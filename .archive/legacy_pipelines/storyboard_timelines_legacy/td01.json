@@ -1,0 +1,38 @@
+{
+  "id": "td01",
+  "durationFrames": 645,
+  "durationSeconds": 21.504,
+  "fps": 30,
+  "audioFile": "vo-td01.mp3",
+  "anchors": {
+    "thirty_days": 16,
+    "honest": 376,
+    "prompts": 562
+  },
+  "phases": [
+    {
+      "id": "hook_cursor",
+      "fromFrame": 0,
+      "toFrame": 376,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "calendar_callouts",
+      "fromFrame": 376,
+      "toFrame": 562,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "title_card",
+      "fromFrame": 562,
+      "toFrame": 645,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

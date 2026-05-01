@@ -1,0 +1,83 @@
+{
+  "id": "td07",
+  "durationFrames": 3019,
+  "durationSeconds": 100.656,
+  "fps": 30,
+  "audioFile": "vo-td07.mp3",
+  "anchors": {
+    "use_case_one": 0,
+    "stress_test": 304,
+    "heres_prompt": 609,
+    "most_important": 1557,
+    "day_eleven": 1660,
+    "eight_thousand": 2082,
+    "not_because": 2184,
+    "second_opinion": 2665
+  },
+  "phases": [
+    {
+      "id": "reveal_one",
+      "fromFrame": 0,
+      "toFrame": 304,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "argue_against",
+      "fromFrame": 304,
+      "toFrame": 609,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "prompt_demo",
+      "fromFrame": 609,
+      "toFrame": 1557,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "tone_shift",
+      "fromFrame": 1557,
+      "toFrame": 1660,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "hard_cut"
+    },
+    {
+      "id": "day_11_conversation",
+      "fromFrame": 1660,
+      "toFrame": 2082,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "hard_cut"
+    },
+    {
+      "id": "pnl_loss",
+      "fromFrame": 2082,
+      "toFrame": 2184,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "hard_cut"
+    },
+    {
+      "id": "lesson",
+      "fromFrame": 2184,
+      "toFrame": 2665,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "blackout"
+    },
+    {
+      "id": "do_this_one",
+      "fromFrame": 2665,
+      "toFrame": 3019,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

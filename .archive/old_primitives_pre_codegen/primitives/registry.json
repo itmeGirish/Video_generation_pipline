@@ -1,0 +1,177 @@
+{
+  "primitives": {
+    "title_reveal": {
+      "description": "USE WHEN: bullet wants ONE hero word (or very short phrase) to land with weight, optional subtitle below. DON'T USE WHEN: hero element is a number/percentage (use number_punch); line is a question (use provocation).",
+      "props": {
+        "text": {"type": "string", "required": true, "description": "Hero word"},
+        "subtitle": {"type": "string", "required": false}
+      }
+    },
+    "title_card": {
+      "description": "USE WHEN: bullet wants a single line of typed text as a label, beat-card, or callout, optional accent color token. DON'T USE WHEN: line is a question (use provocation), a quote (use pull_quote), or a hero word (use title_reveal). Color value, when provided, must be a token name from the project's config.yaml design block.",
+      "props": {
+        "text": {"type": "string", "required": true},
+        "color": {"type": "string", "required": false}
+      }
+    },
+    "number_punch": {
+      "description": "USE WHEN: bullet wants a SEQUENCE of single-line elements (numbers, percentages, short words/phrases) to slot-machine in one at a time, big and centered, hard spring + shake. DON'T USE WHEN: elements are paired number+label structure (use stats_grid) or side-by-side comparison (use split_screen).",
+      "props": {
+        "items": {"type": "array", "required": true, "items": {"value": "string", "color": "string?", "big": "bool?", "small": "bool?"}}
+      }
+    },
+    "provocation": {
+      "description": "USE WHEN: bullet poses a question or rhetorical statement, typewriter delivery with blinking cursor. DON'T USE WHEN: line is a statement of fact (use title_card) or a quote (use pull_quote).",
+      "props": {
+        "text": {"type": "string", "required": true}
+      }
+    },
+    "bullet_list": {
+      "description": "USE WHEN: bullet shows a list of N items (any N) that should spring in with stagger, optional title above. DON'T USE WHEN: items are checkable/completable (use checklist) or items are number+label pairs (use stats_grid).",
+      "props": {
+        "title": {"type": "string", "required": false},
+        "items": {"type": "array", "required": true, "items": "string"}
+      }
+    },
+    "formula": {
+      "description": "USE WHEN: bullet shows a short equation/relationship as N tokens that should appear word-by-word with optional per-token colors. Intent examples: X = Y + Z, A vs B, FAST != SLOW. DON'T USE WHEN: line is prose (use title_card) or arithmetic with computed values (no primitive today).",
+      "props": {
+        "tokens": {"type": "array", "required": true, "items": {"text": "string", "color": "string?"}}
+      }
+    },
+    "checklist": {
+      "description": "USE WHEN: bullet shows N items that get bouncy check stamps as they appear — capabilities, requirements, completed work. DON'T USE WHEN: items are not binary done/not-done (use bullet_list).",
+      "props": {
+        "title": {"type": "string", "required": false},
+        "items": {"type": "array", "required": true, "items": "string"}
+      }
+    },
+    "stats_grid": {
+      "description": "USE WHEN: bullet shows N number+label pairs side-by-side as a scoreboard. DON'T USE WHEN: there is only one big number (use number_punch).",
+      "props": {
+        "stats": {"type": "array", "required": true, "items": {"value": "string", "label": "string", "color": "string?"}}
+      }
+    },
+    "split_screen": {
+      "description": "USE WHEN: bullet wants a left/right vertical split with a label per side, optionally a value per side; strong VS energy. DON'T USE WHEN: comparison is racing/animated (use benchmark_race) or three+ way (split into multiple bullets or use stats_grid).",
+      "props": {
+        "left": {"type": "object", "required": true, "shape": {"label": "string", "color": "string?"}},
+        "right": {"type": "object", "required": true, "shape": {"label": "string", "color": "string?"}}
+      }
+    },
+    "model_orb_with_components": {
+      "description": "USE WHEN: bullet shows a central glowing node with N labeled tools/components arranged around it; radial architecture diagram. Colors are taken from config.yaml design tokens — don't pick them. DON'T USE WHEN: components have specific input/output relationships flowing through the center (use guides_sensors_split).",
+      "props": {
+        "components": {"type": "array", "required": true, "items": {"icon": "string?", "label": "string"}}
+      }
+    },
+    "caption_card": {
+      "description": "USE WHEN: bullet wants a lower-third caption — definition, aside label, secondary context that supports a hero element above. DON'T USE WHEN: the caption IS the hero element (use title_card).",
+      "props": {
+        "text": {"type": "string", "required": true}
+      }
+    },
+    "code_flood_terminal": {
+      "description": "USE WHEN: bullet shows a terminal flooding with code at high speed, file paths flickering at top, optional PR counter ticking. DON'T USE WHEN: terminal shows one quiet command (use title_card).",
+      "props": {
+        "files": {"type": "array", "required": true, "items": "string"},
+        "pr_counter": {"type": "object", "required": false, "shape": {"from": "int", "to": "int"}}
+      }
+    },
+    "tetris_stack": {
+      "description": "USE WHEN: bullet shows N building-block layers stacking up to construct a concept; each block has a label. Colors are taken from config.yaml design tokens — don't pick them. DON'T USE WHEN: stack order doesn't matter (use bullet_list or checklist).",
+      "props": {
+        "blocks": {"type": "array", "required": true, "items": "string"},
+        "header": {"type": "string", "required": false}
+      }
+    },
+    "benchmark_race": {
+      "description": "USE WHEN: bullet shows two models/options racing on a named benchmark with a leaderboard ticking live. DON'T USE WHEN: comparison is static numbers (use stats_grid) or generic split (use split_screen).",
+      "props": {
+        "model_label": {"type": "string", "required": true},
+        "left": {"type": "object", "required": true, "shape": {"label": "string", "rank_path": "array<int>", "result_color": "string"}},
+        "right": {"type": "object", "required": true, "shape": {"label": "string", "rank_path": "array<int>", "result_color": "string"}}
+      }
+    },
+    "closed_loop_circuit": {
+      "description": "USE WHEN: bullet describes a feedback/iteration loop with N stages connecting back to the start (cycle continues). Per-stage colors come from the bullet body if specified, else config.yaml design tokens. DON'T USE WHEN: flow is a linear pipeline (no primitive today).",
+      "props": {
+        "stages": {"type": "array", "required": true, "items": {"label": "string", "color": "string"}}
+      }
+    },
+    "timeline_playhead": {
+      "description": "USE WHEN: bullet shows progress over time with a playhead sweeping left-to-right, optional counters and milestone events. DON'T USE WHEN: time progression is between discrete versions/releases (use evolution_timeline).",
+      "props": {
+        "from_label": {"type": "string", "required": true},
+        "to_label": {"type": "string", "required": true},
+        "counters": {"type": "array", "required": false, "items": {"label": "string", "from": "int", "to": "int", "color": "string?"}},
+        "events": {"type": "array", "required": false, "items": {"at_pct": "float", "label": "string"}}
+      }
+    },
+    "evolution_timeline": {
+      "description": "USE WHEN: bullet shows a generational/version progression with N nodes (year + label); mark current node, optionally mark future node as dotted. DON'T USE WHEN: time is continuous with counters/playhead (use timeline_playhead).",
+      "props": {
+        "nodes": {"type": "array", "required": true, "items": {"year": "string", "label": "string", "current": "bool?", "future": "bool?"}}
+      }
+    },
+    "productivity_bars": {
+      "description": "USE WHEN: bullet compares two teams/approaches with one outpacing the other (human-vs-AI, before-vs-after). DON'T USE WHEN: comparison is benchmark scores (use benchmark_race) or stat values (use stats_grid).",
+      "props": {
+        "team_a": {"type": "object", "required": true, "shape": {"label": "string", "speed": "float"}},
+        "team_b": {"type": "object", "required": true, "shape": {"label": "string", "speed": "float"}},
+        "caption": {"type": "string", "required": false}
+      }
+    },
+    "mini_ui_grid": {
+      "description": "USE WHEN: bullet shows multiple product UIs / use-case examples in an NxM grid that animate in sequence. Grid shape (rows, columns) is determined by the bullet body, not by this primitive. DON'T USE WHEN: only one UI is shown (use image_asset if a screenshot is on disk).",
+      "props": {
+        "header": {"type": "string", "required": false},
+        "vignettes": {"type": "array", "required": true, "items": {"icon": "string?", "title": "string", "kind": "string", "body": "object"}}
+      }
+    },
+    "guides_sensors_split": {
+      "description": "USE WHEN: bullet describes a closed input/output loop with N inputs (guides) on the left feeding into a central node and N outputs (sensors) on the right whose results feed back. DON'T USE WHEN: it's a generic comparison (use split_screen) or a one-way pipeline (no primitive today).",
+      "props": {
+        "guides": {"type": "array", "required": true, "items": {"icon": "string?", "label": "string"}},
+        "sensors": {"type": "array", "required": true, "items": {"icon": "string?", "label": "string", "result": "string?"}}
+      }
+    },
+    "pull_quote": {
+      "description": "USE WHEN: bullet shows a verbatim quotation with attribution. DON'T USE WHEN: text is the author's own statement, not attributed to someone (use title_card).",
+      "props": {
+        "quote": {"type": "string", "required": true},
+        "attribution": {"type": "string", "required": false}
+      }
+    },
+    "logo_swarm": {
+      "description": "USE WHEN: bullet shows a list of product/brand names that pop in around a central caption (ecosystem diagram). DON'T USE WHEN: logos are real image assets on disk (use image_asset per logo).",
+      "props": {
+        "caption": {"type": "string", "required": true},
+        "logos": {"type": "array", "required": true, "items": "string"}
+      }
+    },
+    "callback_card": {
+      "description": "USE WHEN: bullet wants a small reminder of prior facts/numbers from earlier in the video; smaller scale, often docked to a corner; optional tagline. DON'T USE WHEN: items are new content for this scene (use bullet_list).",
+      "props": {
+        "items": {"type": "array", "required": true, "items": "string"},
+        "tagline": {"type": "string", "required": false}
+      }
+    },
+    "silhouette_team": {
+      "description": "USE WHEN: bullet shows N people at desks with floating orbs doing the typing — collaboration / scale of adoption. Orb color comes from config.yaml design tokens, not this primitive. DON'T USE WHEN: people are individual characters (no primitive today).",
+      "props": {
+        "count": {"type": "int", "required": true},
+        "caption": {"type": "string", "required": false}
+      }
+    },
+    "image_asset": {
+      "description": "USE WHEN: bullet references an image file (logo, screenshot, photo, diagram, SVG) that lives in projects/<name>/public/<filename>. The bullet body either names the file (e.g. '[asset: filename.png]') or describes a real-world image asset that the author has put on disk. The src prop is the filename verbatim. DON'T USE WHEN: the file is not on disk yet (ask the user OR drop the bullet).",
+      "props": {
+        "src": {"type": "string", "required": true},
+        "caption": {"type": "string", "required": false},
+        "scale": {"type": "number", "required": false},
+        "entrance": {"type": "string", "required": false, "enum": ["fade", "pop", "slide"]}
+      }
+    }
+  }
+}

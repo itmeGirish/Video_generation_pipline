@@ -1,0 +1,22 @@
+id: td02
+audio_file: vo-td02.mp3
+
+narration: |
+  Before I show you anything. If you clicked this hoping Claude will pick stocks for you, close the video.
+  That's not what it does. Anyone selling you an A I that predicts the market is lying. And usually selling a course.
+  What it is, is the fastest reading and reasoning assistant ever built. Used correctly, it's worth more than any signal service. Let me show you exactly how.
+
+anchors:
+  not_what:     { phrase: "not what it does" }
+  reading:      { phrase: "reading and reasoning" }
+
+phases:
+  - id: scratch_warning
+    from: start
+    to:   "@not_what"
+  - id: what_it_is_not
+    from: "@not_what"
+    to:   "@reading"
+  - id: what_it_is
+    from: "@reading"
+    to:   end

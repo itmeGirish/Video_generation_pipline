@@ -1,0 +1,22 @@
+{
+  "id": "hf03",
+  "durationFrames": 1918,
+  "durationSeconds": 63.96,
+  "fps": 30,
+  "audioFile": "vo-hf03.mp3",
+  "anchors": {
+    "first_half": 193,
+    "second_half": 820,
+    "need_both": 1711
+  },
+  "phases": [
+    {
+      "id": "guides_sensors_split",
+      "fromFrame": 0,
+      "toFrame": 1918,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

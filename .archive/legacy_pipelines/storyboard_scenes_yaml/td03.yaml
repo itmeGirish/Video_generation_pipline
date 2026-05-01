@@ -1,0 +1,19 @@
+id: td03
+audio_file: vo-td03.mp3
+
+narration: |
+  Four workflows. Ranked from the one I use occasionally, to the one that genuinely changed how I trade.
+  Real prompts. Real outputs. All on screen.
+  Number one is the one I wish someone had told me about a year ago. We'll get there. Let's start at the bottom.
+
+anchors:
+  ranked:       { phrase: "Ranked from" }
+  number_one:   { phrase: "Number one" }
+
+phases:
+  - id: four_workflows
+    from: start
+    to:   "@number_one"
+  - id: redacted_reveal
+    from: "@number_one"
+    to:   end

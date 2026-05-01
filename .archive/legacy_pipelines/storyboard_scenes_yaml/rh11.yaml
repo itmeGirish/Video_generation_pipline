@@ -1,0 +1,22 @@
+id: rh11
+audio_file: vo-rh11.mp3
+
+narration: |
+  Remember this? Now you know. Context, tools, memory, loop, guardrails. Level one, two, or three. Same model. Different harness. That's the whole game.
+
+anchors:
+  now_you_know:      { phrase: "Now you know" }
+  same_model:        { phrase: "Same model" }
+  whole_game:        { phrase: "whole game" }
+
+phases:
+  - id: loopback_demo
+    from: start
+    to:   "@same_model"
+  - id: magenta_slam
+    from: "@same_model"
+    to:   "@whole_game"
+    transition_in: hard_cut       # clean slate — tools must clear before slam
+  - id: final_hold
+    from: "@whole_game"
+    to:   end

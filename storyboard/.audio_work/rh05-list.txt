@@ -1,0 +1,3 @@
+file 'C:\Girish\Fundamental_Projects\video_generation\video_explainer\storyboard\.audio_work\rh05-pre.wav'
+file 'C:\Girish\Fundamental_Projects\video_generation\video_explainer\storyboard\.audio_work\rh05-sil.wav'
+file 'C:\Girish\Fundamental_Projects\video_generation\video_explainer\storyboard\.audio_work\rh05-post.wav'

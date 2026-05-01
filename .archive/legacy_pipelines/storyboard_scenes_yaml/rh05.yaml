@@ -1,0 +1,42 @@
+id: rh05
+audio_file: vo-rh05.mp3
+
+# Scene 5 has 5 sub-parts + a pattern break in the middle.
+# The VO speaks each section distinctly; anchors mark the transitions.
+narration: |
+  One. Context. Before the AI sees anything, the harness decides what to put in front of it. Garbage in, garbage out — literally.
+  Two. Tools. This is what turns a chatbot into something that actually does work. Without tools, the AI can only talk. With tools, it can act.
+  Three. Memory. AI models forget everything between sessions. The harness is what gives them continuity — the difference between a demo and a product.
+  With just those three, you have a smarter chatbot. Not an agent. For that, you need the last two — and this is where it gets interesting.
+  Four. The loop. Real agents don't answer in one shot. They think, act, observe, think again — sometimes a dozen times — until the job is done.
+  Five. Guardrails. Format checks, safety filters, spending limits. Boring stuff. Also the stuff that decides if your AI survives real users.
+
+anchors:
+  context:     { phrase: "One. Context" }
+  tools:       { phrase: "Two. Tools" }
+  memory:      { phrase: "Three. Memory" }
+  pattern_break: { phrase: "just those three" }
+  loop:        { phrase: "Four. The loop" }
+  guardrails:  { phrase: "Guardrails", alt: ["Format checks"] }
+
+phases:
+  - id: part_a_context
+    from: start
+    to:   "@tools"
+  - id: part_b_tools
+    from: "@tools"
+    to:   "@memory"
+  - id: part_c_memory
+    from: "@memory"
+    to:   "@pattern_break"
+  - id: pattern_break
+    from: "@pattern_break"
+    to:   "@loop"
+    transition_in: blackout       # breath beat — fade to black, then re-enter
+  - id: part_d_loop
+    from: "@loop"
+    to:   "@guardrails"
+    transition_in: blackout       # re-enter cleanly after the silent beat
+  - id: part_e_guardrails
+    from: "@guardrails"
+    to:   end

@@ -1,0 +1,14 @@
+id: rh03
+audio_file: vo-rh03.mp3
+
+narration: |
+  The Claude inside Cursor, the Claude inside Claude Code, and the Claude you get in a raw API call are literally the same model. Same weights. So why does one feel like magic and the other feels broken? That's the whole video.
+
+anchors:
+  same_weights: { phrase: "Same weights" }
+  whole_video:  { phrase: "whole video" }
+
+phases:
+  - id: split_screen
+    from: start
+    to:   end

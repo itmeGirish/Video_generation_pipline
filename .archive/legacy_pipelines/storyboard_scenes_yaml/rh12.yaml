@@ -1,0 +1,14 @@
+id: rh12
+audio_file: vo-rh12.mp3
+
+narration: |
+  If this was useful, the playlist is down there. See you in the next one.
+
+anchors:
+  playlist: { phrase: "playlist" }
+  next_one: { phrase: "next one" }
+
+phases:
+  - id: end_card
+    from: start
+    to:   end

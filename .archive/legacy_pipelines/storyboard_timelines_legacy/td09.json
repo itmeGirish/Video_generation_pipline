@@ -1,0 +1,30 @@
+{
+  "id": "td09",
+  "durationFrames": 1108,
+  "durationSeconds": 36.936,
+  "fps": 30,
+  "audioFile": "vo-td09.mp3",
+  "anchors": {
+    "all_four": 0,
+    "one_thing": 603,
+    "your_edge": 1063
+  },
+  "phases": [
+    {
+      "id": "pinned_comment",
+      "fromFrame": 0,
+      "toFrame": 603,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "personalize_tweak",
+      "fromFrame": 603,
+      "toFrame": 1108,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "hard_cut"
+    }
+  ]
+}

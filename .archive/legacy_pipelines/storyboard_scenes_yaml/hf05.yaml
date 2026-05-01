@@ -1,0 +1,21 @@
+id: hf05
+audio_file: vo-hf05.mp3
+
+narration: |
+  Maybe you're still thinking — Okay, but really, the model is what matters. The harness is just wrapping paper.
+  Here's the single fact that ends that argument.
+  Late 2025. LangChain takes their agent to a benchmark called TerminalBench. Same model — GPT-5.2 Codex. They run it. They rank outside the top thirty. Middle of the pack. Not great.
+  Now watch this. They don't touch the model. They rebuild the harness. Better planning. Smarter context management. Sub-agents. Tighter feedback loops.
+  Same exact model. They run it again. Rank five. Top of the leaderboard.
+  Let that sink in. Same model. Same weights. Same everything. Only the harness changed. From rank thirty-plus to rank five.
+  And it gets weirder. A research team used another AI to rewrite the harness automatically — hit a seventy-six percent task pass rate. Beat every human-designed system in the competition.
+  The model is becoming a commodity. Anyone can rent GPT. Anyone can rent Claude. What they can't rent — is your harness. That's where the engineering lives now.
+
+anchors:
+  same_exact:      { phrase: "Same exact model" }
+  research_team:   { phrase: "research team" }
+
+phases:
+  - id: full_scene
+    from: start
+    to:   end

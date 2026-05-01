@@ -1,0 +1,201 @@
+{
+  "hf01": {
+    "durationFrames": 1715,
+    "phases": {
+      "number_punches": [
+        0,
+        135
+      ],
+      "terminal_flood": [
+        135,
+        451
+      ],
+      "engineers_watching": [
+        451,
+        962
+      ],
+      "the_question": [
+        962,
+        1566
+      ],
+      "harness_reveal": [
+        1566,
+        1715
+      ]
+    },
+    "anchors": {
+      "almost_nobody": 451,
+      "name_now": 962,
+      "stick_with": 1566
+    }
+  },
+  "hf02": {
+    "durationFrames": 2061,
+    "phases": {
+      "horse_intro": [
+        0,
+        397
+      ],
+      "horse_runs": [
+        397,
+        711
+      ],
+      "horse_to_orb": [
+        711,
+        1353
+      ],
+      "formula_drop": [
+        1353,
+        1469
+      ],
+      "harness_assembly": [
+        1469,
+        2061
+      ]
+    },
+    "anchors": {
+      "horse_without": 397,
+      "ai_model_horse": 711,
+      "put_formula": 1353,
+      "intelligence": 1469
+    }
+  },
+  "hf03": {
+    "durationFrames": 1918,
+    "phases": {
+      "guides_sensors_split": [
+        0,
+        1918
+      ]
+    },
+    "anchors": {
+      "first_half": 193,
+      "second_half": 820,
+      "need_both": 1711
+    }
+  },
+  "hf04": {
+    "durationFrames": 2290,
+    "phases": {
+      "callback_intro": [
+        0,
+        315
+      ],
+      "timeline_grow": [
+        315,
+        562
+      ],
+      "month1_disaster": [
+        562,
+        1196
+      ],
+      "compound_upgrades": [
+        1196,
+        1985
+      ],
+      "final_stats": [
+        1985,
+        2243
+      ],
+      "quote": [
+        2243,
+        2290
+      ]
+    },
+    "anchors": {
+      "august_2025": 315,
+      "month_one": 562,
+      "fix_harness": 1196,
+      "million_stats": 1985,
+      "wild": 2243
+    }
+  },
+  "hf05": {
+    "durationFrames": 2571,
+    "phases": {
+      "direct_address": [
+        0,
+        481
+      ],
+      "split_screen_bench": [
+        481,
+        1244
+      ],
+      "model_merge": [
+        1244,
+        1897
+      ],
+      "second_data": [
+        1897,
+        2509
+      ],
+      "thesis": [
+        2509,
+        2571
+      ]
+    },
+    "anchors": {
+      "same_model": 481,
+      "same_exact": 1244,
+      "research_team": 1897,
+      "engineering_lives": 2509
+    }
+  },
+  "hf06": {
+    "durationFrames": 2037,
+    "phases": {
+      "hook_opener": [
+        0,
+        643
+      ],
+      "vignette_grid": [
+        643,
+        1931
+      ],
+      "orbit_hub": [
+        1931,
+        1992
+      ],
+      "ask": [
+        1992,
+        2037
+      ]
+    },
+    "anchors": {
+      "work_look": 643,
+      "thinking_bigger": 1931,
+      "you_in": 1992
+    }
+  },
+  "hf07": {
+    "durationFrames": 2373,
+    "phases": {
+      "two_line_reveal": [
+        0,
+        341
+      ],
+      "evolution_timeline": [
+        341,
+        706
+      ],
+      "two_teams": [
+        706,
+        1484
+      ],
+      "monday_checklist": [
+        1484,
+        2286
+      ],
+      "urgency_and_title": [
+        2286,
+        2373
+      ]
+    },
+    "anchors": {
+      "sixty_years": 341,
+      "fastest_growing": 706,
+      "four_things": 1484,
+      "youre_early": 2286
+    }
+  }
+}

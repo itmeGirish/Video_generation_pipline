@@ -1,0 +1,21 @@
+{
+  "id": "rh03",
+  "durationFrames": 496,
+  "durationSeconds": 16.552,
+  "fps": 30,
+  "audioFile": "vo-rh03.mp3",
+  "anchors": {
+    "same_weights": 238,
+    "whole_video": 441
+  },
+  "phases": [
+    {
+      "id": "split_screen",
+      "fromFrame": 0,
+      "toFrame": 496,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

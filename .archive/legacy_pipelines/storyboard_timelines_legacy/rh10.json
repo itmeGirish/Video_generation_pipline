@@ -1,0 +1,21 @@
+{
+  "id": "rh10",
+  "durationFrames": 487,
+  "durationSeconds": 16.249,
+  "fps": 30,
+  "audioFile": "vo-rh10.mp3",
+  "anchors": {
+    "homework": 19,
+    "monday": 298
+  },
+  "phases": [
+    {
+      "id": "checklist",
+      "fromFrame": 0,
+      "toFrame": 487,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

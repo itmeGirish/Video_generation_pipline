@@ -1,0 +1,29 @@
+{
+  "id": "td03",
+  "durationFrames": 606,
+  "durationSeconds": 20.232,
+  "fps": 30,
+  "audioFile": "vo-td03.mp3",
+  "anchors": {
+    "ranked": 60,
+    "number_one": 367
+  },
+  "phases": [
+    {
+      "id": "four_workflows",
+      "fromFrame": 0,
+      "toFrame": 367,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "redacted_reveal",
+      "fromFrame": 367,
+      "toFrame": 606,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

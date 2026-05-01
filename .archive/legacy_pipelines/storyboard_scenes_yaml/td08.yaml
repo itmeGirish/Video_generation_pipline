@@ -1,0 +1,33 @@
+id: td08
+audio_file: vo-td08.mp3
+
+narration: |
+  Okay. The embarrassing part. Things I tried that absolutely did not work.
+  One. I once spent twenty minutes trying to get Claude to predict where Nifty would close on Friday. I know. I knew it wouldn't work while I was doing it. I did it anyway. Don't be me.
+  Two. Technical analysis on charts. Claude can't see your TradingView setup. And even when you upload a screenshot, it's mediocre at pattern recognition. Use real T A tools. Not this.
+  Three. Trusting the numbers. Claude will confidently tell you, Infosys Q two revenue was thirty eight thousand crore. And be off by a thousand crore. Verify every number before trading on it. Always.
+  Use it for reading. Reasoning. And pushing back on your thinking. Not for data. Not for prediction. Not for charts.
+
+anchors:
+  embarrassing:     { phrase: "embarrassing" }
+  one_nifty:        { phrase: "predict where Nifty" }
+  two_technical:    { phrase: "Technical analysis" }
+  three_numbers:    { phrase: "Trusting the numbers" }
+  use_it_for:       { phrase: "Use it for" }
+
+phases:
+  - id: intro_failed
+    from: start
+    to:   "@one_nifty"
+  - id: fail_nifty_predict
+    from: "@one_nifty"
+    to:   "@two_technical"
+  - id: fail_charts
+    from: "@two_technical"
+    to:   "@three_numbers"
+  - id: fail_numbers
+    from: "@three_numbers"
+    to:   "@use_it_for"
+  - id: takeaway_use_for
+    from: "@use_it_for"
+    to:   end

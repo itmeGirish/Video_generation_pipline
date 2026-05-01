@@ -1,0 +1,21 @@
+id: hf03
+audio_file: vo-hf03.mp3
+
+narration: |
+  Here's the part that clicks everything into place. Every good harness has exactly two halves.
+  The first half — guides. Guides steer the model before it acts. Think of them like giving a new employee their first-day onboarding. The AGENTS.md file. The coding conventions. The skill that explains how your team handles API errors. Guides raise the chances the agent gets it right on the first try.
+  The second half — sensors. Sensors catch what the guides missed. Tests. Type checkers. Linters. Another AI that reviews the first AI's work. Sensors watch after the model acts and push the mistake back in, so the agent can fix itself — usually before a human even sees it.
+  Here's the punchline. Guides alone, and your agent never learns. Sensors alone, and your agent keeps making the same mistake forever. You need both.
+  When you have both — that's a harness. That's when it starts to feel like magic.
+
+anchors:
+  first_half:    { phrase: "first half" }
+  second_half:   { phrase: "second half" }
+  need_both:     { phrase: "need both", alt: ["needed both", "you need both"] }
+
+phases:
+  # Single phase; the HF03 component has its own guides/sensors sub-animation
+  # driven by these anchors (it's one atomic visual that evolves over time).
+  - id: guides_sensors_split
+    from: start
+    to:   end

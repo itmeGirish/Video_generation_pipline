@@ -1,0 +1,20 @@
+id: rh01
+audio_file: vo-rh01.mp3
+
+narration: |
+  Same question. Same AI. One of them failed. The other delivered. Here's what changed.
+
+anchors:
+  failed:    { phrase: "failed" }
+  delivered: { phrase: "delivered" }
+
+phases:
+  - id: question_typed
+    from: start
+    to:   "@failed"
+  - id: no_harness_fail
+    from: "@failed"
+    to:   "@delivered"
+  - id: with_harness_success
+    from: "@delivered"
+    to:   end

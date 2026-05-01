@@ -1,0 +1,21 @@
+{
+  "id": "hf06",
+  "durationFrames": 2037,
+  "durationSeconds": 67.92,
+  "fps": 30,
+  "audioFile": "vo-hf06.mp3",
+  "anchors": {
+    "work_look": 643,
+    "you_in": 1992
+  },
+  "phases": [
+    {
+      "id": "full_scene",
+      "fromFrame": 0,
+      "toFrame": 2037,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

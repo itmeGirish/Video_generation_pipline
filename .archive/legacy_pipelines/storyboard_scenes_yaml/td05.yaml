@@ -1,0 +1,39 @@
+id: td05
+audio_file: vo-td05.mp3
+
+narration: |
+  Use case three. News triage. On any Monday morning, there are roughly fifty thousand financial news stories published globally.
+  You own, what, ten stocks? Twenty? The real question isn't, what's the news. It's, which three headlines actually matter to my portfolio today.
+  Here's the prompt. List your tickers. Paste forty headlines. Claude sorts them into Material, Context, and Noise. For every Material story, one line on why it matters.
+  Ten minutes every morning. Replaces an hour of scrolling Moneycontrol, Bloomberg, E T Markets.
+  The best part. Claude understands context. It knows R B I cuts repo rate matters for H D F C Bank. It knows Tata Motors launches a new S U V variant is less material than Tata Motors recalls fifty thousand vehicles.
+  Old keyword alerts: five hundred matches. Claude four point seven: four that actually matter.
+  This is where most of Claude's daily value lives for a retail trader. One prompt. Ten minutes. Whole morning saved.
+
+anchors:
+  use_case_three:   { phrase: "Use case three" }
+  heres_prompt:     { phrase: "Here's the prompt" }
+  ten_minutes:      { phrase: "Ten minutes every morning" }
+  best_part:        { phrase: "best part" }
+  old_keyword:      { phrase: "Old keyword alerts" }
+  daily_value:      { phrase: "daily value" }
+
+phases:
+  - id: headlines_flood
+    from: start
+    to:   "@heres_prompt"
+  - id: prompt_sort
+    from: "@heres_prompt"
+    to:   "@ten_minutes"
+  - id: replaces_scroll
+    from: "@ten_minutes"
+    to:   "@best_part"
+  - id: context_understanding
+    from: "@best_part"
+    to:   "@old_keyword"
+  - id: comparison_stat
+    from: "@old_keyword"
+    to:   "@daily_value"
+  - id: closing_beat
+    from: "@daily_value"
+    to:   end

@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "compiler_version": "0.1.0",
+  "tts_voice": "en-US-GuyNeural",
+  "tts_rate": "+5%",
+  "tts_pitch": "-2Hz",
+  "whisper_model": "base",
+  "fps": 30,
+  "min_phase_frames": 30,
+  "python": "3.13.7",
+  "built_at_utc": "2026-04-25T06:20:58.492929Z",
+  "source_hashes": {
+    "hf01": "fa7a7b85b281d8f4",
+    "hf02": "d22cb6a26d7534e1",
+    "hf03": "bde645a1a94af339",
+    "hf04": "ebcfff2970dd184f",
+    "hf05": "0fe89dc4134d0d1f",
+    "hf06": "4051bf8149432be5",
+    "hf07": "b7e0b18dbf3ce0c2",
+    "rh01": "bd626a6e32014367",
+    "rh02": "1021599b04987e41",
+    "rh03": "19b565b925f8bbd7",
+    "rh04": "4d25ab19d28cb2e2",
+    "rh05": "19ea9044e3d15397",
+    "rh06": "1f125980fcb546c3",
+    "rh07": "41c77737293f1e02",
+    "rh08": "2a4e2239a34109af",
+    "rh09": "a7e91581c8d2ed4b",
+    "rh10": "4f97c71ecaaa1794",
+    "rh11": "dbbf58a954ed0245",
+    "rh12": "845f4925c35d5628",
+    "td01": "4184c7f8271d7dba",
+    "td02": "bd9b468adc3a78e6",
+    "td03": "e161b51f4143d618",
+    "td04": "db1df1500b9ba89e",
+    "td05": "98a71d49cef75908",
+    "td06": "fe15fad56d3aa8a5",
+    "td07": "db559dfd5484f7aa",
+    "td08": "709d4f06ff0810dd",
+    "td09": "7e973a6cd776aa60",
+    "td10": "e0df71748a310caf"
+  },
+  "scenes": [
+    {
+      "id": "hf01",
+      "durationFrames": 1715,
+      "phaseCount": 5,
+      "anchorCount": 3
+    },
+    {
+      "id": "hf02",
+      "durationFrames": 2061,
+      "phaseCount": 5,
+      "anchorCount": 4
+    },
+    {
+      "id": "hf03",
+      "durationFrames": 1918,
+      "phaseCount": 1,
+      "anchorCount": 3
+    },
+    {
+      "id": "hf04",
+      "durationFrames": 2290,
+      "phaseCount": 1,
+      "anchorCount": 3
+    },
+    {
+      "id": "hf05",
+      "durationFrames": 2571,
+      "phaseCount": 1,
+      "anchorCount": 2
+    },
+    {
+      "id": "hf06",
+      "durationFrames": 2037,
+      "phaseCount": 1,
+      "anchorCount": 2
+    },
+    {
+      "id": "hf07",
+      "durationFrames": 2373,
+      "phaseCount": 5,
+      "anchorCount": 4
+    },
+    {
+      "id": "rh01",
+      "durationFrames": 317,
+      "phaseCount": 3,
+      "anchorCount": 2
+    },
+    {
+      "id": "rh02",
+      "durationFrames": 239,
+      "phaseCount": 1,
+      "anchorCount": 1
+    },
+    {
+      "id": "rh03",
+      "durationFrames": 496,
+      "phaseCount": 1,
+      "anchorCount": 2
+    },
+    {
+      "id": "rh04",
+      "durationFrames": 530,
+      "phaseCount": 3,
+      "anchorCount": 2
+    },
+    {
+      "id": "rh05",
+      "durationFrames": 2355,
+      "phaseCount": 6,
+      "anchorCount": 6
+    },
+    {
+      "id": "rh06",
+      "durationFrames": 880,
+      "phaseCount": 6,
+      "anchorCount": 6
+    },
+    {
+      "id": "rh07",
+      "durationFrames": 678,
+      "phaseCount": 2,
+      "anchorCount": 3
+    },
+    {
+      "id": "rh08",
+      "durationFrames": 1207,
+      "phaseCount": 4,
+      "anchorCount": 4
+    },
+    {
+      "id": "rh09",
+      "durationFrames": 494,
+      "phaseCount": 2,
+      "anchorCount": 2
+    },
+    {
+      "id": "rh10",
+      "durationFrames": 487,
+      "phaseCount": 1,
+      "anchorCount": 2
+    },
+    {
+      "id": "rh11",
+      "durationFrames": 540,
+      "phaseCount": 3,
+      "anchorCount": 3
+    },
+    {
+      "id": "rh12",
+      "durationFrames": 188,
+      "phaseCount": 1,
+      "anchorCount": 2
+    },
+    {
+      "id": "td01",
+      "durationFrames": 645,
+      "phaseCount": 3,
+      "anchorCount": 3
+    },
+    {
+      "id": "td02",
+      "durationFrames": 765,
+      "phaseCount": 3,
+      "anchorCount": 2
+    },
+    {
+      "id": "td03",
+      "durationFrames": 606,
+      "phaseCount": 2,
+      "anchorCount": 2
+    },
+    {
+      "id": "td04",
+      "durationFrames": 2068,
+      "phaseCount": 5,
+      "anchorCount": 5
+    },
+    {
+      "id": "td05",
+      "durationFrames": 2153,
+      "phaseCount": 6,
+      "anchorCount": 6
+    },
+    {
+      "id": "td06",
+      "durationFrames": 2235,
+      "phaseCount": 6,
+      "anchorCount": 6
+    },
+    {
+      "id": "td07",
+      "durationFrames": 3019,
+      "phaseCount": 8,
+      "anchorCount": 8
+    },
+    {
+      "id": "td08",
+      "durationFrames": 1908,
+      "phaseCount": 5,
+      "anchorCount": 5
+    },
+    {
+      "id": "td09",
+      "durationFrames": 1108,
+      "phaseCount": 2,
+      "anchorCount": 3
+    },
+    {
+      "id": "td10",
+      "durationFrames": 698,
+      "phaseCount": 2,
+      "anchorCount": 2
+    }
+  ]
+}

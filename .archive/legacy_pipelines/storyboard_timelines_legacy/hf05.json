@@ -1,0 +1,21 @@
+{
+  "id": "hf05",
+  "durationFrames": 2571,
+  "durationSeconds": 85.728,
+  "fps": 30,
+  "audioFile": "vo-hf05.mp3",
+  "anchors": {
+    "same_exact": 1244,
+    "research_team": 1897
+  },
+  "phases": [
+    {
+      "id": "full_scene",
+      "fromFrame": 0,
+      "toFrame": 2571,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

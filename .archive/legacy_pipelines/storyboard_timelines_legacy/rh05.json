@@ -1,0 +1,65 @@
+{
+  "id": "rh05",
+  "durationFrames": 2355,
+  "durationSeconds": 78.527,
+  "fps": 30,
+  "audioFile": "vo-rh05.mp3",
+  "anchors": {
+    "context": 0,
+    "tools": 350,
+    "memory": 769,
+    "pattern_break": 1230,
+    "loop": 1536,
+    "guardrails": 2031
+  },
+  "phases": [
+    {
+      "id": "part_a_context",
+      "fromFrame": 0,
+      "toFrame": 350,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "part_b_tools",
+      "fromFrame": 350,
+      "toFrame": 769,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "part_c_memory",
+      "fromFrame": 769,
+      "toFrame": 1230,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "pattern_break",
+      "fromFrame": 1230,
+      "toFrame": 1536,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "blackout"
+    },
+    {
+      "id": "part_d_loop",
+      "fromFrame": 1536,
+      "toFrame": 2031,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "blackout"
+    },
+    {
+      "id": "part_e_guardrails",
+      "fromFrame": 2031,
+      "toFrame": 2355,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

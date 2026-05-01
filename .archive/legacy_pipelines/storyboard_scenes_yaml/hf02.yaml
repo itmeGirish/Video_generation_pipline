@@ -1,0 +1,33 @@
+id: hf02
+audio_file: vo-hf02.mp3
+
+narration: |
+  Okay. What is a harness? Forget AI for a second. Think about a horse.
+  A horse is powerful. Fast. Useful. But a horse without a harness? Runs wherever it wants. Takes you nowhere.
+  Now here's the metaphor the whole industry has quietly agreed on. The AI model is the horse. It's brilliant, it's strong, it's unpredictable. The harness is everything you build around the model to turn that raw power into actual work.
+  The tools it can use. The memory it keeps. The sandbox that contains its mistakes. The feedback signals that tell it when it messed up.
+  Put it in a formula — agent equals model plus harness. The model is the intelligence. The harness is what makes the intelligence useful.
+  Claude Code? Harness. Cursor? Harness. OpenAI Codex? Harness. They all point at different models — but the real engineering lives in what wraps them.
+
+anchors:
+  horse_without:   { phrase: "horse without" }
+  ai_model_horse:  { phrase: "AI model is the horse" }
+  put_formula:     { phrase: "Put it in a formula" }
+  intelligence:    { phrase: "model is the intelligence" }
+
+phases:
+  - id: horse_intro
+    from: start
+    to:   "@horse_without"
+  - id: horse_runs
+    from: "@horse_without"
+    to:   "@ai_model_horse"
+  - id: horse_to_orb
+    from: "@ai_model_horse"
+    to:   "@put_formula"
+  - id: formula_drop
+    from: "@put_formula"
+    to:   "@intelligence"
+  - id: harness_assembly
+    from: "@intelligence"
+    to:   end

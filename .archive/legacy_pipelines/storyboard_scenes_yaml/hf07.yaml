@@ -1,0 +1,48 @@
+# hf07 — "You're early. Don't blow it."
+# Co-located narration + anchors + phases. Single source of truth.
+
+id: hf07
+audio_file: vo-hf07.mp3
+
+narration: |
+  Quick context before you go. Because everyone's going to try to tell you AI is changing engineering — and that's true, but it's too vague to act on. Here's the specific version.
+  For sixty years, engineers wrote code. That era is ending. Not because writing code doesn't matter — it still does — but because the person at the keyboard is no longer the only one who can do it. Or the fastest. Or often, the best.
+  What stays uniquely human? Deciding what to build. Constraining it. Verifying it. Teaching the system to catch its own mistakes.
+  That work has a name now. Harness engineering. And the wave is early. So early that if you start this week, you are ahead of ninety-nine percent of the industry.
+  Four things to do on Monday.
+  One — read the LangChain post titled The Anatomy of an Agent Harness.
+  Two — read OpenAI's Harness Engineering essay by Ryan Lopopolo.
+  Three — open Claude Code or Cursor, and for your next project, write an AGENTS.md file.
+  Four — next time your agent makes a mistake, don't just fix it. Fix the harness.
+  That's the whole job. That's the shift. You're early. Don't blow it.
+
+anchors:
+  sixty_years:       { phrase: "sixty years" }               # normalized "60 years" also matches
+  fastest_growing:   { phrase: "fastest" }
+  # Anchor aliases: primary phrase + fallbacks for TTS/Whisper drift.
+  # Whisper hears "Four things" as "For things" (homophone) — the alt makes the match robust.
+  four_things:       { phrase: "Four things", alt: ["For things"] }
+  # "early" appears 3× in narration; we want the final "You're early" (occurrence 2, 0-indexed)
+  youre_early:       { phrase: "early", occurrence: 2 }
+
+phases:
+  - id: two_line_reveal
+    from: start
+    to:   "@sixty_years"
+
+  - id: evolution_timeline
+    from: "@sixty_years"
+    to:   "@fastest_growing"
+
+  - id: two_teams
+    from: "@fastest_growing"
+    to:   "@four_things"
+
+  - id: monday_checklist
+    from: "@four_things"
+    to:   "@youre_early"
+
+  # Merged: urgency_close + final_title are one phase since audio ends right after "Don't blow it"
+  - id: urgency_and_title
+    from: "@youre_early"
+    to:   end

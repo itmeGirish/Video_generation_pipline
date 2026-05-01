@@ -1,0 +1,284 @@
+{
+  "total_sec": 539.016,
+  "total_frames": 16170,
+  "audioFile": "vo-harness3-full.mp3",
+  "scenes": [
+    {
+      "id": "hf01",
+      "global_start_sec": 0.0,
+      "global_end_sec": 61.9,
+      "global_start_frame": 0,
+      "global_end_frame": 1857,
+      "durationFrames": 1857,
+      "durationSeconds": 61.9,
+      "fps": 30,
+      "audioFile": "vo-harness3-full.mp3",
+      "anchors": {
+        "almost_nobody": 480,
+        "name_now": 1023,
+        "stick_with": 1701
+      },
+      "phases": [
+        {
+          "id": "number_punches",
+          "fromFrame": 0,
+          "toFrame": 4,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "terminal_flood",
+          "fromFrame": 4,
+          "toFrame": 480,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "engineers_watching",
+          "fromFrame": 480,
+          "toFrame": 1023,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "the_question",
+          "fromFrame": 1023,
+          "toFrame": 1701,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "harness_reveal",
+          "fromFrame": 1701,
+          "toFrame": 1857,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "hf02",
+      "global_start_sec": 61.9,
+      "global_end_sec": 134.24,
+      "global_start_frame": 1857,
+      "global_end_frame": 4027,
+      "durationFrames": 2170,
+      "durationSeconds": 72.34,
+      "fps": 30,
+      "audioFile": "vo-harness3-full.mp3",
+      "anchors": {
+        "horse_without": 409,
+        "ai_model_horse": 740,
+        "put_formula": 1412,
+        "intelligence": 1545
+      },
+      "phases": [
+        {
+          "id": "horse_intro",
+          "fromFrame": 0,
+          "toFrame": 409,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "horse_runs",
+          "fromFrame": 409,
+          "toFrame": 740,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "horse_to_orb",
+          "fromFrame": 740,
+          "toFrame": 1412,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "formula_drop",
+          "fromFrame": 1412,
+          "toFrame": 1545,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "harness_assembly",
+          "fromFrame": 1545,
+          "toFrame": 2170,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "hf03",
+      "global_start_sec": 134.24,
+      "global_end_sec": 205.02,
+      "global_start_frame": 4027,
+      "global_end_frame": 6150,
+      "durationFrames": 2123,
+      "durationSeconds": 70.78,
+      "fps": 30,
+      "audioFile": "vo-harness3-full.mp3",
+      "anchors": {
+        "first_half": 202,
+        "second_half": 894,
+        "need_both": 1896
+      },
+      "phases": [
+        {
+          "id": "guides_sensors_split",
+          "fromFrame": 0,
+          "toFrame": 2123,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "hf04",
+      "global_start_sec": 205.02,
+      "global_end_sec": 285.72,
+      "global_start_frame": 6150,
+      "global_end_frame": 8571,
+      "durationFrames": 2421,
+      "durationSeconds": 80.7,
+      "fps": 30,
+      "audioFile": "vo-harness3-full.mp3",
+      "anchors": {
+        "august_2025": 319,
+        "month_one": 584,
+        "fix_harness": 1260
+      },
+      "phases": [
+        {
+          "id": "full_scene",
+          "fromFrame": 0,
+          "toFrame": 2421,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "hf05",
+      "global_start_sec": 285.72,
+      "global_end_sec": 378.1,
+      "global_start_frame": 8571,
+      "global_end_frame": 11343,
+      "durationFrames": 2772,
+      "durationSeconds": 92.38,
+      "fps": 30,
+      "audioFile": "vo-harness3-full.mp3",
+      "anchors": {
+        "same_exact": 1351,
+        "research_team": 2035
+      },
+      "phases": [
+        {
+          "id": "full_scene",
+          "fromFrame": 0,
+          "toFrame": 2772,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "hf06",
+      "global_start_sec": 378.1,
+      "global_end_sec": 451.6,
+      "global_start_frame": 11343,
+      "global_end_frame": 13548,
+      "durationFrames": 2205,
+      "durationSeconds": 73.5,
+      "fps": 30,
+      "audioFile": "vo-harness3-full.mp3",
+      "anchors": {
+        "work_look": 681,
+        "you_in": 2166
+      },
+      "phases": [
+        {
+          "id": "full_scene",
+          "fromFrame": 0,
+          "toFrame": 2205,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "hf07",
+      "global_start_sec": 451.6,
+      "global_end_sec": 539.016,
+      "global_start_frame": 13548,
+      "global_end_frame": 16170,
+      "durationFrames": 2622,
+      "durationSeconds": 87.416,
+      "fps": 30,
+      "audioFile": "vo-harness3-full.mp3",
+      "anchors": {
+        "fastest_growing": 800,
+        "four_things": 1633,
+        "youre_early": 1427
+      },
+      "phases": [
+        {
+          "id": "two_line_reveal",
+          "fromFrame": 0,
+          "toFrame": 0,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "evolution_timeline",
+          "fromFrame": 0,
+          "toFrame": 800,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "two_teams",
+          "fromFrame": 800,
+          "toFrame": 1633,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "monday_checklist",
+          "fromFrame": 1633,
+          "toFrame": 1427,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "urgency_and_title",
+          "fromFrame": 1427,
+          "toFrame": 2622,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    }
+  ]
+}

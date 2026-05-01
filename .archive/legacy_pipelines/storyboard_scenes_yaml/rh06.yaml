@@ -1,0 +1,35 @@
+id: rh06
+audio_file: vo-rh06.mp3
+
+narration: |
+  Same task. Same model. Two harnesses.
+  The raw AI fails immediately.
+  The harnessed version gets to work. Pulls context. Calls a tool — which fails. Loop catches it, reformats, retries. Success. Three tools, one retry, twenty-two seconds. That's the harness doing the work.
+
+anchors:
+  two_harnesses: { phrase: "Two harnesses" }
+  raw_ai_fails:  { phrase: "raw AI fails" }
+  pulls_context: { phrase: "Pulls context" }
+  which_fails:   { phrase: "which fails" }
+  retries:       { phrase: "retries" }
+  doing_work:    { phrase: "doing the work" }
+
+phases:
+  - id: task_setup
+    from: start
+    to:   "@raw_ai_fails"
+  - id: left_panel_fail
+    from: "@raw_ai_fails"
+    to:   "@pulls_context"
+  - id: context_builder
+    from: "@pulls_context"
+    to:   "@which_fails"
+  - id: failure_beat
+    from: "@which_fails"
+    to:   "@retries"
+  - id: retry_success
+    from: "@retries"
+    to:   "@doing_work"
+  - id: stats_hero
+    from: "@doing_work"
+    to:   end

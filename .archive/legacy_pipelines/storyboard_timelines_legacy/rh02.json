@@ -1,0 +1,20 @@
+{
+  "id": "rh02",
+  "durationFrames": 239,
+  "durationSeconds": 7.973,
+  "fps": 30,
+  "audioFile": "vo-rh02.mp3",
+  "anchors": {
+    "lets_go": 180
+  },
+  "phases": [
+    {
+      "id": "title_card",
+      "fromFrame": 0,
+      "toFrame": 239,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

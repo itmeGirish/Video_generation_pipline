@@ -1,0 +1,535 @@
+{
+  "total_sec": 544.704,
+  "total_frames": 16341,
+  "audioFile": "vo-trading-full.mp3",
+  "scenes": [
+    {
+      "id": "td01",
+      "global_start_sec": 0.0,
+      "global_end_sec": 23.14,
+      "global_start_frame": 0,
+      "global_end_frame": 694,
+      "durationFrames": 694,
+      "durationSeconds": 23.14,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "thirty_days": 19,
+        "honest": 418,
+        "prompts": 612
+      },
+      "phases": [
+        {
+          "id": "hook_cursor",
+          "fromFrame": 0,
+          "toFrame": 418,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "calendar_callouts",
+          "fromFrame": 418,
+          "toFrame": 612,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "title_card",
+          "fromFrame": 612,
+          "toFrame": 694,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td02",
+      "global_start_sec": 23.14,
+      "global_end_sec": 50.78,
+      "global_start_frame": 694,
+      "global_end_frame": 1523,
+      "durationFrames": 829,
+      "durationSeconds": 27.64,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "not_what": 229,
+        "reading": 534
+      },
+      "phases": [
+        {
+          "id": "scratch_warning",
+          "fromFrame": 0,
+          "toFrame": 229,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "what_it_is_not",
+          "fromFrame": 229,
+          "toFrame": 534,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "what_it_is",
+          "fromFrame": 534,
+          "toFrame": 829,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td03",
+      "global_start_sec": 50.78,
+      "global_end_sec": 72.28,
+      "global_start_frame": 1523,
+      "global_end_frame": 2168,
+      "durationFrames": 645,
+      "durationSeconds": 21.5,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "ranked": 64,
+        "number_one": 400
+      },
+      "phases": [
+        {
+          "id": "four_workflows",
+          "fromFrame": 0,
+          "toFrame": 400,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "redacted_reveal",
+          "fromFrame": 400,
+          "toFrame": 645,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td04",
+      "global_start_sec": 72.28,
+      "global_end_sec": 146.82,
+      "global_start_frame": 2168,
+      "global_end_frame": 4404,
+      "durationFrames": 2236,
+      "durationSeconds": 74.54,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "use_case_four": 0,
+        "heres_prompt": 604,
+        "day_one": 1080,
+        "average_winner": 1594,
+        "this_once": 2176
+      },
+      "phases": [
+        {
+          "id": "trade_history_intro",
+          "fromFrame": 0,
+          "toFrame": 604,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "prompt_demo",
+          "fromFrame": 604,
+          "toFrame": 1080,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "blind_spot",
+          "fromFrame": 1080,
+          "toFrame": 1594,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "stats_callout",
+          "fromFrame": 1594,
+          "toFrame": 2176,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "takeaway",
+          "fromFrame": 2176,
+          "toFrame": 2236,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td05",
+      "global_start_sec": 146.82,
+      "global_end_sec": 225.34,
+      "global_start_frame": 4404,
+      "global_end_frame": 6760,
+      "durationFrames": 2356,
+      "durationSeconds": 78.52,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "use_case_three": 0,
+        "heres_prompt": 668,
+        "ten_minutes": 1105,
+        "best_part": 1334,
+        "old_keyword": 1836,
+        "daily_value": 2097
+      },
+      "phases": [
+        {
+          "id": "headlines_flood",
+          "fromFrame": 0,
+          "toFrame": 668,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "prompt_sort",
+          "fromFrame": 668,
+          "toFrame": 1105,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "replaces_scroll",
+          "fromFrame": 1105,
+          "toFrame": 1334,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "context_understanding",
+          "fromFrame": 1334,
+          "toFrame": 1836,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "comparison_stat",
+          "fromFrame": 1836,
+          "toFrame": 2097,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "closing_beat",
+          "fromFrame": 2097,
+          "toFrame": 2356,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td06",
+      "global_start_sec": 225.34,
+      "global_end_sec": 306.08,
+      "global_start_frame": 6760,
+      "global_end_frame": 9182,
+      "durationFrames": 2422,
+      "durationSeconds": 80.74,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "use_case_two": 0,
+        "stanford": 378,
+        "thirty_seconds": 848,
+        "heres_prompt": 892,
+        "look_at_what": 1479,
+        "good_research": 2250
+      },
+      "phases": [
+        {
+          "id": "ceo_speech",
+          "fromFrame": 0,
+          "toFrame": 378,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "research_proof",
+          "fromFrame": 378,
+          "toFrame": 848,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "thirty_sec_promise",
+          "fromFrame": 848,
+          "toFrame": 892,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "prompt_demo",
+          "fromFrame": 892,
+          "toFrame": 1479,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "language_shift",
+          "fromFrame": 1479,
+          "toFrame": 2250,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "nudge_takeaway",
+          "fromFrame": 2250,
+          "toFrame": 2422,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td07",
+      "global_start_sec": 306.08,
+      "global_end_sec": 413.02,
+      "global_start_frame": 9182,
+      "global_end_frame": 12390,
+      "durationFrames": 3208,
+      "durationSeconds": 106.94,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "use_case_one": 0,
+        "stress_test": 338,
+        "heres_prompt": 647,
+        "most_important": 1665,
+        "day_eleven": 1777,
+        "eight_thousand": 2203,
+        "not_because": 2302,
+        "second_opinion": 2830
+      },
+      "phases": [
+        {
+          "id": "reveal_one",
+          "fromFrame": 0,
+          "toFrame": 338,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "argue_against",
+          "fromFrame": 338,
+          "toFrame": 647,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "prompt_demo",
+          "fromFrame": 647,
+          "toFrame": 1665,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "tone_shift",
+          "fromFrame": 1665,
+          "toFrame": 1777,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "day_11_conversation",
+          "fromFrame": 1777,
+          "toFrame": 2203,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "pnl_loss",
+          "fromFrame": 2203,
+          "toFrame": 2302,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "lesson",
+          "fromFrame": 2302,
+          "toFrame": 2830,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "blackout"
+        },
+        {
+          "id": "do_this_one",
+          "fromFrame": 2830,
+          "toFrame": 3208,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td08",
+      "global_start_sec": 413.02,
+      "global_end_sec": 480.82,
+      "global_start_frame": 12390,
+      "global_end_frame": 14424,
+      "durationFrames": 2034,
+      "durationSeconds": 67.8,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "embarrassing": 55,
+        "one_nifty": 331,
+        "two_technical": 705,
+        "three_numbers": 1206,
+        "use_it_for": 1673
+      },
+      "phases": [
+        {
+          "id": "intro_failed",
+          "fromFrame": 0,
+          "toFrame": 331,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "fail_nifty_predict",
+          "fromFrame": 331,
+          "toFrame": 705,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "fail_charts",
+          "fromFrame": 705,
+          "toFrame": 1206,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "fail_numbers",
+          "fromFrame": 1206,
+          "toFrame": 1673,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "takeaway_use_for",
+          "fromFrame": 1673,
+          "toFrame": 2034,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td09",
+      "global_start_sec": 480.82,
+      "global_end_sec": 519.7,
+      "global_start_frame": 14424,
+      "global_end_frame": 15591,
+      "durationFrames": 1167,
+      "durationSeconds": 38.88,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "all_four": 0,
+        "one_thing": 618,
+        "your_edge": 1115
+      },
+      "phases": [
+        {
+          "id": "pinned_comment",
+          "fromFrame": 0,
+          "toFrame": 618,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "personalize_tweak",
+          "fromFrame": 618,
+          "toFrame": 1167,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    },
+    {
+      "id": "td10",
+      "global_start_sec": 519.7,
+      "global_end_sec": 544.704,
+      "global_start_frame": 15591,
+      "global_end_frame": 16341,
+      "durationFrames": 750,
+      "durationSeconds": 25.004,
+      "fps": 30,
+      "audioFile": "vo-trading-full.mp3",
+      "anchors": {
+        "next_week": 0,
+        "saved_you": 553
+      },
+      "phases": [
+        {
+          "id": "tease_next",
+          "fromFrame": 0,
+          "toFrame": 553,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        },
+        {
+          "id": "share_close",
+          "fromFrame": 553,
+          "toFrame": 750,
+          "enterFrames": 12,
+          "exitFrames": 12,
+          "transitionIn": "hard_cut"
+        }
+      ]
+    }
+  ]
+}

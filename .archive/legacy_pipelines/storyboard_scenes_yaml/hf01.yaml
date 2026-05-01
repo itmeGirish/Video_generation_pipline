@@ -1,0 +1,35 @@
+id: hf01
+audio_file: vo-hf01.mp3
+
+narration: |
+  One million lines of code. Shipped to production. Five months. Zero humans wrote a single line of it.
+  This actually happened. At OpenAI. Eight months ago. And almost nobody is talking about how they did it. Because the how is more interesting than the what.
+  The models didn't get magically smarter. The engineers didn't work harder. They built something around the model that made it trustworthy enough to let loose.
+  That something has a name now. It's called a harness. And building it has become the hottest new discipline in software engineering.
+  Nobody's teaching it in school yet. Nobody's hiring for it by name yet. But if you've been waiting for the next big thing in AI — the thing after prompt engineering, the thing after context engineering — this is it.
+  Stick with me for the next six minutes and you'll get it. All of it.
+
+anchors:
+  # Narration begins with the "One million lines" hook
+  almost_nobody:     { phrase: "almost nobody" }
+  name_now:          { phrase: "name now" }
+  stick_with:        { phrase: "Stick with me" }
+
+phases:
+  # Scene opens with 5-sec silent number-punch intro while narration plays in background.
+  # Terminal flood starts immediately after (narration is describing the "how").
+  - id: number_punches
+    from: start
+    to:   4.5                # 4.5 seconds in seconds (compiler resolves to 135 frames)
+  - id: terminal_flood
+    from: 4.5
+    to:   "@almost_nobody"
+  - id: engineers_watching
+    from: "@almost_nobody"
+    to:   "@name_now"
+  - id: the_question
+    from: "@name_now"
+    to:   "@stick_with"
+  - id: harness_reveal
+    from: "@stick_with"
+    to:   end

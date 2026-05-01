@@ -1,0 +1,19 @@
+id: hf06
+audio_file: vo-hf06.mp3
+
+narration: |
+  Okay. Everything I've shown you — it's not theory. People are doing this work right now.
+  And here's the thing most people are missing. These jobs don't really have a title yet. Nobody on LinkedIn is officially a harness engineer. Which means if you learn this now, before the title exists, you're early.
+  So what does the work actually look like?
+  You write AGENTS.md files that teach the agent the shape of your codebase. You build skills — small focused instruction packs the agent loads when it needs them. You set up sandboxes so the agent can run code without nuking your laptop. You wire up review agents that critique other agents' work. You write custom linters that turn your team's taste into machine-readable rules.
+  And the most important thing — every time the agent screws up, you don't just fix the bug. You fix the harness. So that exact screw-up becomes impossible. Forever. For every teammate. For every future run.
+  The keyboard work got automated. The thinking work got bigger. You in?
+
+anchors:
+  work_look:        { phrase: "work actually look like" }
+  you_in:           { phrase: "You in" }
+
+phases:
+  - id: full_scene
+    from: start
+    to:   end

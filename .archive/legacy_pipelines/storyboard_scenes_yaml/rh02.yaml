@@ -1,0 +1,13 @@
+id: rh02
+audio_file: vo-rh02.mp3
+
+narration: |
+  Seven minutes. Five parts. Three levels. Let's go.
+
+anchors:
+  lets_go: { phrase: "Let's go" }
+
+phases:
+  - id: title_card
+    from: start
+    to:   end

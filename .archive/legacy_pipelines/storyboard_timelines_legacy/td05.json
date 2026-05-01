@@ -1,0 +1,65 @@
+{
+  "id": "td05",
+  "durationFrames": 2153,
+  "durationSeconds": 71.784,
+  "fps": 30,
+  "audioFile": "vo-td05.mp3",
+  "anchors": {
+    "use_case_three": 0,
+    "heres_prompt": 611,
+    "ten_minutes": 1015,
+    "best_part": 1233,
+    "old_keyword": 1670,
+    "daily_value": 1911
+  },
+  "phases": [
+    {
+      "id": "headlines_flood",
+      "fromFrame": 0,
+      "toFrame": 611,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "prompt_sort",
+      "fromFrame": 611,
+      "toFrame": 1015,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "replaces_scroll",
+      "fromFrame": 1015,
+      "toFrame": 1233,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "context_understanding",
+      "fromFrame": 1233,
+      "toFrame": 1670,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "comparison_stat",
+      "fromFrame": 1670,
+      "toFrame": 1911,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "closing_beat",
+      "fromFrame": 1911,
+      "toFrame": 2153,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

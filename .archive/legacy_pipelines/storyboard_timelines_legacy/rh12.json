@@ -1,0 +1,21 @@
+{
+  "id": "rh12",
+  "durationFrames": 188,
+  "durationSeconds": 6.29,
+  "fps": 30,
+  "audioFile": "vo-rh12.mp3",
+  "anchors": {
+    "playlist": 48,
+    "next_one": 141
+  },
+  "phases": [
+    {
+      "id": "end_card",
+      "fromFrame": 0,
+      "toFrame": 188,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

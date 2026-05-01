@@ -1,0 +1,37 @@
+{
+  "id": "td02",
+  "durationFrames": 765,
+  "durationSeconds": 25.512,
+  "fps": 30,
+  "audioFile": "vo-td02.mp3",
+  "anchors": {
+    "not_what": 206,
+    "reading": 487
+  },
+  "phases": [
+    {
+      "id": "scratch_warning",
+      "fromFrame": 0,
+      "toFrame": 206,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "what_it_is_not",
+      "fromFrame": 206,
+      "toFrame": 487,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "what_it_is",
+      "fromFrame": 487,
+      "toFrame": 765,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

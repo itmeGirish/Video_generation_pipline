@@ -1,0 +1,20 @@
+id: rh04
+audio_file: vo-rh04.mp3
+
+narration: |
+  A harness is the workshop around the AI. The model is one power tool on the bench — incredible, but it can't build anything on its own. The harness is the bench, the jigs, the lighting, the sawdust extractor. It's what makes the tool useful.
+
+anchors:
+  power_tool:  { phrase: "power tool on the bench" }
+  makes_tool:  { phrase: "makes the tool useful" }
+
+phases:
+  - id: dictionary_card
+    from: start
+    to:   "@power_tool"
+  - id: workshop_metaphor
+    from: "@power_tool"
+    to:   "@makes_tool"
+  - id: pentagon_slots
+    from: "@makes_tool"
+    to:   end

@@ -1,0 +1,28 @@
+id: rh08
+audio_file: vo-rh08.mp3
+
+narration: |
+  Three levels.
+  Level one, the wrapper. One AI, one tool, no memory. Eighty percent of AI products on Product Hunt. Ship in a weekend.
+  Level two, the agent. What you just watched. Cursor, Claude Code, the Mumbai flight demo. Ten times harder. A hundred times more useful.
+  Level three, the system. Multiple agents, long-term memory, evaluation loops. Overkill for most. Essential for a few.
+
+anchors:
+  three_levels:   { phrase: "Three levels" }
+  level_one:      { phrase: "Level one" }
+  level_two:      { phrase: "Level two" }
+  level_three:    { phrase: "Level three" }
+
+phases:
+  - id: title_bar
+    from: start
+    to:   "@level_one"
+  - id: level_1_wrapper
+    from: "@level_one"
+    to:   "@level_two"
+  - id: level_2_agent
+    from: "@level_two"
+    to:   "@level_three"
+  - id: level_3_system
+    from: "@level_three"
+    to:   end

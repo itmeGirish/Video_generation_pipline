@@ -1,0 +1,52 @@
+id: td07
+audio_file: vo-td07.mp3
+
+narration: |
+  Use case one. The one I use most. And the one I wish someone had shown me a year ago.
+  Before every meaningful trade, I now run what I call a pre-trade stress test. I tell Claude what I'm about to do. And ask it to argue against me. Not validate me. Argue.
+  Here's the prompt. I'm about to buy this ticker at this price. My thesis. My stop loss. My target. Act as a skeptical portfolio manager. List the strongest arguments against this trade. Identify what I'm probably confirmation biased about. Ask me three questions I should be able to answer before buying. Don't be polite. Push back hard.
+  And here's the part I wasn't going to share in this video. But it's the most important beat. So I will.
+  Day eleven. Claude told me not to take this trade. I asked it to flip and argue for me instead. It did. Reluctantly. I took the trade anyway.
+  Eight thousand four hundred rupees. Gone.
+  Not because Claude was right and I was wrong. It's more subtle than that. Claude was asking the right questions. I didn't have good answers. I took the trade anyway, because I wanted to. Not because I should have.
+  It's the cheapest second opinion I've ever had. It doesn't know more than I do. It just isn't emotionally invested in me being right. If you do one thing from this video, make it this one.
+
+anchors:
+  use_case_one:     { phrase: "Use case one" }
+  stress_test:      { phrase: "stress test" }
+  heres_prompt:     { phrase: "Here's the prompt" }
+  most_important:   { phrase: "most important" }
+  day_eleven:       { phrase: "Day eleven" }
+  eight_thousand:   { phrase: "Eight thousand", alt: ["8,400", "8000", "rupees gone", "rupees. Gone", "thousand four hundred", "Gone"] }
+  not_because:      { phrase: "Not because", occurrence: 0 }
+  second_opinion:   { phrase: "second opinion" }
+
+phases:
+  - id: reveal_one
+    from: start
+    to:   "@stress_test"
+  - id: argue_against
+    from: "@stress_test"
+    to:   "@heres_prompt"
+  - id: prompt_demo
+    from: "@heres_prompt"
+    to:   "@most_important"
+  - id: tone_shift
+    from: "@most_important"
+    to:   "@day_eleven"
+    transition_in: hard_cut       # clean slate for the emotional pivot
+  - id: day_11_conversation
+    from: "@day_eleven"
+    to:   "@eight_thousand"
+    transition_in: hard_cut       # the day-11 chat needs its own canvas
+  - id: pnl_loss
+    from: "@eight_thousand"
+    to:   "@not_because"
+    transition_in: hard_cut       # the ₹8,400 slam — full impact, no bleed
+  - id: lesson
+    from: "@not_because"
+    to:   "@second_opinion"
+    transition_in: blackout       # breath beat between loss and lesson
+  - id: do_this_one
+    from: "@second_opinion"
+    to:   end

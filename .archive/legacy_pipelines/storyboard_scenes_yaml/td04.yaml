@@ -1,0 +1,34 @@
+id: td04
+audio_file: vo-td04.mp3
+
+narration: |
+  Use case four. Your own trade history. Every trader loses money. The difference between the ones who improve and the ones who don't, is whether they learn from those losses.
+  And almost nobody does. Because reviewing your own trades is boring, emotional, and honestly, painful.
+  Here's the prompt. Paste your last thirty trades. Ask Claude to find the patterns. The losing setups. The winning holding period. The single biggest mistake. Be blunt.
+  Day one of the experiment, Claude pointed out something my broker's analytics had never shown me. I was exiting winners too fast and holding losers too long. The most basic mistake in trading. And I'd been doing it for a year without noticing.
+  Average winner held: two days. Average loser held: fourteen days.
+  This one prompt. Ten minutes. Showed me my own blind spot. It's use case number four because you only need to do it once a month. But if you do nothing else from this video, at least do this once.
+
+anchors:
+  use_case_four:    { phrase: "Use case four" }
+  heres_prompt:     { phrase: "Here's the prompt" }
+  day_one:          { phrase: "Day one" }
+  average_winner:   { phrase: "Average winner" }
+  this_once:        { phrase: "do this once" }
+
+phases:
+  - id: trade_history_intro
+    from: start
+    to:   "@heres_prompt"
+  - id: prompt_demo
+    from: "@heres_prompt"
+    to:   "@day_one"
+  - id: blind_spot
+    from: "@day_one"
+    to:   "@average_winner"
+  - id: stats_callout
+    from: "@average_winner"
+    to:   "@this_once"
+  - id: takeaway
+    from: "@this_once"
+    to:   end

@@ -1,0 +1,22 @@
+{
+  "id": "hf04",
+  "durationFrames": 2290,
+  "durationSeconds": 76.344,
+  "fps": 30,
+  "audioFile": "vo-hf04.mp3",
+  "anchors": {
+    "august_2025": 315,
+    "month_one": 562,
+    "fix_harness": 1196
+  },
+  "phases": [
+    {
+      "id": "full_scene",
+      "fromFrame": 0,
+      "toFrame": 2290,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+id: rh09
+audio_file: vo-rh09.mp3
+
+narration: |
+  Everyone argues about which AI is best — Claude, Gemini, the rest. Look at the products actually making money: the model underneath is almost interchangeable. The moat isn't the model. It's everything around it.
+
+anchors:
+  making_money: { phrase: "making money" }
+  moat_isnt:    { phrase: "moat isn't", alt: ["mode isn't", "moat isnt"] }
+
+phases:
+  - id: industry_map
+    from: start
+    to:   "@moat_isnt"
+  - id: caption_reveal
+    from: "@moat_isnt"
+    to:   end

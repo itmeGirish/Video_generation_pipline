@@ -1,0 +1,54 @@
+{
+  "id": "hf01",
+  "durationFrames": 1715,
+  "durationSeconds": 57.192,
+  "fps": 30,
+  "audioFile": "vo-hf01.mp3",
+  "anchors": {
+    "almost_nobody": 451,
+    "name_now": 962,
+    "stick_with": 1566
+  },
+  "phases": [
+    {
+      "id": "number_punches",
+      "fromFrame": 0,
+      "toFrame": 135,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "terminal_flood",
+      "fromFrame": 135,
+      "toFrame": 451,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "engineers_watching",
+      "fromFrame": 451,
+      "toFrame": 962,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "the_question",
+      "fromFrame": 962,
+      "toFrame": 1566,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "harness_reveal",
+      "fromFrame": 1566,
+      "toFrame": 1715,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

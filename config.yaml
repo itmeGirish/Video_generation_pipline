@@ -1,0 +1,115 @@
+# Video Explainer Configuration
+
+# Video settings
+video:
+  resolution:
+    width: 1920
+    height: 1080
+  fps: 30
+  format: "mp4"
+  codec: "h264"
+
+# LLM settings
+llm:
+  # Provider: "claude-code" for production, "mock" for testing
+  provider: "claude-code"
+  # Model to use (when provider is not mock). Override with LLM_DEFAULT_MODEL env var.
+  model: "claude-sonnet-4-20250514"
+  # Model for fact-checking (higher quality). Override with FACTCHECK_MODEL env var.
+  factcheck_model: "claude-opus-4-5-20251101"
+  # Maximum tokens for generation
+  max_tokens: 4096
+  # Temperature for generation
+  temperature: 0.7
+
+# TTS settings
+tts:
+  provider: "edge"  # Options: "edge" (free), "elevenlabs" (needs API key), "mock" (testing)
+  # Voice ID (will be set from environment or here)
+  voice_id: null
+  # Model to use
+  model: "eleven_multilingual_v2"
+  # Output format
+  output_format: "mp3_44100_128"
+  # ElevenLabs-specific settings
+  elevenlabs:
+    base_url: "https://api.elevenlabs.io/v1"
+    default_voice_id: "21m00Tcm4TlvDq8ikWAM"  # Rachel voice
+    stability: 0.5
+    similarity_boost: 0.75
+    cost_per_character: 0.0003  # $0.30 per 1000 chars
+
+# Timeout settings (seconds unless noted)
+timeouts:
+  llm: 600
+  tts_request: 60.0
+  tts_stream: 60.0
+  tts_list_voices: 30.0
+  tts_timestamps: 120.0
+  render: 600
+  scene_generation: 300
+  refine: 600
+  narration_refine: 300
+  factcheck: 600
+  ffprobe: 10
+  ffmpeg: 60
+  screenshot_navigate: 20000  # milliseconds for Playwright
+
+# Remotion dev server settings
+remotion:
+  dev_url: "http://localhost:3000"  # Override with REMOTION_DEV_URL env var
+  default_composition: "ScenePlayer"
+
+# Speech estimation parameters
+speech:
+  words_per_minute: 170  # measured: en-US-GuyNeural averages ~170 wpm with comma pacing
+  inter_word_gap: 0.05
+  word_duration_base: 0.5
+  word_duration_length_factor: 0.5
+  word_length_reference: 6
+  voiceover_duration_buffer: 0.5
+
+# Visual theme for generated scenes
+theme:
+  background: "#0A0A1A"
+  surface: "#FFFFFF"
+  surface_alt: "#F5F5F7"
+  text: "#1A1A1A"
+  text_dim: "#555555"
+  text_muted: "#888888"
+  primary: "#0066FF"
+  primary_glow: "#0088FF"
+  secondary: "#FF6600"
+  secondary_glow: "#FF8800"
+  success: "#00AA55"
+  warning: "#F5A623"
+  error: "#E53935"
+  purple: "#8844FF"
+  cyan: "#00BCD4"
+  pink: "#E91E63"
+  lime: "#76B900"
+  border: "#E0E0E5"
+  font_family: "Inter"
+
+# Budget limits (USD)
+budget:
+  llm_per_video: 50.00
+  tts_per_video: 10.00
+  image_gen_per_video: 20.00
+  total_per_video: 100.00
+
+# Paths
+paths:
+  output_dir: "output"
+  templates_dir: "templates"
+  animations_dir: "animations"
+
+# Review settings
+review:
+  # Enable human review checkpoints
+  enabled: true
+  # Checkpoints: script, storyboard, assets, final
+  checkpoints:
+    - script
+    - storyboard
+    - final

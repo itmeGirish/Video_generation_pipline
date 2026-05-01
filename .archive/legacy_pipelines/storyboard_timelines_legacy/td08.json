@@ -1,0 +1,56 @@
+{
+  "id": "td08",
+  "durationFrames": 1908,
+  "durationSeconds": 63.6,
+  "fps": 30,
+  "audioFile": "vo-td08.mp3",
+  "anchors": {
+    "embarrassing": 53,
+    "one_nifty": 307,
+    "two_technical": 669,
+    "three_numbers": 1134,
+    "use_it_for": 1561
+  },
+  "phases": [
+    {
+      "id": "intro_failed",
+      "fromFrame": 0,
+      "toFrame": 307,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "fail_nifty_predict",
+      "fromFrame": 307,
+      "toFrame": 669,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "fail_charts",
+      "fromFrame": 669,
+      "toFrame": 1134,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "fail_numbers",
+      "fromFrame": 1134,
+      "toFrame": 1561,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "takeaway_use_for",
+      "fromFrame": 1561,
+      "toFrame": 1908,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

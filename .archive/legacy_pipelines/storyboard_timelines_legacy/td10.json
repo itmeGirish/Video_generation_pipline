@@ -1,0 +1,29 @@
+{
+  "id": "td10",
+  "durationFrames": 698,
+  "durationSeconds": 23.28,
+  "fps": 30,
+  "audioFile": "vo-td10.mp3",
+  "anchors": {
+    "next_week": 0,
+    "saved_you": 522
+  },
+  "phases": [
+    {
+      "id": "tease_next",
+      "fromFrame": 0,
+      "toFrame": 522,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "share_close",
+      "fromFrame": 522,
+      "toFrame": 698,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

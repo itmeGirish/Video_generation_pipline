@@ -1,0 +1,24 @@
+id: hf04
+audio_file: vo-hf04.mp3
+
+narration: |
+  Remember that team? Three engineers. One million lines. Five months. Here's how they actually pulled it off.
+  August 2025. Empty repo. One rule — not a single line of code can be written by a human.
+  Month one? Disaster. They moved at one-tenth the speed of writing it themselves. Every day, agents would fail. Wrong file. Wrong pattern. Wrong dependency.
+  But here's what the team did that changed everything. When the agent failed, they did not fix the code. They fixed the harness.
+  Agent forgot a convention? Add it to AGENTS.md. Agent made the same mistake twice? Write a linter that catches it automatically. Agent couldn't find a file? Give it a better search tool. Every failure became a permanent upgrade to the system.
+  Month two — they caught up. Month three — they passed themselves. Month five — one million lines. Three engineers. Zero keystrokes of code.
+  This is what harness engineering actually looks like in the wild.
+
+anchors:
+  # Declared but not yet wired to phases — future refactor.
+  august_2025:    { phrase: "August 2025", alt: ["August twenty twenty-five", "2025"] }
+  month_one:      { phrase: "Month one" }
+  fix_harness:    { phrase: "fixed the harness" }
+
+phases:
+  # Single-phase for now; component handles sub-animations internally.
+  # TODO: decompose into callback/timeline/month1/compound/stats/quote phases.
+  - id: full_scene
+    from: start
+    to:   end

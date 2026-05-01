@@ -1,0 +1,37 @@
+{
+  "id": "rh04",
+  "durationFrames": 530,
+  "durationSeconds": 17.683,
+  "fps": 30,
+  "audioFile": "vo-rh04.mp3",
+  "anchors": {
+    "power_tool": 135,
+    "makes_tool": 460
+  },
+  "phases": [
+    {
+      "id": "dictionary_card",
+      "fromFrame": 0,
+      "toFrame": 135,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "workshop_metaphor",
+      "fromFrame": 135,
+      "toFrame": 460,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "pentagon_slots",
+      "fromFrame": 460,
+      "toFrame": 530,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

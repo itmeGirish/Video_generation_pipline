@@ -1,0 +1,14 @@
+id: rh10
+audio_file: vo-rh10.mp3
+
+narration: |
+  Here's your homework. Pick one thing you do repetitively at work. Wrap one AI call and one tool around it. Use it Monday. That's a Level 1 harness. You just built one.
+
+anchors:
+  homework: { phrase: "homework" }
+  monday:   { phrase: "Monday" }
+
+phases:
+  - id: checklist
+    from: start
+    to:   end

@@ -1,0 +1,30 @@
+{
+  "id": "rh07",
+  "durationFrames": 678,
+  "durationSeconds": 22.623,
+  "fps": 30,
+  "audioFile": "vo-rh07.mp3",
+  "anchors": {
+    "real_money": 49,
+    "fail_weird": 322,
+    "fail_conf": 423
+  },
+  "phases": [
+    {
+      "id": "cracks_and_cost",
+      "fromFrame": 0,
+      "toFrame": 322,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "fail_mode_gauge",
+      "fromFrame": 322,
+      "toFrame": 678,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

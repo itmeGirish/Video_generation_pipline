@@ -1,0 +1,38 @@
+{
+  "id": "rh11",
+  "durationFrames": 540,
+  "durationSeconds": 18.015,
+  "fps": 30,
+  "audioFile": "vo-rh11.mp3",
+  "anchors": {
+    "now_you_know": 58,
+    "same_model": 348,
+    "whole_game": 490
+  },
+  "phases": [
+    {
+      "id": "loopback_demo",
+      "fromFrame": 0,
+      "toFrame": 348,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "magenta_slam",
+      "fromFrame": 348,
+      "toFrame": 490,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "hard_cut"
+    },
+    {
+      "id": "final_hold",
+      "fromFrame": 490,
+      "toFrame": 540,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

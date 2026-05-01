@@ -1,0 +1,18 @@
+id: rh07
+audio_file: vo-rh07.mp3
+
+narration: |
+  That retry just cost you real money. Agents run 10 to 50 times the cost of a single chat call. They're slower. They fail in weird ways. And when they fail, they often fail confidently — which is worse than failing loudly. Nobody builds one of these twice without learning that the hard way.
+
+anchors:
+  real_money:  { phrase: "real money" }
+  fail_weird:  { phrase: "weird ways" }
+  fail_conf:   { phrase: "fail confidently" }
+
+phases:
+  - id: cracks_and_cost
+    from: start
+    to:   "@fail_weird"
+  - id: fail_mode_gauge
+    from: "@fail_weird"
+    to:   end

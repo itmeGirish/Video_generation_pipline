@@ -1,0 +1,56 @@
+{
+  "id": "td04",
+  "durationFrames": 2068,
+  "durationSeconds": 68.952,
+  "fps": 30,
+  "audioFile": "vo-td04.mp3",
+  "anchors": {
+    "use_case_four": 0,
+    "heres_prompt": 558,
+    "day_one": 1012,
+    "average_winner": 1485,
+    "this_once": 2019
+  },
+  "phases": [
+    {
+      "id": "trade_history_intro",
+      "fromFrame": 0,
+      "toFrame": 558,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "prompt_demo",
+      "fromFrame": 558,
+      "toFrame": 1012,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "blind_spot",
+      "fromFrame": 1012,
+      "toFrame": 1485,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "stats_callout",
+      "fromFrame": 1485,
+      "toFrame": 2019,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "takeaway",
+      "fromFrame": 2019,
+      "toFrame": 2068,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

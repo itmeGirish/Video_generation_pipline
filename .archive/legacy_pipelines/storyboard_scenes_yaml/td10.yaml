@@ -1,0 +1,18 @@
+id: td10
+audio_file: vo-td10.mp3
+
+narration: |
+  Next week, I'm taking the news triage workflow and building it as an automated system. Runs every morning. Drops a summary in my Whatsapp before the market opens. From scratch. On camera. Subscribe if you want to see that.
+  And if this saved you time. Send it to one friend who's still reading forty news stories every morning.
+
+anchors:
+  next_week:        { phrase: "Next week" }
+  saved_you:        { phrase: "saved you" }
+
+phases:
+  - id: tease_next
+    from: start
+    to:   "@saved_you"
+  - id: share_close
+    from: "@saved_you"
+    to:   end

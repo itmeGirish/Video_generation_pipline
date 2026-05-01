@@ -1,0 +1,65 @@
+{
+  "id": "rh06",
+  "durationFrames": 880,
+  "durationSeconds": 29.352,
+  "fps": 30,
+  "audioFile": "vo-rh06.mp3",
+  "anchors": {
+    "two_harnesses": 99,
+    "raw_ai_fails": 189,
+    "pulls_context": 345,
+    "which_fails": 451,
+    "retries": 573,
+    "doing_work": 822
+  },
+  "phases": [
+    {
+      "id": "task_setup",
+      "fromFrame": 0,
+      "toFrame": 189,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "left_panel_fail",
+      "fromFrame": 189,
+      "toFrame": 345,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "context_builder",
+      "fromFrame": 345,
+      "toFrame": 451,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "failure_beat",
+      "fromFrame": 451,
+      "toFrame": 573,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "retry_success",
+      "fromFrame": 573,
+      "toFrame": 822,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "stats_hero",
+      "fromFrame": 822,
+      "toFrame": 880,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

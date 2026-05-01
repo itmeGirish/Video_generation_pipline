@@ -1,0 +1,20 @@
+id: td09
+audio_file: vo-td09.mp3
+
+narration: |
+  All four prompts I showed today. The post-trade journal. News triage. Earnings call analysis. And the pre-trade stress test. They're pinned in the comment below. Copy them. Adapt them to your portfolio. Use them tomorrow morning.
+  One thing I'd push you on. Don't just copy. Tweak. Claude gets sharper the more specific you are about your style, your holdings, your risk tolerance. A generic prompt gets a generic answer. A personalized one becomes your edge.
+
+anchors:
+  all_four:         { phrase: "All four" }
+  one_thing:        { phrase: "One thing" }
+  your_edge:        { phrase: "your edge" }
+
+phases:
+  - id: pinned_comment
+    from: start
+    to:   "@one_thing"
+  - id: personalize_tweak
+    from: "@one_thing"
+    to:   end
+    transition_in: hard_cut       # "Tweak." slam needs clean canvas

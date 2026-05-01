@@ -1,0 +1,29 @@
+{
+  "id": "rh09",
+  "durationFrames": 494,
+  "durationSeconds": 16.469,
+  "fps": 30,
+  "audioFile": "vo-rh09.mp3",
+  "anchors": {
+    "making_money": 210,
+    "moat_isnt": 352
+  },
+  "phases": [
+    {
+      "id": "industry_map",
+      "fromFrame": 0,
+      "toFrame": 352,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "caption_reveal",
+      "fromFrame": 352,
+      "toFrame": 494,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

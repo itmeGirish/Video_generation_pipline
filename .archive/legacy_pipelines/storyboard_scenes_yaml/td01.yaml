@@ -1,0 +1,23 @@
+id: td01
+audio_file: vo-td01.mp3
+
+narration: |
+  For the last thirty days, I didn't place a single trade without first running it past Claude four point seven.
+  Some of it worked shockingly well. Some of it failed in ways that cost me money.
+  This video is the honest debrief. What actually helps. What's a waste of time. And the three prompts I'll keep using forever.
+
+anchors:
+  thirty_days:  { phrase: "thirty days" }
+  honest:       { phrase: "honest debrief" }
+  prompts:      { phrase: "three prompts" }
+
+phases:
+  - id: hook_cursor
+    from: start
+    to:   "@honest"
+  - id: calendar_callouts
+    from: "@honest"
+    to:   "@prompts"
+  - id: title_card
+    from: "@prompts"
+    to:   end

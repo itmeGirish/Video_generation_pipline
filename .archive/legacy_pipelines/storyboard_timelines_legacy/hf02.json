@@ -1,0 +1,55 @@
+{
+  "id": "hf02",
+  "durationFrames": 2061,
+  "durationSeconds": 68.712,
+  "fps": 30,
+  "audioFile": "vo-hf02.mp3",
+  "anchors": {
+    "horse_without": 397,
+    "ai_model_horse": 711,
+    "put_formula": 1353,
+    "intelligence": 1469
+  },
+  "phases": [
+    {
+      "id": "horse_intro",
+      "fromFrame": 0,
+      "toFrame": 397,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "horse_runs",
+      "fromFrame": 397,
+      "toFrame": 711,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "horse_to_orb",
+      "fromFrame": 711,
+      "toFrame": 1353,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "formula_drop",
+      "fromFrame": 1353,
+      "toFrame": 1469,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "harness_assembly",
+      "fromFrame": 1469,
+      "toFrame": 2061,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

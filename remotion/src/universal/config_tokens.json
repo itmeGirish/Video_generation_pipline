@@ -1,0 +1,20 @@
+{
+  "bg": "#0A0A0F",
+  "surface": "#12121A",
+  "text": "#E8E8E8",
+  "text_dim": "#666680",
+  "cyan": "#00F0FF",
+  "violet": "#FF2D92",
+  "amber": "#FFB800",
+  "green": "#00FF88",
+  "red": "#FF3B3B",
+  "white": "#E8E8E8",
+  "font_display": "'Inter', sans-serif",
+  "font_mono": "'JetBrains Mono', monospace",
+  "dot_grid_opacity": 0.04,
+  "dot_grid_spacing": 40,
+  "spring_damping": 14,
+  "spring_stiffness": 180,
+  "fade_frames": 6,
+  "type_speed_cps": 22
+}

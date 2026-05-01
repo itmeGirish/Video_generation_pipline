@@ -1,0 +1,55 @@
+{
+  "id": "hf07",
+  "durationFrames": 2373,
+  "durationSeconds": 79.128,
+  "fps": 30,
+  "audioFile": "vo-hf07.mp3",
+  "anchors": {
+    "sixty_years": 341,
+    "fastest_growing": 706,
+    "four_things": 1484,
+    "youre_early": 2286
+  },
+  "phases": [
+    {
+      "id": "two_line_reveal",
+      "fromFrame": 0,
+      "toFrame": 341,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "evolution_timeline",
+      "fromFrame": 341,
+      "toFrame": 706,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "two_teams",
+      "fromFrame": 706,
+      "toFrame": 1484,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "monday_checklist",
+      "fromFrame": 1484,
+      "toFrame": 2286,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "urgency_and_title",
+      "fromFrame": 2286,
+      "toFrame": 2373,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+id: td06
+audio_file: vo-td06.mp3
+
+narration: |
+  Use case two. Earnings call transcripts. And before you say, I don't listen to those, neither do I. That's the whole point.
+  There's real academic research from Stanford showing that when executives hedge, dodge questions, or shift from confident language to vague language, their stocks tend to underperform over the following year.
+  Most of us don't have ninety minutes per company to listen for this. Claude does it in thirty seconds.
+  Here's the prompt. Paste the transcript. Ask Claude to compare the guidance language to last quarter's call. Flag every evaded question. Identify any new phrases that didn't appear last quarter. Be specific. Quote the exact phrases.
+  Look at what it caught. Last quarter the C F O said, we expect strong double digit growth. This quarter? We're comfortable with our current trajectory. That's a downgrade in confidence. Claude flagged it in thirty seconds.
+  Does that tell me to sell? No. But it tells me to pay attention before I add to a position. That's what good research feels like. Not a signal. A nudge.
+
+anchors:
+  use_case_two:     { phrase: "Use case two" }
+  stanford:         { phrase: "Stanford" }
+  thirty_seconds:   { phrase: "thirty seconds", occurrence: 0 }
+  heres_prompt:     { phrase: "Here's the prompt" }
+  look_at_what:     { phrase: "Look at what" }
+  good_research:    { phrase: "good research" }
+
+phases:
+  - id: ceo_speech
+    from: start
+    to:   "@stanford"
+  - id: research_proof
+    from: "@stanford"
+    to:   "@thirty_seconds"
+  - id: thirty_sec_promise
+    from: "@thirty_seconds"
+    to:   "@heres_prompt"
+  - id: prompt_demo
+    from: "@heres_prompt"
+    to:   "@look_at_what"
+  - id: language_shift
+    from: "@look_at_what"
+    to:   "@good_research"
+  - id: nudge_takeaway
+    from: "@good_research"
+    to:   end

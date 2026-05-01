@@ -1,0 +1,65 @@
+{
+  "id": "td06",
+  "durationFrames": 2235,
+  "durationSeconds": 74.52,
+  "fps": 30,
+  "audioFile": "vo-td06.mp3",
+  "anchors": {
+    "use_case_two": 0,
+    "stanford": 348,
+    "thirty_seconds": 766,
+    "heres_prompt": 812,
+    "look_at_what": 1358,
+    "good_research": 2073
+  },
+  "phases": [
+    {
+      "id": "ceo_speech",
+      "fromFrame": 0,
+      "toFrame": 348,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "research_proof",
+      "fromFrame": 348,
+      "toFrame": 766,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "thirty_sec_promise",
+      "fromFrame": 766,
+      "toFrame": 812,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "prompt_demo",
+      "fromFrame": 812,
+      "toFrame": 1358,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "language_shift",
+      "fromFrame": 1358,
+      "toFrame": 2073,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "nudge_takeaway",
+      "fromFrame": 2073,
+      "toFrame": 2235,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}

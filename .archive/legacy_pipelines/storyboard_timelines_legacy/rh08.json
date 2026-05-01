@@ -1,0 +1,47 @@
+{
+  "id": "rh08",
+  "durationFrames": 1207,
+  "durationSeconds": 40.249,
+  "fps": 30,
+  "audioFile": "vo-rh08.mp3",
+  "anchors": {
+    "three_levels": 0,
+    "level_one": 60,
+    "level_two": 420,
+    "level_three": 808
+  },
+  "phases": [
+    {
+      "id": "title_bar",
+      "fromFrame": 0,
+      "toFrame": 60,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "level_1_wrapper",
+      "fromFrame": 60,
+      "toFrame": 420,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "level_2_agent",
+      "fromFrame": 420,
+      "toFrame": 808,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    },
+    {
+      "id": "level_3_system",
+      "fromFrame": 808,
+      "toFrame": 1207,
+      "enterFrames": 12,
+      "exitFrames": 12,
+      "transitionIn": "crossfade"
+    }
+  ]
+}
