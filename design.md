@@ -545,7 +545,7 @@ A simple web interface for reviewing outputs at each checkpoint.
 ### Phase 1: Foundation (MVP)
 **Goal**: Generate an explainer video for "LLM Inference: Prefill vs Decode + KV Cache"
 
-**Test Content**: `/Users/prajwal/Desktop/Learning/inference/website/post.md`
+**Test Content**: a sample markdown post on LLM inference (local file, not in repo)
 - Sections covered: "The Two Phases of Inference" through "KV Cache"
 - Target duration: 3-4 minutes
 - Self-contained concepts with clear visual potential
