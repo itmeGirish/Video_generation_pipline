@@ -1,0 +1,5 @@
+{
+  "code": "const sl=interpolate(spring({frame,fps,config:{damping:12,stiffness:70}}),[0,1],[45,0],{extrapolateRight:'clamp'});\nconst op=interpolate(frame,[0,10],[0,1],{extrapolateRight:'clamp'});\nreturn React.createElement(React.Fragment,null,\n  React.createElement('div',{style:{position:'absolute',left:Math.round(width*.08),top:Math.round(height*.73),opacity:op,transform:`translateY(${sl}px)`,display:'flex',flexDirection:'column',gap:Math.round(height*.01)}},\n    React.createElement('div',{style:{color:D.cyan,fontFamily:D.font_display,fontSize:Math.round(width*.022),fontWeight:900,lineHeight:1.3}},'HAND ME THE HARD STUFF.'),\n    React.createElement('div',{style:{color:D.cyan,fontFamily:D.font_display,fontSize:Math.round(width*.022),fontWeight:900,lineHeight:1.3}},'WALK AWAY.')\n  )\n);",
+  "audio_anchor": "verified work",
+  "source_headline": "Architect runs test, seals cube VERIFIED."
+}

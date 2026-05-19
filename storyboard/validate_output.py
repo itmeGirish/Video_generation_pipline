@@ -58,10 +58,17 @@ def _tokens(text: str) -> list[str]:
 
 
 def _midpoint_brightness(mp4: Path, t_sec: float) -> float:
-    """ffmpeg signalstats YAVG at second `t_sec`. -1 on error."""
+    """ffmpeg signalstats YAVG at second `t_sec`. -1 on error.
+
+    Uses OUTPUT seek (`-i file -ss t`), not INPUT seek (`-ss t -i file`).
+    Input seek is fast but can land on the nearest preceding keyframe instead
+    of the requested timestamp; output seek decodes through and lands exactly.
+    For visibility checks across the whole video this matters at scene
+    boundaries where a black frame may sit near a keyframe.
+    """
     try:
         r = subprocess.run(
-            ["ffmpeg", "-ss", str(t_sec), "-i", str(mp4),
+            ["ffmpeg", "-i", str(mp4), "-ss", str(t_sec),
              "-vf", "signalstats,metadata=print", "-vframes", "1", "-f", "null", "-"],
             capture_output=True, text=True, timeout=30,
             creationflags=_NOWIN,
@@ -75,8 +82,10 @@ def _midpoint_brightness(mp4: Path, t_sec: float) -> float:
 def _extract_frame(mp4: Path, t_sec: float, out: Path) -> bool:
     out.parent.mkdir(parents=True, exist_ok=True)
     try:
+        # Output seek (-i file -ss t) lands exactly at t_sec rather than the
+        # nearest preceding keyframe.
         subprocess.run(
-            ["ffmpeg", "-y", "-ss", str(t_sec), "-i", str(mp4),
+            ["ffmpeg", "-y", "-i", str(mp4), "-ss", str(t_sec),
              "-vframes", "1", "-q:v", "2", str(out)],
             capture_output=True, text=True, check=True,
             creationflags=_NOWIN,
@@ -115,12 +124,30 @@ def validate_output(project_dir: Path, extract_frames: bool = False) -> int:
     total_narr_coverage = 0.0
     total_anim_present = 0
     total_anim_count = 0
+    placeholder_count = 0
+
+    # Build a sceneNumber → sceneId lookup. Previous code used zip-by-index,
+    # which assumed Step 1 never reordered or filtered scenes. If a future
+    # change ever drops an empty scene, every subsequent comparison would
+    # silently misalign. Now we look up by scene NUMBER from build_timing.json's
+    # scene_timings list (which carries the ID alongside the scene-derived data).
+    sid_by_idx: dict[int, str] = {}
+    for i, sid in enumerate(scene_ids):
+        sid_by_idx[i] = sid
 
     for i, sc in enumerate(script.scenes):
-        sid = scene_ids[i] if i < len(scene_ids) else None
+        sid = sid_by_idx.get(i)
         if sid is None:
             issues.append(f"scene {sc.number}: no scene_id (timing.json out of sync with source)")
             continue
+        # Defensive: cross-check by scene number prefix when possible.
+        # Convention: PROJECT-sNN where NN matches scene number 1-indexed.
+        expected_suffix = f"-s{sc.number:02d}"
+        if not sid.endswith(expected_suffix):
+            issues.append(
+                f"scene {sc.number}: timing.json scene_id {sid!r} does not end with "
+                f"{expected_suffix!r} — possible reorder/filter mismatch"
+            )
 
         # ── Narration coverage ──
         captions_path = project_captions_dir / f"{sid}.json"
@@ -154,6 +181,22 @@ def validate_output(project_dir: Path, extract_frames: bool = False) -> int:
                 f"scene {sc.number} ({sid}): {len(sc.animation)} animation bullets in source, "
                 f"{len(blocks)} blocks in render — fidelity broken"
             )
+
+        # Placeholder fidelity check — count blocks marked placeholder=True
+        # by visual_designer (rate-limit fallback). The bullet count gate above
+        # passes silently for placeholders, so this is the only check that
+        # surfaces the actual fidelity loss.
+        scene_placeholders = sum(1 for b in blocks if b.get("placeholder"))
+        if scene_placeholders:
+            placeholder_count += scene_placeholders
+            for j, b in enumerate(blocks):
+                if b.get("placeholder"):
+                    err = b.get("placeholder_error", "")[:120]
+                    issues.append(
+                        f"scene {sc.number} bullet {j+1} ({sid}): PLACEHOLDER block — "
+                        f"codegen failed and a generic card was rendered instead. "
+                        f"Re-run --redesign to retry. {err}"
+                    )
 
         # ── Per-bullet visibility check (frame at midpoint of each block) ──
         mp4 = RENDER_OUT / f"{sid}.mp4"
@@ -189,6 +232,8 @@ def validate_output(project_dir: Path, extract_frames: bool = False) -> int:
     print(f"\n[output] SUMMARY:")
     print(f"         narration coverage   : {avg_narr:.0f}% (avg across scenes)")
     print(f"         animation visibility : {anim_pct:.0f}% ({total_anim_present}/{total_anim_count} bullets visible)")
+    if placeholder_count:
+        print(f"         placeholder blocks   : {placeholder_count} (FIDELITY DEGRADED — re-run --redesign)")
     if extract_frames:
         print(f"         qa frames saved to   : {qa_dir.relative_to(ROOT)}")
 

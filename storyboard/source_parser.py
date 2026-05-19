@@ -30,6 +30,7 @@ class AnimationBullet:
     time_to_sec: float         # seconds within scene (e.g. 8.0)
     headline: str              # the bold ALL-CAPS-ish first sentence ("Hard cut. Plain horse silhouette.")
     body: str                  # remainder of the bullet text
+    spotlight_items: list[str] | None = None  # set when body contains [SPOTLIGHT: a | b | c]
 
 
 @dataclass
@@ -209,6 +210,10 @@ def _extract_pacing(body: str) -> str:
     return _extract_section(body, "Pacing")
 
 
+# Spotlight annotation: [SPOTLIGHT: item1 | item2 | item3] anywhere in bullet body/tail
+_SPOTLIGHT_RE = re.compile(r'\[SPOTLIGHT:\s*([^\]]+)\]', re.IGNORECASE)
+
+
 # Animation bullet pattern: top-level "- " bullets with bold time-window header
 _ANIM_BULLET = re.compile(
     r"^-\s+\*\*(\d+:\d{2})\s*[–-]\s*(\d+:\d{2})\s*[—-]\s*(.+?)\*\*\s*(.*)$",
@@ -239,11 +244,19 @@ def _extract_animation(body: str) -> list[AnimationBullet]:
         to_sec = _to_sec(*m.group(2).split(":"))
         headline = _strip_markdown(m.group(3))
 
+        # Parse [SPOTLIGHT: item1 | item2 | ...] annotation
+        spotlight_items = None
+        sm = _SPOTLIGHT_RE.search(body_full)
+        if sm:
+            spotlight_items = [item.strip() for item in sm.group(1).split('|') if item.strip()]
+            body_full = _SPOTLIGHT_RE.sub('', body_full).strip()
+
         bullets.append(AnimationBullet(
             time_from_sec=from_sec,
             time_to_sec=to_sec,
             headline=headline,
             body=body_full,
+            spotlight_items=spotlight_items,
         ))
 
     return bullets

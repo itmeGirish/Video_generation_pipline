@@ -23,42 +23,59 @@ override that.
 | Flag | What it clears | When to use |
 |------|----------------|-------------|
 | (none) | nothing — relies on hash invalidation | normal iteration after editing the structured script |
-| `--redesign` | All LLM bullet caches | LLM-emitted React was wrong, but TTS+audio are fine |
+| `--redesign` | All bullet caches | The cached React for one or more bullets is wrong; you want to re-author + re-seed every bullet |
 | `--retts` | TTS hash | SSML compiler logic changed, audio needs re-gen |
 | `--force` | designs + transcripts + TTS hash + scene renders | something is deeply wrong; nuclear option |
 | `--scene N` | one scene's render only | iterating on a single scene's visuals |
 
-To re-codegen ONE bullet only (faster than --redesign which clears all):
+> **Important:** `--redesign` and `--force` only DELETE the cache. They do NOT
+> re-author the bullet code — the pipeline never spawns `claude` CLI. After
+> deleting, re-author the affected bullets in this Claude Code session, then
+> re-seed via `seed_bullet_cache.py`, then re-run the build.
+
+**To re-author ONE bullet only:**
 ```bash
+# 1. delete the stale cache file
 rm storyboard/.cache/designs/bullet-s{N}-b{M}-*.json
+
+# 2. re-author the bullet here (read scene N bullet M from the structured script,
+#    write fresh React.createElement code + audio_anchor)
+
+# 3. seed it back
+python storyboard/seed_bullet_cache.py projects/scripts/<name>.txt \
+    --scene N --bullet M --anchor '<verbatim phrase>' --code-file path/to/code.js
+
+# 4. re-run
 python -m storyboard.build_video projects/<name>/
 ```
+
+For batch re-authoring, write a JSON bundle and pass `--json bundle.json`.
 
 ---
 
 ## Error class → fix → re-run command
 
-### Step 3 — visual codegen errors
+### Step 2 — visual codegen errors
 
-**`scene N bullet M failed after K attempts. Last error: claude CLI rate-limited`**
-→ Per-account API throttle is active. Wait 5–10 min for the throttle to clear, then re-run.
-→ The bullet's cache file isn't written (so the failed bullet automatically retries).
-→ Cached bullets in the same scene (and earlier scenes) are kept; only the failed bullet re-runs.
-→ To reduce future rate hits: set `DESIGNER_PARALLELISM=1` env var.
+**`scene N bullet M: cache miss` (CacheMissError)**
+→ The bullet has no cached design. The pipeline does NOT generate it for you —
+  re-author it here in-session and seed via `seed_bullet_cache.py`. The error
+  message shows the exact bullet body and seed command.
 
-**`scene N bullet M: response missing or empty 'code' field`**
-→ LLM returned malformed JSON. Auto-retry up to 3× with 20/40/60s backoff.
-→ If it still fails, edit the bullet body in the structured script to be more concrete
-   (vague bullets like "the reveal" give the LLM nothing to render).
-→ Re-run: source hash changes auto-invalidate that bullet's cache.
+**`scene N bullet M: cache file has empty/missing 'code' field`**
+→ Cache file is corrupted or the seed bundle wrote an empty entry. Delete the
+  cache file, re-author, re-seed.
+→ Edit the bullet body in the structured script to be more concrete (vague bullets
+   give YOU, the in-session author, nothing concrete to render either).
+→ Delete that bullet's cache file, re-author here, re-seed.
 
-**`scene N bullet M: 'code' field has no React.createElement call`**
-→ LLM emitted JSX (forbidden) or some other shape. Same fix as above.
+**`scene N bullet M: cached 'code' has no React.createElement call`**
+→ The seeded code was bad (e.g. JSX accidentally written). Re-author with
+  `React.createElement(...)` syntax only, no JSX. Re-seed.
 
-**`scene N bullet M: audio_anchor 'X' not in narration — pick a verbatim phrase`**
-→ LLM hallucinated the anchor. Auto-retry up to 3×.
-→ If persistent, the bullet body may not provide enough hints for the LLM to pick a
-   real phrase. Add explicit anchor candidates inside the bullet body.
+**`scene N bullet M: cached audio_anchor 'X' is not a verbatim phrase in narration`**
+→ The anchor you authored doesn't appear word-for-word in scene N's narration.
+  Pick 1–4 contiguous narration words and re-seed.
 
 ---
 
@@ -172,6 +189,18 @@ Did the error mention narration coverage or audio?
 
 Something else broken? → --force and start fresh.
 ```
+
+---
+
+## When build_video.py exits non-zero — decode the exit code
+
+| Exit | Meaning | What to do |
+|---|---|---|
+| 0 | success | nothing — final mp4 is in `projects/<name>/out/` |
+| 1 | fatal error (bundle failed, parser rejected, render fatal) | read the stderr; usually a structured-script syntax issue or a missing dependency |
+| 2 | render PARTIAL — some scenes failed both retries in render_scenes.mjs; stitch was aborted | re-run the same command; the resume-skip path will pick up only the missing scenes (rule 10 Class 8 atomic-write defenses ensure the successful scenes' mp4s are intact) |
+| 3 | quality gate (`--strict-anchors`) — Step 7 anchor coverage below threshold | tighten the structured script: rules 08 (audio_anchor), 15 (narration richness), 19 (bullet density). Re-run `verify_structured_script.py` to confirm before retrying. |
+| 130 | Ctrl+C — render tree killed via `taskkill /F /T /PID` | re-run the same command; the per-scene resume-skip + atomic writes ensure no corrupt mp4 was left on disk and successful scenes are preserved |
 
 ---
 

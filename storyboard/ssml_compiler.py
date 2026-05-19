@@ -31,15 +31,26 @@ SENTENCE_PAUSE_MS = os.environ.get("SSML_SENTENCE_PAUSE_MS", "250")
 
 
 def _convert_author_pauses(text: str) -> str:
-    """Convert author-supplied <pause Xs> markers in narration to SSML breaks
-    BEFORE _escape() runs. Otherwise html.escape() turns them into &lt;pause Xs&gt;
-    and the downstream strip-tags-for-edge-tts pass cannot remove them, so the
-    TTS speaks "less-than pause zero point three s greater-than" out loud.
+    """Convert author-supplied <pause Xs> markers (raw OR HTML-escaped) into
+    raw SSML <break time="Xms"/> tags.
 
-    Accepts forms: <pause 0.3s>, <pause 0.3 s>, <pause 300ms>, <pause 1>.
-    Numeric value can be float; unit defaults to seconds, 'ms' explicit.
-    Output is a literal SSML <break time="Xms"/> tag (raw '<' and '>'), which
-    the strip pipeline removes (replacing with ', ') before edge-tts sees it.
+    Why both forms: callers may run this BEFORE or AFTER `_escape`. If before,
+    the input has raw `<pause Xs>`; if after, the input has `&lt;pause Xs&gt;`
+    because `_escape` escapes the angle brackets. Earlier code ran this only
+    BEFORE escape — but `_escape` then HTML-escaped the just-created `<break>`
+    tags into `&lt;break.../&gt;`, which the TTS chunk-splitter regex
+    `<break time="(\\d+)(ms|s)"\\s*/>` does not match. Result: every author/
+    pacer pause was silently dropped (verified 2026-05-07 on difference_txt
+    scene 1: pacer inserted 5.46s of pauses, audio duration didn't change).
+
+    Calling this AFTER `_escape` handles both raw author markers (already
+    escaped to `&lt;pause Xs&gt;`) AND any pre-existing raw markers (left
+    over from upstream callers). The output is RAW `<break time="Xms"/>`
+    tags, which `_replace_emdashes` and `_add_sentence_breaks` produce too —
+    the TTS chunk-splitter finds all of them.
+
+    Accepts forms: <pause 0.3s>, <pause 0.3 s>, <pause 300ms>, <pause 1>,
+    and the HTML-escaped equivalents (&lt;pause 0.3s&gt;, etc.).
     """
     def _to_break(m: re.Match) -> str:
         val = m.group(1)
@@ -50,9 +61,9 @@ def _convert_author_pauses(text: str) -> str:
             return ""  # malformed pause → drop entirely
         ms = round(n) if unit == "ms" else round(n * 1000)
         return f'<break time="{ms}ms"/>'
-    # Handles <pause 0.3s>, <pause 0.3 s>, <pause 300ms>, <pause 1>, etc.
+    # Single regex handles both raw `<...>` and escaped `&lt;...&gt;` markers.
     return re.sub(
-        r'<\s*pause\s+([\d.]+)\s*(ms|s)?\s*>',
+        r'(?:<|&lt;)\s*pause\s+([\d.]+)\s*(ms|s)?\s*(?:>|&gt;)',
         _to_break,
         text,
         flags=re.IGNORECASE,
@@ -85,47 +96,91 @@ def _wrap_emphasis(text: str, heroes: set[str], emphasis_level: str) -> str:
 
 def _wrap_numbers(text: str) -> str:
     """Numbers (digits with optional commas/periods) get emphasis + slowdown.
-    Skips digits already inside SSML tag attributes (e.g. rate="{EMPHASIS_RATE}").
+    Skips digits inside SSML tag attributes AND digits already inside an
+    <emphasis>...</emphasis> region (which _wrap_emphasis may have produced
+    around hero words containing digits like 'GPT5'). Wrapping digits inside
+    an existing <emphasis> produces nested <emphasis>, which is invalid SSML
+    on most engines and undefined behavior on edge-tts.
     """
     parts = re.split(r"(<[^>]+>)", text)
     out: list[str] = []
+    emphasis_depth = 0
     for p in parts:
         if p.startswith("<"):
+            if re.match(r"<emphasis(\s|>)", p):
+                emphasis_depth += 1
+            elif p.startswith("</emphasis"):
+                emphasis_depth = max(0, emphasis_depth - 1)
             out.append(p)
         else:
-            out.append(re.sub(
-                r"\b(\d[\d,\.]*)\b",
-                lambda m: f'<emphasis level="strong"><prosody rate="{EMPHASIS_RATE}">{m.group(1)}</prosody></emphasis>',
-                p,
-            ))
+            if emphasis_depth > 0:
+                # Already inside an <emphasis>; don't nest another
+                out.append(p)
+            else:
+                out.append(re.sub(
+                    r"\b(\d[\d,\.]*)\b",
+                    lambda m: f'<emphasis level="strong"><prosody rate="{EMPHASIS_RATE}">{m.group(1)}</prosody></emphasis>',
+                    p,
+                ))
     return "".join(out)
 
 
 def _replace_emdashes(text: str) -> str:
-    """Em-dashes → 400ms pauses. Handle ' — ' and '—' and ' -- '."""
+    """Em-dashes → 400ms pauses. Handle ' — ', '—' (no spaces), ' -- '."""
     text = re.sub(r"\s+—\s+", f'<break time="{EM_DASH_PAUSE_MS}ms"/> ', text)
     text = re.sub(r"\s+--\s+", f'<break time="{EM_DASH_PAUSE_MS}ms"/> ', text)
+    # Also handle no-space em-dash like 'well—then' (common in compact prose)
+    text = re.sub(r"(?<=\w)—(?=\w)", f'<break time="{EM_DASH_PAUSE_MS}ms"/>', text)
     return text
 
 
 def _add_sentence_breaks(text: str) -> str:
-    """Add 250ms break after sentence-ending periods (not inside numbers like 3.14)."""
-    return re.sub(r"(?<=[a-zA-Z])\.(\s+)", rf'.<break time="{SENTENCE_PAUSE_MS}ms"/>\1', text)
+    """Add 250ms break after sentence-ending punctuation: '.', '?', '!'.
+    Allows digit-ending sentences like '...by 2024.' (previous regex required
+    a letter immediately before the period and skipped these).
+    """
+    return re.sub(
+        r"(?<=[a-zA-Z0-9])([.?!])(\s+)",
+        rf'\1<break time="{SENTENCE_PAUSE_MS}ms"/>\2',
+        text,
+    )
 
 
 def _wrap_last_sentence(text: str) -> str:
-    """Wrap final sentence in slower + slightly higher pitch (punchline delivery)."""
-    # Find the last sentence. Trailing whitespace/punctuation OK.
-    parts = re.split(r"(?<=[a-zA-Z])\.(\s*)", text.rstrip())
-    if len(parts) < 3:
+    """Wrap final sentence in slower + slightly higher pitch (punchline delivery).
+
+    Now handles single-sentence narration: if there is exactly one sentence,
+    wrap the whole thing as the punchline (the previous version returned
+    unchanged, leaving very common short scenes with NO punchline prosody)."""
+    stripped = text.rstrip()
+    if not stripped:
         return text
-    # parts = [..., last_sentence, "", trailing] — last meaningful sentence is parts[-3]
-    last = parts[-3].strip()
-    if not last or len(last) < 5:
+
+    # Try to find a final sentence by punctuation. We accept '.', '?', '!'.
+    # Walk backward from the end to find the LAST sentence-ending punctuation
+    # that is followed by whitespace or end-of-string.
+    sentence_end_re = re.compile(r"[.?!]")
+    matches = list(sentence_end_re.finditer(stripped))
+    if len(matches) <= 1:
+        # 0 or 1 sentence terminator — treat the whole thing as the punchline.
+        # Skip if too short for prosody to feel natural.
+        if len(stripped) < 5:
+            return text
+        wrapped = f'<prosody rate="{PUNCHLINE_RATE}" pitch="{PUNCHLINE_PITCH}">{stripped}</prosody>'
+        return wrapped + text[len(stripped):]
+
+    # Two or more sentences: the last sentence starts after the second-to-last
+    # punctuation. (matches[-1] is the final sentence's terminator.)
+    second_last_end = matches[-2].end()
+    final_terminator = matches[-1].end()
+    last_sentence = stripped[second_last_end:final_terminator].lstrip()
+    if not last_sentence or len(last_sentence) < 5:
         return text
-    wrapped = f'<prosody rate="{PUNCHLINE_RATE}" pitch="{PUNCHLINE_PITCH}">{last}.</prosody>'
-    rebuilt = "".join(parts[:-3]) + wrapped + parts[-1]
-    return rebuilt
+    leading_ws = stripped[second_last_end:second_last_end + len(stripped[second_last_end:]) - len(stripped[second_last_end:].lstrip())]
+    head = stripped[:second_last_end] + leading_ws
+    tail = text[len(stripped):]
+    wrapped = f'<prosody rate="{PUNCHLINE_RATE}" pitch="{PUNCHLINE_PITCH}">{last_sentence}</prosody>'
+    return head + wrapped + tail
 
 
 def _parse_pacing(pacing_text: str) -> tuple[str | None, str]:
@@ -154,11 +209,17 @@ def _parse_pacing(pacing_text: str) -> tuple[str | None, str]:
 def compile_scene(scene: Scene) -> str:
     """Compile one scene's narration to SSML body (no <speak> wrapper)."""
     rate_override, emphasis_level = _parse_pacing(scene.pacing)
-    # Author-supplied <pause Xs> markers MUST be converted to <break/> tags
-    # BEFORE escape, otherwise they get HTML-escaped to &lt;pause Xs&gt; and
-    # leak through the strip-tags pipeline → TTS speaks them literally.
-    raw = _convert_author_pauses(scene.narration.strip())
-    text = _escape(raw)
+    # Order matters:
+    #   1. _escape — HTML-escape raw narration. Author markers `<pause Xs>` and
+    #      em-dashes are turned into `&lt;pause Xs&gt;` and `—` (already safe).
+    #   2. _convert_author_pauses — converts BOTH raw `<pause Xs>` and escaped
+    #      `&lt;pause Xs&gt;` to RAW `<break time="Xms"/>` tags. RAW form is
+    #      what the TTS chunk-splitter regex matches (Strategy B in build_video.py).
+    #   3. emphasis / numbers / em-dash / sentence breaks — add additional RAW
+    #      `<break/>` and `<emphasis>` tags. They survive because they're added
+    #      AFTER escape.
+    text = _escape(scene.narration.strip())
+    text = _convert_author_pauses(text)
 
     heroes = _hero_words(scene.narration)
     text = _wrap_emphasis(text, heroes, emphasis_level)

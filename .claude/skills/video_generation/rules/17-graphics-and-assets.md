@@ -9,15 +9,17 @@ metadata:
 
 The pipeline has **no fixed `image_asset` primitive** — per-bullet codegen
 (rule 04) emits whatever React.createElement tree fits the bullet body. When
-a bullet body references an image file, the LLM authors a Remotion `<Img>`
-(or plain `<img>`) element pointing at the file via `staticFile()`.
+a bullet body references an image file, the LLM authors a Remotion `Img`
+element (never HTML `<img>`) pointing at the file via `staticFile()`.
 
 This rule covers: where to put the files, how to reference them in the
 structured script, and what file types work.
 
 ## Where files go
 
-Put assets in the project's `public/` directory (Remotion's `staticFile()` root):
+Put assets under `projects/<name>/public/`. The Remotion config sets
+`publicDir = projects/<name>/` (the whole project directory), so the
+`public/` subdirectory name **IS part of the staticFile path**:
 
 ```
 projects/<name>/
@@ -31,11 +33,17 @@ projects/<name>/
 (The script itself lives at `projects/scripts/<name>.txt` raw and
 `projects/structured_scripts/<name>.txt` canonical — not under the project folder.)
 
-`build_video.py` passes the project's `public/` as Remotion's `publicDir`, so
-any file under it is reachable from emitted bullet code via
-`staticFile("filename.ext")`. The LLM's emitted `code` field has access to
-this — `staticFile` is a Remotion runtime export and the LLM is told it can
-construct image elements.
+Since `publicDir = projects/<name>/`, the correct staticFile call is:
+
+```js
+staticFile('public/logo.png')   // → projects/<name>/public/logo.png  ✓
+staticFile('logo.png')          // → projects/<name>/logo.png          ✗ WRONG
+```
+
+**Always include the `public/` prefix in every staticFile call.**
+The LLM's emitted `code` field has access to `staticFile` as a runtime binding
+(DynamicBlock.tsx wires it in). The system prompt already shows the correct
+`staticFile('public/...')` form.
 
 ## How the writer references a graphic
 
@@ -84,20 +92,57 @@ When the bullet body names a real on-disk file (or uses `[asset: ...]`), the
 LLM typically emits something like:
 
 ```js
-const src = staticFile('logo.png');
+const src = staticFile('public/logo.png');  // publicDir=projects/<name>/ — always include subfolder
 return React.createElement('div', {
   style: { position: 'absolute', inset: 0, display: 'flex',
            alignItems: 'center', justifyContent: 'center' },
-}, React.createElement('img', {
+}, React.createElement(Img, {
   src,
   style: { maxWidth: width * 0.6, maxHeight: height * 0.7, objectFit: 'contain' },
 }));
 ```
 
+**CRITICAL:** Always use `Img` (Remotion component, available in bindings), NEVER
+the HTML string `'img'`. The HTML `<img>` element does not wait for the asset to
+load before the frame is rendered — it causes blank frames in the final mp4.
+`Img` blocks the frame render until the asset is loaded.
+
 The LLM picks scale, position, entrance animation, and any caption from the
 bullet body — there is no fixed prop schema, so the more concrete the body
 the more faithful the output. Use rule 19's layout discipline (≥60% canvas
 utilization, proportional sizing) when describing the desired footprint.
+
+## Video assets — canDecode check required
+
+If a bullet references a video file (`.mp4`, `.webm`, `.mov`), the browser
+(Chromium headless) must be able to decode it before Remotion can render it.
+Use `canDecode` from the remotion skill (`can-decode.md`) to validate first:
+
+```ts
+import { Input, ALL_FORMATS, UrlSource } from "mediabunny";
+
+export const canDecode = async (src: string): Promise<boolean> => {
+  const input = new Input({
+    formats: ALL_FORMATS,
+    source: new UrlSource(src, { getRetryDelay: () => null }),
+  });
+  try { await input.getFormat(); } catch { return false; }
+  const videoTrack = await input.getPrimaryVideoTrack();
+  if (videoTrack && !(await videoTrack.canDecode())) return false;
+  const audioTrack = await input.getPrimaryAudioTrack();
+  if (audioTrack && !(await audioTrack.canDecode())) return false;
+  return true;
+};
+```
+
+**When to call it:** In `validate_pipeline.py` or as a pre-render check before
+passing the video asset path to the LLM-emitted code. If `canDecode` returns
+false, swap the asset for a still frame or remove the bullet rather than letting
+the render silently produce blank frames.
+
+**Why it matters:** Remotion renders in headless Chromium. Codec support depends
+on the Chromium build. H.264 in mp4 containers works reliably. AV1, HEVC, and
+ProRes may fail silently — the frame renders black with no build error.
 
 ## Limits
 

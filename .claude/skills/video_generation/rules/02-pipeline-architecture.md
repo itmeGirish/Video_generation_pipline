@@ -21,9 +21,10 @@ projects/scripts/<name>.txt
     │
     ▼
 [STEP 0.5] script_converter.py  (or rule 18 hand-conversion)
-    │  Strips preamble, normalizes em-dashes, removes HTML entities
-    │  Stage 1: regex (fast). Stage 2: LLM fallback if regex output isn't parseable.
-    │  Writes canonical output to projects/structured_scripts/<name>.txt
+    │  Strips preamble, normalizes em-dashes, removes HTML entities — REGEX ONLY.
+    │  The LLM fallback was REMOVED — no `claude` CLI subprocess is spawned anywhere.
+    │  If regex normalization fails, the converter raises and the user must hand-convert
+    │  per rule 18 to projects/structured_scripts/<name>.txt.
     │  (raw scripts in projects/scripts/ are NEVER modified — read-only input)
     │
     ▼
@@ -33,16 +34,17 @@ projects/scripts/<name>.txt
     │  Each AnimationBullet: { time_from_sec, time_to_sec, headline, body }
     │
     ▼
-[STEP 2] visual_designer.py  (calls Claude CLI via subprocess)
-    │  ONE LLM call PER BULLET (not per scene) — emits a JS function body
-    │  that returns React.createElement(...). DynamicBlock.tsx compiles +
-    │  invokes it at render time. There is NO fixed primitive registry.
+[STEP 2] visual_designer.py  (CACHE LOOKUP ONLY — no subprocess)
+    │  Per-bullet React.createElement code is authored UPSTREAM by the active
+    │  Claude Code session reading projects/structured_scripts/<name>.txt directly.
+    │  Authored bundles are seeded via:
+    │    python storyboard/seed_bullet_cache.py <script_path> --json bundle.json
+    │  This step does pure cache lookup; cache miss raises CacheMissError and aborts.
     │  Each VisualBlock: { code, audio_anchor, time_from_sec, time_to_sec, source_headline }
-    │  Cached per bullet: sha256(narration + bullet idx + headline+body + design_tokens + prompt-version)
+    │  Cache key: sha256(narration + f"{bullet_idx}|{time_from_sec}-{time_to_sec}" + f"{headline}|{body}" + design_tokens(sorted) + 'prompt-v13-per-bullet')
     │  Cache file: storyboard/.cache/designs/bullet-s{scene}-b{idx}-{hash16}.json
-    │  Concurrency: DESIGNER_PARALLELISM env (default 2) workers.
-    │  Retries: 3× normal (20/40/60s), up to 6× rate-limit (60/180/300s).
-    │  FIDELITY GATE: every bullet must succeed before the scene is committed.
+    │  Concurrency: DESIGNER_PARALLELISM env (default 8) — pure disk reads, no API calls.
+    │  FIDELITY GATE: every bullet must be in cache; missing entries fail loud, no placeholder.
     │
     ▼
 [STEP 3] ssml_compiler.py  (ACTIVE — see rule 05)
@@ -76,10 +78,15 @@ projects/scripts/<name>.txt
     │
     │  For each scene, for each VisualBlock:
     │    framesFrom resolved by audio_anchor lookup OR fallback time_from_sec
-    │    framesTo = next block's framesFrom (no gaps, no overlaps)
+    │    framesTo = next block's framesFrom (no gaps, no overlaps in JSON)
     │    All seconds→frames conversions use round() (NOT int() — int truncation
     │    accumulates 1-frame drift per scene; round() drift is ±0.5 frame per
     │    scene which cancels out across the whole video).
+    │  NOTE on framesTo: at RUNTIME (UniversalScene.tsx) every block's
+    │    <Sequence durationInFrames> is set to (sceneEnd - framesFrom), NOT
+    │    (framesTo - framesFrom). Blocks STACK additively to scene end —
+    │    framesTo is used only by validators + audio_anchor sequencing math.
+    │    See rule 04 § "Additive-layering contract" + rule 09 Layer 1.
     │
     │  Writes projects/<name>/scenes/<scene-id>.json     (CANONICAL — owned by project)
     │  Writes projects/<name>/captions/<scene-id>.json   (CANONICAL — word timestamps relative to scene)
@@ -105,28 +112,61 @@ projects/scripts/<name>.txt
     │  Hard-fails BEFORE the slow webpack bundle (1s vs 30s).
     │
     ▼
-[STEP 9] Remotion render (bundle once, all scenes)
+[STEP 8.6] layout_validator.py  (rule 19 §7)
+    │  For each bullet, evaluates the React.createElement code in a Node stub
+    │  environment at sample post-entrance frames (45/65/85/97% of duration),
+    │  walks the tree, extracts every position:'absolute' element's (x, y, w, h),
+    │  and checks for OUT_OF_BOUNDS (with 80px slack, transform/low-opacity
+    │  ignored) + CROSS_BULLET_OVERLAP (additive-layering aware).
+    │  Reports violations; --strict-layout makes it a hard error,
+    │  --skip-layout disables the step for fast iteration.
+    │
+    ▼
+[STEP 9] Remotion render (bundle once, all scenes)  — Remotion v4.0.455+
     │  node render_scenes.mjs <id1> <id2> ... <idN>
     │  Webpack bundles ONCE, then renders each scene silent → remotion/out/<sid>.mp4
-    │  RESUME LOGIC: skip render if scene JSON unchanged (mtime check)
+    │  RESUME LOGIC: skip render if scene JSON unchanged AND _mp4_is_healthy()
+    │  BROWSER REUSE: openBrowser('chrome', { gl:'swangle' }) shared across all
+    │    scenes via puppeteerInstance; recycled every 5 scenes (memory bound)
+    │  HUNG-RENDER WATCHDOG: 120s without onProgress → cancelSignal fires →
+    │    retry attempt; browser is recycled before retry
+    │  PER-SCENE RETRY: 1 initial + 1 retry (2s backoff); failed-mp4 cleanup
+    │    between attempts; partial failure → exit code 2 (vs 1=fatal)
+    │  ATOMIC WRITES: <sid>.mp4.inprogress → os.replace (Ctrl+C-safe)
+    │  Ctrl+C handling (parent build_video.py): subprocess.Popen +
+    │    CREATE_NEW_PROCESS_GROUP + taskkill /F /T on KeyboardInterrupt
+    │    (Windows tree-kill of node + every Chromium it spawned); exit 130
     │
     ▼
 [STEP 9.5] visual_qa.py
-    │  Post-render: midpoint frame brightness per scene + primitive type distribution.
-    │  WARN if a scene's middle frame is black (empty render) or one type dominates >60%.
+    │  Post-render: midpoint frame brightness per scene.
+    │  WARN if a scene's middle frame is black (empty render).
     │
     ▼
-[STEP 10] ffmpeg stitch + mux
+[STEP 10] Final stitch — three modes (config.yaml stitch.mode):
+    │
+    │  ── MODE A: remotion_master (RECOMMENDED — see rule 09 Layer 4) ──────
+    │  Single Remotion render produces audio+visuals together. NO ffmpeg.
+    │     subprocess: node render_master.mjs <output>
+    │       env: PROJECT, MASTER_AUDIO_FILE, VIDEO_FPS/WIDTH/HEIGHT,
+    │            MASTER_TRANSITION_FRAMES (= stitch.crossfade_frames)
+    │     The master composition (remotion/src/MasterComposition.tsx) chains
+    │     per-scene mp4s via <TransitionSeries> + master <Audio>. Frame-accurate
+    │     by construction; avoids the ffmpeg chained-xfade drift class of bug.
+    │     Atomic: <output>.mp4.inprogress → health-check → os.replace.
+    │
+    │  ── MODE B: hard_cut (default) / crossfade (legacy ffmpeg) ──────────
     │  (1) Re-encode each scene mp4 to a clean stream (libx264, -an, fixed fps).
+    │      Atomic: <sid>_clean.mp4.inprogress → os.replace (rule 10 Class 8).
     │      Quality knobs from config.yaml stitch.scene_clean_preset / scene_clean_crf.
-    │  (2) Concatenate via filter_complex concat=n=N:v=1:a=0 (NOT -f concat demuxer —
-    │      the demuxer copies source PTS which can drift; filter_complex re-times
-    │      from frame 0).
-    │  (3) Mux the full TTS mp3 onto the concat'd video. NO -shortest flag —
-    │      total video frame count was computed in Step 7 to equal total audio
-    │      duration exactly, so neither stream needs truncating.
+    │  (2) Concatenate via filter_complex concat=n=N:v=1:a=0 (hard_cut)
+    │      OR chained xfade filters (crossfade — has known timeline-drift bug,
+    │      see rule 09 Layer 4).
+    │  (3) Mux the full TTS mp3 onto the concat'd video. NO -shortest flag.
+    │      Atomic: <output>.mp4.inprogress → health-check → os.replace.
     │  Quality knobs from config.yaml stitch.final_preset / final_crf / audio_bitrate.
-    │  Output: projects/<name>/out/<output_name>.mp4
+    │
+    │  Output (both modes): projects/<name>/out/<output_name>.mp4
     │
     ▼
 [STEP 10.5] validate_output.py
@@ -158,19 +198,21 @@ projects/scripts/<name>.txt
 
 | Cache | Key | Location |
 |-------|-----|----------|
-| Visual codegen (per bullet) | sha256(narration + bullet idx + headline+body + design_tokens + prompt-version) | `storyboard/.cache/designs/bullet-s{scene}-b{idx}-{hash16}.json` |
+| Visual codegen (per bullet) | sha256(narration + f"{bullet_idx}\|{time_from_sec}-{time_to_sec}" + f"{headline}\|{body}" + design_tokens(sorted) + b"prompt-v13-per-bullet") | `storyboard/.cache/designs/bullet-s{scene}-b{idx}-{hash16}.json` |
 | Whisper transcript | sha256(audio) | `storyboard/.cache/transcript-<hash>.json` |
 | TTS audio | sha256(full SSML) | hash marker file in `projects/<name>/audio/` |
 
 ## When a step fails
 
 - **Step 1 fails**: structured script has wrong format → check SCENE headers, Narration/Animation blocks in `projects/structured_scripts/<name>.txt`
-- **Step 2 fails (rate-limit)**: Claude CLI returns exit 1 with empty stderr → designer auto-backs off (60/180/300s × 6); reduce `DESIGNER_PARALLELISM` env if it persists
-- **Step 2 fails (validation)**: emitted `code` lacks `React.createElement` / `audio_anchor` not in narration → delete that bullet's cache file and rerun (rule 04)
+- **Step 2 fails (cache miss)**: bullet not yet authored → error message names the bullet, body, and the seed command. Author the bullet here in-session, write a JSON bundle, run `seed_bullet_cache.py`, re-run the build (rule 04)
+- **Step 2 fails (validation)**: cached `code` lacks `React.createElement` / `audio_anchor` not in narration → delete that bullet's cache file, re-author here, re-seed (rule 04)
 - **Step 4 fails**: edge-tts network error → retry, or check VOICE in config.yaml
 - **Step 5 fails**: faster-whisper OOM → use smaller model ("tiny" instead of "base")
 - **Step 9 fails**: Remotion crash → check scene JSON `code` field; runtime errors render a red `BLOCK RUNTIME ERROR` frame instead of crashing
-- **Step 10 fails**: ffmpeg concat error → check all scene files exist, check re-encode step
+- **Step 10 fails**:
+  - `remotion_master` mode → `node render_master.mjs` exit code != 0; check stdout/stderr in build log. Common causes: master audio file not in `projects/<name>/audio/`, scene mp4 missing from `remotion/out/`, master composition id mismatch (must be `<project-id-with-hyphens>-master`).
+  - ffmpeg modes → ffmpeg concat/xfade error → check all scene files exist, check re-encode step.
 
 ## Orchestrator code
 

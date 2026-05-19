@@ -1,0 +1,10 @@
+const NARRATION_TEXT = "So what do you actually do with all of this? Because if you're building anything with AI in production, the answer isn't 'pick GPT' or 'pick Claude.' The answer is use both. And let me show you exactly how.";
+const fadeIn=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
+const marbleY=interpolate(frame,[8,30],[-Math.round(height*.05),Math.round(height*.12)],{extrapolateRight:'clamp'});
+return React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,opacity:fadeIn}},
+  React.createElement('div',{style:{position:'absolute',top:Math.round(height*.03),left:Math.round(width*.03),color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(width*.008),opacity:.6}},'S7'),
+  React.createElement('div',{style:{position:'absolute',top:Math.round(height*.06),left:'50%',transform:'translateX(-50%)',color:D.white,fontFamily:D.font_display,fontSize:Math.round(width*.018),fontWeight:900,opacity:interpolate(frame,[8,20],[0,1],{extrapolateRight:'clamp'})}},'THE $0.24 PIPELINE'),
+  React.createElement('div',{style:{position:'absolute',left:Math.round(width*.48),top:marbleY,width:Math.round(width*.022),height:Math.round(width*.022),borderRadius:'50%',backgroundColor:D.white,boxShadow:'0 0 14px '+D.white}}),
+  React.createElement('div',{style:{position:'absolute',left:Math.round(width*.44),top:Math.round(height*.14),right:Math.round(width*.44),height:2,backgroundColor:D.text_dim,opacity:.3}}),
+  React.createElement('div',{style:{position:'absolute',left:'50%',top:Math.round(height*.18),transform:'translateX(-50%)',color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(width*.009),opacity:interpolate(frame,[20,32],[0,1],{extrapolateRight:'clamp'}),textAlign:'center'}},'LEGAL QUESTION  →  GPT-5.5  →  CLAUDE  →  VERIFIED ANSWER')
+);

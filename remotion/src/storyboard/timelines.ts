@@ -23,8 +23,8 @@ export type SceneTimeline = {
 export const TIMELINES: Record<string, SceneTimeline> = {
   "chat-5-5-s01": {
     "id": "chat-5-5-s01",
-    "durationFrames": 1489,
-    "durationSeconds": 49.633,
+    "durationFrames": 1172,
+    "durationSeconds": 39.067,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -32,7 +32,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1489,
+        "toFrame": 1172,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -41,8 +41,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s02": {
     "id": "chat-5-5-s02",
-    "durationFrames": 1119,
-    "durationSeconds": 37.3,
+    "durationFrames": 854,
+    "durationSeconds": 28.467,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -50,7 +50,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1119,
+        "toFrame": 854,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -59,8 +59,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s03": {
     "id": "chat-5-5-s03",
-    "durationFrames": 2874,
-    "durationSeconds": 95.8,
+    "durationFrames": 2121,
+    "durationSeconds": 70.7,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -68,7 +68,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2874,
+        "toFrame": 2121,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -77,8 +77,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s04": {
     "id": "chat-5-5-s04",
-    "durationFrames": 4649,
-    "durationSeconds": 154.967,
+    "durationFrames": 3379,
+    "durationSeconds": 112.633,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -86,7 +86,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 4649,
+        "toFrame": 3379,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -95,8 +95,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s05": {
     "id": "chat-5-5-s05",
-    "durationFrames": 7701,
-    "durationSeconds": 256.7,
+    "durationFrames": 5711,
+    "durationSeconds": 190.367,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -104,7 +104,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 7701,
+        "toFrame": 5711,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -113,8 +113,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s06": {
     "id": "chat-5-5-s06",
-    "durationFrames": 5534,
-    "durationSeconds": 184.467,
+    "durationFrames": 4132,
+    "durationSeconds": 137.733,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -122,7 +122,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 5534,
+        "toFrame": 4132,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -131,8 +131,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s07": {
     "id": "chat-5-5-s07",
-    "durationFrames": 3402,
-    "durationSeconds": 113.4,
+    "durationFrames": 2868,
+    "durationSeconds": 95.6,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -140,7 +140,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 3402,
+        "toFrame": 2868,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -149,8 +149,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s08": {
     "id": "chat-5-5-s08",
-    "durationFrames": 4299,
-    "durationSeconds": 143.3,
+    "durationFrames": 3544,
+    "durationSeconds": 118.133,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -158,7 +158,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 4299,
+        "toFrame": 3544,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -167,8 +167,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s09": {
     "id": "chat-5-5-s09",
-    "durationFrames": 11,
-    "durationSeconds": 0.367,
+    "durationFrames": 3475,
+    "durationSeconds": 115.833,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -176,7 +176,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 11,
+        "toFrame": 3475,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
@@ -185,8 +185,8 @@ export const TIMELINES: Record<string, SceneTimeline> = {
   },
   "chat-5-5-s10": {
     "id": "chat-5-5-s10",
-    "durationFrames": 8863,
-    "durationSeconds": 295.433,
+    "durationFrames": 2868,
+    "durationSeconds": 95.6,
     "fps": 30,
     "audioFile": "vo-chat_5_5-full.mp3",
     "anchors": {},
@@ -194,7 +194,7 @@ export const TIMELINES: Record<string, SceneTimeline> = {
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 8863,
+        "toFrame": 2868,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"

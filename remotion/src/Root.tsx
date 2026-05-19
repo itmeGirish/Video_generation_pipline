@@ -3,6 +3,7 @@ import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
 import { loadFont as loadJetBrainsMono } from "@remotion/google-fonts/JetBrainsMono";
 import { makeUniversalScenePreview } from "./sequences/UniversalScenePreview";
 import { TIMELINES } from "./storyboard/timelines";
+import { registerMasterComposition } from "./MasterComposition";
 
 // Video dimensions from environment or defaults (match config.yaml)
 const VIDEO_WIDTH = Number(process.env.VIDEO_WIDTH) || 1920;
@@ -50,6 +51,13 @@ export const RemotionRoot: React.FC = () => {
           height={VIDEO_HEIGHT}
         />
       ))}
+      {/*
+        Master composition: stitches per-scene mp4s + master audio in ONE
+        Remotion render via <TransitionSeries>. Replaces ffmpeg stitch step
+        (Step 10). Frame-accurate sync by construction.
+        See remotion/src/MasterComposition.tsx and rules/09 Layer 4.
+      */}
+      {registerMasterComposition()}
     </>
   );
 };

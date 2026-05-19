@@ -44,12 +44,112 @@ COMPOSITION_ID_RE = re.compile(r"^[a-zA-Z0-9-]+$")
 
 
 def _read_timelines_ids() -> set[str]:
-    """Extract scene IDs from timelines.ts (keys at top level of TIMELINES object)."""
+    """Extract scene IDs from timelines.ts (TOP-LEVEL keys of the TIMELINES object).
+
+    Uses brace-walking on the text starting at `export const TIMELINES = {`.
+    The previous regex `"([a-zA-Z0-9-]+)":\\s*\\{` matched nested object keys
+    too (e.g. `phases: [{ "id": "scene", … }]` → "scene" gets harvested as a
+    phantom scene ID). Walking braces only collects keys at brace-depth 0
+    inside TIMELINES.
+    """
     if not TIMELINES_TS.exists():
         return set()
     text = TIMELINES_TS.read_text(encoding="utf-8")
-    # Each entry looks like:  "<project>-s01": {
-    return set(re.findall(r'"([a-zA-Z0-9-]+)":\s*\{', text))
+    m = re.search(r"export\s+const\s+TIMELINES[^=]*=\s*\{", text)
+    if not m:
+        return set()
+    start = m.end()
+    depth = 1
+    in_str = False
+    escape = False
+    end = -1
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escape:
+            escape = False
+            continue
+        if ch == "\\":
+            escape = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end = i
+                break
+    if end < 0:
+        return set()
+    body = text[start:end]
+    # Top-level entry pattern: at depth 1 (inside TIMELINES), find `"id": {`
+    # We re-walk the body and collect quoted keys followed by colon-then-`{`
+    # only when current depth == 1 (i.e., we're at the top level of TIMELINES).
+    ids: set[str] = set()
+    depth = 1
+    in_str = False
+    escape = False
+    i = 0
+    while i < len(body):
+        ch = body[i]
+        if escape:
+            escape = False
+            i += 1; continue
+        if ch == "\\":
+            escape = True
+            i += 1; continue
+        if ch == '"' and not in_str and depth == 1:
+            # Try to read a key: "name": {
+            end_quote = body.find('"', i + 1)
+            if end_quote == -1:
+                break
+            key = body[i + 1:end_quote]
+            tail = body[end_quote + 1:end_quote + 30]
+            tail_m = re.match(r"\s*:\s*\{", tail)
+            if tail_m and re.match(r"[a-zA-Z0-9-]+$", key):
+                ids.add(key)
+            i = end_quote + 1
+            continue
+        if ch == '"':
+            in_str = not in_str
+        elif not in_str and ch == "{":
+            depth += 1
+        elif not in_str and ch == "}":
+            depth -= 1
+        i += 1
+    return ids
+
+
+def _balanced_block(text: str, start_idx: int) -> str | None:
+    """Return the substring between `{` at start_idx and its matching `}`.
+    None if unbalanced. Handles nested braces (single `[^}]*` regex cannot)."""
+    if start_idx >= len(text) or text[start_idx] != "{":
+        return None
+    depth = 0
+    in_str = False
+    escape = False
+    for i in range(start_idx, len(text)):
+        ch = text[i]
+        if escape:
+            escape = False; continue
+        if ch == "\\":
+            escape = True; continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start_idx + 1:i]
+    return None
 
 
 def _check_design_tokens_match() -> list[str]:
@@ -58,10 +158,16 @@ def _check_design_tokens_match() -> list[str]:
     if not DESIGN_TS.exists() or not TOKENS_JSON.exists():
         return ["design.ts or config_tokens.json missing"]
     dt_text = DESIGN_TS.read_text(encoding="utf-8")
-    m = re.search(r"type\s+DesignTokens\s*=\s*\{([^}]*)\}", dt_text, re.DOTALL)
+    m = re.search(r"type\s+DesignTokens\s*=\s*", dt_text)
     if not m:
         return ["cannot parse DesignTokens from design.ts"]
-    required = set(re.findall(r"(\w+)\s*:\s*\w+", m.group(1)))
+    brace_start = dt_text.find("{", m.end())
+    if brace_start < 0:
+        return ["DesignTokens has no '{' after the type alias"]
+    block = _balanced_block(dt_text, brace_start)
+    if block is None:
+        return ["DesignTokens has unbalanced braces (nested object literals confused the previous regex)"]
+    required = set(re.findall(r"(\w+)\s*:\s*\w+", block))
     actual = set(json.loads(TOKENS_JSON.read_text(encoding="utf-8")).keys())
     missing = required - actual
     if missing:

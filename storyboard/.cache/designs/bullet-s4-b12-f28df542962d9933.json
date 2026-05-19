@@ -1,0 +1,5 @@
+{
+  "code": "const bgOp=interpolate(frame,[0,10],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});\nconst headerOp=interpolate(frame,[10,22],[0,1],{extrapolateRight:'clamp'});\nreturn React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,opacity:bgOp}},\n  React.createElement('div',{style:{position:'absolute',top:Math.round(height*.18),left:'50%',transform:'translateX(-50%)',color:D.white,fontFamily:D.font_display,fontSize:Math.round(width*.022),fontWeight:900,opacity:headerOp,textAlign:'center'}},\n    'WHAT DEVELOPERS SAY')\n);",
+  "audio_anchor": "Theo Browne",
+  "source_headline": "\"WHAT DEVELOPERS SAY\" header."
+}

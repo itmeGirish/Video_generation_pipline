@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Process python,ffmpeg -ErrorAction SilentlyContinue)",
+      "Bash(python -c \"import storyboard.source_parser as m; print\\(dir\\(m\\)\\)\")",
+      "Bash(ffmpeg -i c:/Girish/Fundamental_Projects/video_generation/video_explainer/remotion/out/chat-5-5-s01.mp4 -vf \"select=eq\\(n\\\\,699\\)\" -vframes 1 C:/tmp/frame_s01_b4.png -y)",
+      "Bash(ffmpeg -i c:/Girish/Fundamental_Projects/video_generation/video_explainer/remotion/out/chat-5-5-s01.mp4 -vf \"select=eq\\(n\\\\,807\\)\" -vframes 1 C:/tmp/frame_s01_b5.png -y)",
+      "Bash(node render_scenes.mjs chat-5-5-s03)"
+    ]
+  }
+}

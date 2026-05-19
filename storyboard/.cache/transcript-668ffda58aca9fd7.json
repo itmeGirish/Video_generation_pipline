@@ -1,0 +1,3662 @@
+[
+  {
+    "word": "You're",
+    "start": 0.0,
+    "end": 0.18
+  },
+  {
+    "word": "spending",
+    "start": 0.18,
+    "end": 0.38
+  },
+  {
+    "word": "too",
+    "start": 0.38,
+    "end": 0.6
+  },
+  {
+    "word": "much",
+    "start": 0.6,
+    "end": 0.82
+  },
+  {
+    "word": "on",
+    "start": 0.82,
+    "end": 1.0
+  },
+  {
+    "word": "AI.",
+    "start": 1.0,
+    "end": 1.22
+  },
+  {
+    "word": "If",
+    "start": 1.94,
+    "end": 2.24
+  },
+  {
+    "word": "you're",
+    "start": 2.24,
+    "end": 2.36
+  },
+  {
+    "word": "using",
+    "start": 2.36,
+    "end": 2.6
+  },
+  {
+    "word": "one",
+    "start": 2.6,
+    "end": 2.94
+  },
+  {
+    "word": "model",
+    "start": 2.94,
+    "end": 3.32
+  },
+  {
+    "word": "for",
+    "start": 3.32,
+    "end": 3.58
+  },
+  {
+    "word": "everything.",
+    "start": 3.58,
+    "end": 4.18
+  },
+  {
+    "word": "Code,",
+    "start": 5.2,
+    "end": 5.4
+  },
+  {
+    "word": "drafts,",
+    "start": 5.88,
+    "end": 6.28
+  },
+  {
+    "word": "agents,",
+    "start": 6.56,
+    "end": 6.8
+  },
+  {
+    "word": "fax",
+    "start": 7.1,
+    "end": 7.3
+  },
+  {
+    "word": "checks.",
+    "start": 7.3,
+    "end": 7.58
+  },
+  {
+    "word": "You're",
+    "start": 8.22,
+    "end": 8.82
+  },
+  {
+    "word": "paying",
+    "start": 8.82,
+    "end": 9.08
+  },
+  {
+    "word": "four",
+    "start": 9.08,
+    "end": 9.56
+  },
+  {
+    "word": "times",
+    "start": 9.56,
+    "end": 9.88
+  },
+  {
+    "word": "what",
+    "start": 9.88,
+    "end": 10.1
+  },
+  {
+    "word": "you",
+    "start": 10.1,
+    "end": 10.2
+  },
+  {
+    "word": "should.",
+    "start": 10.2,
+    "end": 10.5
+  },
+  {
+    "word": "Here's",
+    "start": 11.24,
+    "end": 11.6
+  },
+  {
+    "word": "the",
+    "start": 11.6,
+    "end": 11.7
+  },
+  {
+    "word": "routing",
+    "start": 11.7,
+    "end": 12.02
+  },
+  {
+    "word": "layer",
+    "start": 12.02,
+    "end": 12.34
+  },
+  {
+    "word": "that",
+    "start": 12.34,
+    "end": 12.54
+  },
+  {
+    "word": "fixes",
+    "start": 12.54,
+    "end": 12.96
+  },
+  {
+    "word": "it.",
+    "start": 12.96,
+    "end": 13.26
+  },
+  {
+    "word": "Eight",
+    "start": 13.92,
+    "end": 14.18
+  },
+  {
+    "word": "minutes.",
+    "start": 14.18,
+    "end": 14.44
+  },
+  {
+    "word": "No",
+    "start": 15.36,
+    "end": 15.66
+  },
+  {
+    "word": "fluff.",
+    "start": 15.66,
+    "end": 15.92
+  },
+  {
+    "word": "Before",
+    "start": 16.48,
+    "end": 16.68
+  },
+  {
+    "word": "the",
+    "start": 16.68,
+    "end": 16.84
+  },
+  {
+    "word": "routing",
+    "start": 16.84,
+    "end": 17.12
+  },
+  {
+    "word": "layer",
+    "start": 17.12,
+    "end": 17.42
+  },
+  {
+    "word": "makes",
+    "start": 17.42,
+    "end": 17.72
+  },
+  {
+    "word": "sense,",
+    "start": 17.72,
+    "end": 18.1
+  },
+  {
+    "word": "you",
+    "start": 18.68,
+    "end": 18.8
+  },
+  {
+    "word": "need",
+    "start": 18.8,
+    "end": 18.94
+  },
+  {
+    "word": "to",
+    "start": 18.94,
+    "end": 19.06
+  },
+  {
+    "word": "know",
+    "start": 19.06,
+    "end": 19.28
+  },
+  {
+    "word": "who",
+    "start": 19.28,
+    "end": 19.5
+  },
+  {
+    "word": "you're",
+    "start": 19.5,
+    "end": 19.6
+  },
+  {
+    "word": "routing",
+    "start": 19.6,
+    "end": 19.84
+  },
+  {
+    "word": "between.",
+    "start": 19.84,
+    "end": 20.18
+  },
+  {
+    "word": "Two",
+    "start": 21.04,
+    "end": 21.28
+  },
+  {
+    "word": "flagship",
+    "start": 21.28,
+    "end": 21.66
+  },
+  {
+    "word": "models.",
+    "start": 21.66,
+    "end": 22.04
+  },
+  {
+    "word": "Two",
+    "start": 23.0,
+    "end": 23.2
+  },
+  {
+    "word": "different",
+    "start": 23.2,
+    "end": 23.42
+  },
+  {
+    "word": "jobs.",
+    "start": 23.42,
+    "end": 23.7
+  },
+  {
+    "word": "Claude",
+    "start": 24.82,
+    "end": 25.12
+  },
+  {
+    "word": "Opus",
+    "start": 25.12,
+    "end": 25.7
+  },
+  {
+    "word": "4",
+    "start": 25.7,
+    "end": 26.2
+  },
+  {
+    "word": ".7.",
+    "start": 26.2,
+    "end": 26.86
+  },
+  {
+    "word": "Released",
+    "start": 27.82,
+    "end": 28.24
+  },
+  {
+    "word": "April",
+    "start": 28.24,
+    "end": 28.68
+  },
+  {
+    "word": "16th.",
+    "start": 28.68,
+    "end": 30.28
+  },
+  {
+    "word": "Built",
+    "start": 30.28,
+    "end": 30.42
+  },
+  {
+    "word": "for",
+    "start": 30.42,
+    "end": 30.62
+  },
+  {
+    "word": "reasoning.",
+    "start": 30.62,
+    "end": 31.0
+  },
+  {
+    "word": "Verifies",
+    "start": 31.7,
+    "end": 32.36
+  },
+  {
+    "word": "its",
+    "start": 32.36,
+    "end": 32.62
+  },
+  {
+    "word": "own",
+    "start": 32.62,
+    "end": 32.78
+  },
+  {
+    "word": "work.",
+    "start": 32.78,
+    "end": 33.26
+  },
+  {
+    "word": "GPT",
+    "start": 33.96,
+    "end": 34.54
+  },
+  {
+    "word": "5",
+    "start": 34.54,
+    "end": 35.08
+  },
+  {
+    "word": ".5.",
+    "start": 35.08,
+    "end": 35.8
+  },
+  {
+    "word": "Released",
+    "start": 36.54,
+    "end": 37.22
+  },
+  {
+    "word": "April",
+    "start": 37.22,
+    "end": 37.7
+  },
+  {
+    "word": "23rd.",
+    "start": 37.7,
+    "end": 39.12
+  },
+  {
+    "word": "Built",
+    "start": 39.14,
+    "end": 39.38
+  },
+  {
+    "word": "for",
+    "start": 39.38,
+    "end": 39.58
+  },
+  {
+    "word": "action.",
+    "start": 39.58,
+    "end": 39.92
+  },
+  {
+    "word": "Operates",
+    "start": 40.8,
+    "end": 41.22
+  },
+  {
+    "word": "tools,",
+    "start": 41.22,
+    "end": 41.58
+  },
+  {
+    "word": "browsers,",
+    "start": 42.18,
+    "end": 42.5
+  },
+  {
+    "word": "desktops.",
+    "start": 42.88,
+    "end": 43.3
+  },
+  {
+    "word": "Different",
+    "start": 44.16,
+    "end": 44.52
+  },
+  {
+    "word": "jobs.",
+    "start": 44.52,
+    "end": 44.84
+  },
+  {
+    "word": "That's",
+    "start": 45.62,
+    "end": 46.16
+  },
+  {
+    "word": "the",
+    "start": 46.16,
+    "end": 46.22
+  },
+  {
+    "word": "whole",
+    "start": 46.22,
+    "end": 46.34
+  },
+  {
+    "word": "game.",
+    "start": 46.34,
+    "end": 46.64
+  },
+  {
+    "word": "Pick",
+    "start": 47.12,
+    "end": 47.22
+  },
+  {
+    "word": "by",
+    "start": 47.22,
+    "end": 47.38
+  },
+  {
+    "word": "task.",
+    "start": 47.38,
+    "end": 47.7
+  },
+  {
+    "word": "But",
+    "start": 48.38,
+    "end": 48.92
+  },
+  {
+    "word": "how?",
+    "start": 48.92,
+    "end": 49.12
+  },
+  {
+    "word": "Two",
+    "start": 49.98,
+    "end": 50.14
+  },
+  {
+    "word": "questions.",
+    "start": 50.14,
+    "end": 50.56
+  },
+  {
+    "word": "That's",
+    "start": 51.28,
+    "end": 51.8
+  },
+  {
+    "word": "all",
+    "start": 51.8,
+    "end": 51.94
+  },
+  {
+    "word": "you",
+    "start": 51.94,
+    "end": 52.1
+  },
+  {
+    "word": "need.",
+    "start": 52.1,
+    "end": 52.34
+  },
+  {
+    "word": "Question",
+    "start": 53.08,
+    "end": 53.44
+  },
+  {
+    "word": "1.",
+    "start": 53.44,
+    "end": 53.76
+  },
+  {
+    "word": "Does",
+    "start": 54.68,
+    "end": 54.92
+  },
+  {
+    "word": "accuracy",
+    "start": 54.92,
+    "end": 55.38
+  },
+  {
+    "word": "matter?",
+    "start": 55.38,
+    "end": 55.78
+  },
+  {
+    "word": "If",
+    "start": 55.78,
+    "end": 56.72
+  },
+  {
+    "word": "wrong",
+    "start": 56.72,
+    "end": 57.0
+  },
+  {
+    "word": "costs",
+    "start": 57.0,
+    "end": 57.4
+  },
+  {
+    "word": "you",
+    "start": 57.4,
+    "end": 57.62
+  },
+  {
+    "word": "money,",
+    "start": 57.62,
+    "end": 57.94
+  },
+  {
+    "word": "reputation,",
+    "start": 58.52,
+    "end": 59.02
+  },
+  {
+    "word": "or",
+    "start": 59.54,
+    "end": 59.64
+  },
+  {
+    "word": "your",
+    "start": 59.64,
+    "end": 59.74
+  },
+  {
+    "word": "job.",
+    "start": 59.74,
+    "end": 60.1
+  },
+  {
+    "word": "Accuracy",
+    "start": 61.06,
+    "end": 61.44
+  },
+  {
+    "word": "matters.",
+    "start": 61.44,
+    "end": 61.8
+  },
+  {
+    "word": "Question",
+    "start": 62.54,
+    "end": 63.12
+  },
+  {
+    "word": "2.",
+    "start": 63.12,
+    "end": 63.48
+  },
+  {
+    "word": "Will",
+    "start": 64.18,
+    "end": 64.58
+  },
+  {
+    "word": "it",
+    "start": 64.58,
+    "end": 64.68
+  },
+  {
+    "word": "run",
+    "start": 64.68,
+    "end": 64.94
+  },
+  {
+    "word": "without",
+    "start": 64.94,
+    "end": 65.38
+  },
+  {
+    "word": "you",
+    "start": 65.38,
+    "end": 65.54
+  },
+  {
+    "word": "watching?",
+    "start": 65.54,
+    "end": 65.88
+  },
+  {
+    "word": "If",
+    "start": 66.76,
+    "end": 66.88
+  },
+  {
+    "word": "it's",
+    "start": 66.88,
+    "end": 67.02
+  },
+  {
+    "word": "an",
+    "start": 67.02,
+    "end": 67.1
+  },
+  {
+    "word": "agent,",
+    "start": 67.1,
+    "end": 67.38
+  },
+  {
+    "word": "a",
+    "start": 67.68,
+    "end": 67.76
+  },
+  {
+    "word": "pipeline,",
+    "start": 67.76,
+    "end": 68.26
+  },
+  {
+    "word": "an",
+    "start": 68.66,
+    "end": 68.92
+  },
+  {
+    "word": "unsupervised",
+    "start": 68.92,
+    "end": 70.02
+  },
+  {
+    "word": "task.",
+    "start": 70.02,
+    "end": 70.62
+  },
+  {
+    "word": "Yes.",
+    "start": 71.12,
+    "end": 71.82
+  },
+  {
+    "word": "Both",
+    "start": 72.58,
+    "end": 72.98
+  },
+  {
+    "word": "yes.",
+    "start": 72.98,
+    "end": 73.42
+  },
+  {
+    "word": "Claude.",
+    "start": 74.28,
+    "end": 74.62
+  },
+  {
+    "word": "Accuracy",
+    "start": 75.46,
+    "end": 75.94
+  },
+  {
+    "word": "yes.",
+    "start": 75.94,
+    "end": 76.3
+  },
+  {
+    "word": "Supervision",
+    "start": 76.82,
+    "end": 77.24
+  },
+  {
+    "word": "no.",
+    "start": 77.24,
+    "end": 77.5
+  },
+  {
+    "word": "Either.",
+    "start": 78.36,
+    "end": 78.66
+  },
+  {
+    "word": "Speed",
+    "start": 79.54,
+    "end": 79.82
+  },
+  {
+    "word": "matters",
+    "start": 79.82,
+    "end": 80.26
+  },
+  {
+    "word": "more",
+    "start": 80.26,
+    "end": 80.66
+  },
+  {
+    "word": "than",
+    "start": 80.66,
+    "end": 80.82
+  },
+  {
+    "word": "accuracy.",
+    "start": 80.82,
+    "end": 81.32
+  },
+  {
+    "word": "GPT",
+    "start": 82.18,
+    "end": 82.9
+  },
+  {
+    "word": "5",
+    "start": 82.9,
+    "end": 83.66
+  },
+  {
+    "word": ".5.",
+    "start": 83.66,
+    "end": 84.3
+  },
+  {
+    "word": "Save",
+    "start": 84.3,
+    "end": 85.42
+  },
+  {
+    "word": "this",
+    "start": 85.42,
+    "end": 85.6
+  },
+  {
+    "word": "tree.",
+    "start": 85.6,
+    "end": 85.86
+  },
+  {
+    "word": "Use",
+    "start": 86.56,
+    "end": 86.9
+  },
+  {
+    "word": "it",
+    "start": 86.9,
+    "end": 87.06
+  },
+  {
+    "word": "for",
+    "start": 87.06,
+    "end": 87.22
+  },
+  {
+    "word": "every",
+    "start": 87.22,
+    "end": 87.68
+  },
+  {
+    "word": "prompt.",
+    "start": 87.68,
+    "end": 88.1
+  },
+  {
+    "word": "Trusting",
+    "start": 88.68,
+    "end": 89.0
+  },
+  {
+    "word": "a",
+    "start": 89.0,
+    "end": 89.06
+  },
+  {
+    "word": "two",
+    "start": 89.06,
+    "end": 89.3
+  },
+  {
+    "word": "-question",
+    "start": 89.3,
+    "end": 89.76
+  },
+  {
+    "word": "tree",
+    "start": 89.76,
+    "end": 90.12
+  },
+  {
+    "word": "feels",
+    "start": 90.12,
+    "end": 90.76
+  },
+  {
+    "word": "too",
+    "start": 90.76,
+    "end": 91.1
+  },
+  {
+    "word": "easy.",
+    "start": 91.1,
+    "end": 91.56
+  },
+  {
+    "word": "So",
+    "start": 92.36,
+    "end": 92.66
+  },
+  {
+    "word": "here's",
+    "start": 92.66,
+    "end": 92.94
+  },
+  {
+    "word": "the",
+    "start": 92.94,
+    "end": 93.02
+  },
+  {
+    "word": "proof.",
+    "start": 93.02,
+    "end": 93.24
+  },
+  {
+    "word": "When",
+    "start": 94.24,
+    "end": 94.34
+  },
+  {
+    "word": "AI",
+    "start": 94.34,
+    "end": 94.58
+  },
+  {
+    "word": "needs",
+    "start": 94.58,
+    "end": 94.96
+  },
+  {
+    "word": "to",
+    "start": 94.96,
+    "end": 95.16
+  },
+  {
+    "word": "act.",
+    "start": 95.16,
+    "end": 95.5
+  },
+  {
+    "word": "Terminal",
+    "start": 96.26,
+    "end": 96.72
+  },
+  {
+    "word": "control.",
+    "start": 96.72,
+    "end": 97.16
+  },
+  {
+    "word": "Desktop",
+    "start": 97.72,
+    "end": 97.98
+  },
+  {
+    "word": "browser.",
+    "start": 97.98,
+    "end": 98.66
+  },
+  {
+    "word": "GPT",
+    "start": 99.8,
+    "end": 100.34
+  },
+  {
+    "word": "wins.",
+    "start": 100.34,
+    "end": 100.72
+  },
+  {
+    "word": "Thirteen",
+    "start": 101.76,
+    "end": 102.08
+  },
+  {
+    "word": "point",
+    "start": 102.08,
+    "end": 102.44
+  },
+  {
+    "word": "lead",
+    "start": 102.44,
+    "end": 102.88
+  },
+  {
+    "word": "on",
+    "start": 102.88,
+    "end": 103.4
+  },
+  {
+    "word": "terminal",
+    "start": 103.4,
+    "end": 103.78
+  },
+  {
+    "word": "bench.",
+    "start": 103.78,
+    "end": 104.2
+  },
+  {
+    "word": "When",
+    "start": 104.98,
+    "end": 105.18
+  },
+  {
+    "word": "AI",
+    "start": 105.18,
+    "end": 105.48
+  },
+  {
+    "word": "needs",
+    "start": 105.48,
+    "end": 105.94
+  },
+  {
+    "word": "to",
+    "start": 105.94,
+    "end": 106.1
+  },
+  {
+    "word": "reason.",
+    "start": 106.1,
+    "end": 106.38
+  },
+  {
+    "word": "Real",
+    "start": 107.42,
+    "end": 107.58
+  },
+  {
+    "word": "bug",
+    "start": 107.58,
+    "end": 107.8
+  },
+  {
+    "word": "fixes",
+    "start": 107.8,
+    "end": 108.36
+  },
+  {
+    "word": "tool",
+    "start": 108.36,
+    "end": 109.0
+  },
+  {
+    "word": "orchestration.",
+    "start": 109.0,
+    "end": 109.68
+  },
+  {
+    "word": "Claude",
+    "start": 110.78,
+    "end": 111.02
+  },
+  {
+    "word": "wins.",
+    "start": 111.02,
+    "end": 111.24
+  },
+  {
+    "word": "Six",
+    "start": 112.08,
+    "end": 112.42
+  },
+  {
+    "word": "points",
+    "start": 112.42,
+    "end": 112.74
+  },
+  {
+    "word": "on",
+    "start": 112.74,
+    "end": 112.98
+  },
+  {
+    "word": "SWE",
+    "start": 112.98,
+    "end": 113.72
+  },
+  {
+    "word": "bench",
+    "start": 113.72,
+    "end": 113.86
+  },
+  {
+    "word": "pro.",
+    "start": 113.86,
+    "end": 114.14
+  },
+  {
+    "word": "Benchmarks",
+    "start": 115.1,
+    "end": 115.5
+  },
+  {
+    "word": "aren't",
+    "start": 115.5,
+    "end": 116.04
+  },
+  {
+    "word": "reality.",
+    "start": 116.04,
+    "end": 116.5
+  },
+  {
+    "word": "But",
+    "start": 117.22,
+    "end": 117.52
+  },
+  {
+    "word": "the",
+    "start": 117.52,
+    "end": 117.62
+  },
+  {
+    "word": "pattern",
+    "start": 117.62,
+    "end": 117.88
+  },
+  {
+    "word": "holds.",
+    "start": 117.88,
+    "end": 118.22
+  },
+  {
+    "word": "Every",
+    "start": 119.14,
+    "end": 119.46
+  },
+  {
+    "word": "developer",
+    "start": 119.46,
+    "end": 119.84
+  },
+  {
+    "word": "benchmark,",
+    "start": 119.84,
+    "end": 120.48
+  },
+  {
+    "word": "same",
+    "start": 120.82,
+    "end": 121.1
+  },
+  {
+    "word": "split.",
+    "start": 121.1,
+    "end": 121.42
+  },
+  {
+    "word": "The",
+    "start": 122.2,
+    "end": 122.4
+  },
+  {
+    "word": "tree",
+    "start": 122.4,
+    "end": 122.66
+  },
+  {
+    "word": "isn't",
+    "start": 122.66,
+    "end": 123.18
+  },
+  {
+    "word": "arbitrary.",
+    "start": 123.18,
+    "end": 123.62
+  },
+  {
+    "word": "It's",
+    "start": 124.34,
+    "end": 124.78
+  },
+  {
+    "word": "how",
+    "start": 124.78,
+    "end": 124.84
+  },
+  {
+    "word": "the",
+    "start": 124.84,
+    "end": 124.96
+  },
+  {
+    "word": "data",
+    "start": 124.96,
+    "end": 125.26
+  },
+  {
+    "word": "already",
+    "start": 125.26,
+    "end": 125.82
+  },
+  {
+    "word": "routes.",
+    "start": 125.82,
+    "end": 126.14
+  },
+  {
+    "word": "You",
+    "start": 126.8,
+    "end": 126.94
+  },
+  {
+    "word": "just",
+    "start": 126.94,
+    "end": 127.08
+  },
+  {
+    "word": "saw",
+    "start": 127.08,
+    "end": 127.26
+  },
+  {
+    "word": "GPT",
+    "start": 127.26,
+    "end": 127.96
+  },
+  {
+    "word": "and",
+    "start": 127.96,
+    "end": 128.34
+  },
+  {
+    "word": "Claude",
+    "start": 128.34,
+    "end": 128.74
+  },
+  {
+    "word": "tie",
+    "start": 128.74,
+    "end": 128.86
+  },
+  {
+    "word": "on",
+    "start": 128.86,
+    "end": 129.08
+  },
+  {
+    "word": "some",
+    "start": 129.08,
+    "end": 129.22
+  },
+  {
+    "word": "benchmarks.",
+    "start": 129.22,
+    "end": 129.6
+  },
+  {
+    "word": "So,",
+    "start": 130.64,
+    "end": 130.98
+  },
+  {
+    "word": "why",
+    "start": 131.04,
+    "end": 131.28
+  },
+  {
+    "word": "does",
+    "start": 131.28,
+    "end": 131.38
+  },
+  {
+    "word": "the",
+    "start": 131.38,
+    "end": 131.5
+  },
+  {
+    "word": "routing",
+    "start": 131.5,
+    "end": 131.7
+  },
+  {
+    "word": "decision",
+    "start": 131.7,
+    "end": 132.12
+  },
+  {
+    "word": "matter?",
+    "start": 132.12,
+    "end": 132.48
+  },
+  {
+    "word": "One",
+    "start": 133.24,
+    "end": 133.54
+  },
+  {
+    "word": "number.",
+    "start": 133.54,
+    "end": 133.84
+  },
+  {
+    "word": "When",
+    "start": 134.72,
+    "end": 135.0
+  },
+  {
+    "word": "GPT",
+    "start": 135.0,
+    "end": 135.68
+  },
+  {
+    "word": "5",
+    "start": 135.68,
+    "end": 136.18
+  },
+  {
+    "word": ".5",
+    "start": 136.18,
+    "end": 136.88
+  },
+  {
+    "word": "doesn't",
+    "start": 136.88,
+    "end": 137.62
+  },
+  {
+    "word": "know",
+    "start": 137.62,
+    "end": 137.78
+  },
+  {
+    "word": "the",
+    "start": 137.78,
+    "end": 137.96
+  },
+  {
+    "word": "answer.",
+    "start": 137.96,
+    "end": 138.32
+  },
+  {
+    "word": "Invent",
+    "start": 138.32,
+    "end": 139.1
+  },
+  {
+    "word": "one",
+    "start": 139.1,
+    "end": 139.5
+  },
+  {
+    "word": "86",
+    "start": 139.5,
+    "end": 140.12
+  },
+  {
+    "word": "%",
+    "start": 140.12,
+    "end": 140.58
+  },
+  {
+    "word": "of",
+    "start": 140.58,
+    "end": 140.72
+  },
+  {
+    "word": "the",
+    "start": 140.72,
+    "end": 140.8
+  },
+  {
+    "word": "time.",
+    "start": 140.8,
+    "end": 141.08
+  },
+  {
+    "word": "Not",
+    "start": 141.54,
+    "end": 142.04
+  },
+  {
+    "word": "86",
+    "start": 142.04,
+    "end": 142.54
+  },
+  {
+    "word": "%",
+    "start": 142.54,
+    "end": 143.0
+  },
+  {
+    "word": "of",
+    "start": 143.0,
+    "end": 143.3
+  },
+  {
+    "word": "all",
+    "start": 143.3,
+    "end": 143.54
+  },
+  {
+    "word": "answers.",
+    "start": 143.54,
+    "end": 143.88
+  },
+  {
+    "word": "86",
+    "start": 144.78,
+    "end": 145.26
+  },
+  {
+    "word": "%",
+    "start": 145.26,
+    "end": 145.8
+  },
+  {
+    "word": "of",
+    "start": 145.8,
+    "end": 145.92
+  },
+  {
+    "word": "the",
+    "start": 145.92,
+    "end": 145.98
+  },
+  {
+    "word": "time",
+    "start": 145.98,
+    "end": 146.22
+  },
+  {
+    "word": "it's",
+    "start": 146.22,
+    "end": 146.46
+  },
+  {
+    "word": "stumped.",
+    "start": 146.46,
+    "end": 146.98
+  },
+  {
+    "word": "Most",
+    "start": 147.52,
+    "end": 147.76
+  },
+  {
+    "word": "of",
+    "start": 147.76,
+    "end": 147.9
+  },
+  {
+    "word": "the",
+    "start": 147.9,
+    "end": 147.96
+  },
+  {
+    "word": "time",
+    "start": 147.96,
+    "end": 148.26
+  },
+  {
+    "word": "it",
+    "start": 148.26,
+    "end": 148.84
+  },
+  {
+    "word": "has",
+    "start": 148.84,
+    "end": 148.98
+  },
+  {
+    "word": "the",
+    "start": 148.98,
+    "end": 149.18
+  },
+  {
+    "word": "highest",
+    "start": 149.18,
+    "end": 149.7
+  },
+  {
+    "word": "accuracy",
+    "start": 149.7,
+    "end": 150.42
+  },
+  {
+    "word": "of",
+    "start": 150.42,
+    "end": 150.66
+  },
+  {
+    "word": "any",
+    "start": 150.66,
+    "end": 150.8
+  },
+  {
+    "word": "model.",
+    "start": 150.8,
+    "end": 151.14
+  },
+  {
+    "word": "But",
+    "start": 151.9,
+    "end": 152.1
+  },
+  {
+    "word": "when",
+    "start": 152.1,
+    "end": 152.22
+  },
+  {
+    "word": "it's",
+    "start": 152.22,
+    "end": 152.38
+  },
+  {
+    "word": "wrong,",
+    "start": 152.38,
+    "end": 152.64
+  },
+  {
+    "word": "it's",
+    "start": 153.04,
+    "end": 153.3
+  },
+  {
+    "word": "confidently",
+    "start": 153.3,
+    "end": 153.8
+  },
+  {
+    "word": "wrong.",
+    "start": 153.8,
+    "end": 154.26
+  },
+  {
+    "word": "Claude",
+    "start": 155.08,
+    "end": 155.36
+  },
+  {
+    "word": "36.",
+    "start": 155.36,
+    "end": 156.84
+  },
+  {
+    "word": "Gemini",
+    "start": 158.24,
+    "end": 158.96
+  },
+  {
+    "word": "50.",
+    "start": 158.96,
+    "end": 159.68
+  },
+  {
+    "word": "If",
+    "start": 160.48,
+    "end": 160.7
+  },
+  {
+    "word": "a",
+    "start": 160.7,
+    "end": 160.78
+  },
+  {
+    "word": "wrong",
+    "start": 160.78,
+    "end": 161.04
+  },
+  {
+    "word": "answer",
+    "start": 161.04,
+    "end": 161.48
+  },
+  {
+    "word": "costs",
+    "start": 161.48,
+    "end": 161.84
+  },
+  {
+    "word": "you",
+    "start": 161.84,
+    "end": 162.04
+  },
+  {
+    "word": "money,",
+    "start": 162.04,
+    "end": 162.38
+  },
+  {
+    "word": "reputation",
+    "start": 162.88,
+    "end": 163.24
+  },
+  {
+    "word": "or",
+    "start": 163.24,
+    "end": 163.86
+  },
+  {
+    "word": "your",
+    "start": 163.86,
+    "end": 163.98
+  },
+  {
+    "word": "job.",
+    "start": 163.98,
+    "end": 164.34
+  },
+  {
+    "word": "That",
+    "start": 165.0,
+    "end": 165.46
+  },
+  {
+    "word": "gap",
+    "start": 165.46,
+    "end": 165.64
+  },
+  {
+    "word": "matters.",
+    "start": 165.64,
+    "end": 166.02
+  },
+  {
+    "word": "That's",
+    "start": 166.9,
+    "end": 167.26
+  },
+  {
+    "word": "why",
+    "start": 167.26,
+    "end": 167.38
+  },
+  {
+    "word": "routing",
+    "start": 167.38,
+    "end": 167.66
+  },
+  {
+    "word": "matters.",
+    "start": 167.66,
+    "end": 168.06
+  },
+  {
+    "word": "But",
+    "start": 168.74,
+    "end": 168.82
+  },
+  {
+    "word": "hallucination",
+    "start": 168.82,
+    "end": 169.54
+  },
+  {
+    "word": "isn't",
+    "start": 169.54,
+    "end": 170.08
+  },
+  {
+    "word": "the",
+    "start": 170.08,
+    "end": 170.26
+  },
+  {
+    "word": "only",
+    "start": 170.26,
+    "end": 170.6
+  },
+  {
+    "word": "failure",
+    "start": 170.6,
+    "end": 170.98
+  },
+  {
+    "word": "mode.",
+    "start": 170.98,
+    "end": 171.38
+  },
+  {
+    "word": "There's",
+    "start": 171.96,
+    "end": 172.4
+  },
+  {
+    "word": "a",
+    "start": 172.4,
+    "end": 172.46
+  },
+  {
+    "word": "worse",
+    "start": 172.46,
+    "end": 172.68
+  },
+  {
+    "word": "one.",
+    "start": 172.68,
+    "end": 173.04
+  },
+  {
+    "word": "Any",
+    "start": 173.76,
+    "end": 174.1
+  },
+  {
+    "word": "experiment",
+    "start": 174.1,
+    "end": 174.68
+  },
+  {
+    "word": "that",
+    "start": 174.68,
+    "end": 174.98
+  },
+  {
+    "word": "proved",
+    "start": 174.98,
+    "end": 175.52
+  },
+  {
+    "word": "it",
+    "start": 175.52,
+    "end": 175.64
+  },
+  {
+    "word": "will",
+    "start": 175.64,
+    "end": 175.7
+  },
+  {
+    "word": "surprise",
+    "start": 175.7,
+    "end": 176.04
+  },
+  {
+    "word": "you.",
+    "start": 176.04,
+    "end": 176.44
+  },
+  {
+    "word": "And",
+    "start": 177.16,
+    "end": 177.38
+  },
+  {
+    "word": "in",
+    "start": 177.38,
+    "end": 177.5
+  },
+  {
+    "word": "labs",
+    "start": 177.5,
+    "end": 177.76
+  },
+  {
+    "word": "ran",
+    "start": 177.76,
+    "end": 178.32
+  },
+  {
+    "word": "a",
+    "start": 178.32,
+    "end": 178.48
+  },
+  {
+    "word": "vending",
+    "start": 178.48,
+    "end": 178.78
+  },
+  {
+    "word": "machine",
+    "start": 178.78,
+    "end": 179.14
+  },
+  {
+    "word": "simulation.",
+    "start": 179.14,
+    "end": 179.78
+  },
+  {
+    "word": "Make",
+    "start": 180.58,
+    "end": 180.82
+  },
+  {
+    "word": "money",
+    "start": 180.82,
+    "end": 181.06
+  },
+  {
+    "word": "for",
+    "start": 181.06,
+    "end": 181.3
+  },
+  {
+    "word": "a",
+    "start": 181.3,
+    "end": 181.38
+  },
+  {
+    "word": "year.",
+    "start": 181.38,
+    "end": 181.6
+  },
+  {
+    "word": "No",
+    "start": 181.94,
+    "end": 182.1
+  },
+  {
+    "word": "rules.",
+    "start": 182.1,
+    "end": 182.56
+  },
+  {
+    "word": "Claude",
+    "start": 183.56,
+    "end": 183.8
+  },
+  {
+    "word": "lied",
+    "start": 183.8,
+    "end": 183.94
+  },
+  {
+    "word": "to",
+    "start": 183.94,
+    "end": 184.12
+  },
+  {
+    "word": "a",
+    "start": 184.12,
+    "end": 184.22
+  },
+  {
+    "word": "customer",
+    "start": 184.22,
+    "end": 184.6
+  },
+  {
+    "word": "to",
+    "start": 184.6,
+    "end": 184.98
+  },
+  {
+    "word": "keep",
+    "start": 184.98,
+    "end": 185.22
+  },
+  {
+    "word": "$3",
+    "start": 185.22,
+    "end": 185.88
+  },
+  {
+    "word": ".50.",
+    "start": 185.88,
+    "end": 186.96
+  },
+  {
+    "word": "Said",
+    "start": 187.74,
+    "end": 188.46
+  },
+  {
+    "word": "refund",
+    "start": 188.46,
+    "end": 188.92
+  },
+  {
+    "word": "process.",
+    "start": 188.92,
+    "end": 189.44
+  },
+  {
+    "word": "Never",
+    "start": 189.96,
+    "end": 190.66
+  },
+  {
+    "word": "sent",
+    "start": 190.66,
+    "end": 190.88
+  },
+  {
+    "word": "the",
+    "start": 190.88,
+    "end": 191.02
+  },
+  {
+    "word": "money.",
+    "start": 191.02,
+    "end": 191.3
+  },
+  {
+    "word": "GPT",
+    "start": 192.22,
+    "end": 192.78
+  },
+  {
+    "word": "5",
+    "start": 192.78,
+    "end": 193.56
+  },
+  {
+    "word": ".5",
+    "start": 193.56,
+    "end": 194.24
+  },
+  {
+    "word": "won",
+    "start": 194.24,
+    "end": 194.96
+  },
+  {
+    "word": "the",
+    "start": 194.96,
+    "end": 195.1
+  },
+  {
+    "word": "simulation.",
+    "start": 195.1,
+    "end": 195.68
+  },
+  {
+    "word": "8",
+    "start": 196.02,
+    "end": 196.62
+  },
+  {
+    "word": "grand.",
+    "start": 196.62,
+    "end": 197.02
+  },
+  {
+    "word": "Clean.",
+    "start": 197.64,
+    "end": 198.08
+  },
+  {
+    "word": "Every",
+    "start": 198.74,
+    "end": 199.26
+  },
+  {
+    "word": "refund",
+    "start": 199.26,
+    "end": 199.82
+  },
+  {
+    "word": "honored.",
+    "start": 199.82,
+    "end": 200.26
+  },
+  {
+    "word": "So.",
+    "start": 201.14,
+    "end": 201.36
+  },
+  {
+    "word": "The",
+    "start": 202.28,
+    "end": 202.48
+  },
+  {
+    "word": "model",
+    "start": 202.48,
+    "end": 202.74
+  },
+  {
+    "word": "that",
+    "start": 202.74,
+    "end": 202.94
+  },
+  {
+    "word": "hallucinates",
+    "start": 202.94,
+    "end": 203.6
+  },
+  {
+    "word": "the",
+    "start": 203.6,
+    "end": 203.74
+  },
+  {
+    "word": "most",
+    "start": 203.74,
+    "end": 204.04
+  },
+  {
+    "word": "was",
+    "start": 204.04,
+    "end": 204.44
+  },
+  {
+    "word": "the",
+    "start": 204.44,
+    "end": 204.6
+  },
+  {
+    "word": "most",
+    "start": 204.6,
+    "end": 204.92
+  },
+  {
+    "word": "honest",
+    "start": 204.92,
+    "end": 205.32
+  },
+  {
+    "word": "operator.",
+    "start": 205.32,
+    "end": 205.92
+  },
+  {
+    "word": "Hallucinating",
+    "start": 206.88,
+    "end": 207.4
+  },
+  {
+    "word": "is",
+    "start": 207.4,
+    "end": 207.82
+  },
+  {
+    "word": "not",
+    "start": 207.82,
+    "end": 208.14
+  },
+  {
+    "word": "knowing.",
+    "start": 208.14,
+    "end": 208.54
+  },
+  {
+    "word": "Lying",
+    "start": 209.48,
+    "end": 209.7
+  },
+  {
+    "word": "is",
+    "start": 209.7,
+    "end": 209.88
+  },
+  {
+    "word": "choosing.",
+    "start": 209.88,
+    "end": 210.28
+  },
+  {
+    "word": "Different",
+    "start": 211.22,
+    "end": 211.38
+  },
+  {
+    "word": "problems.",
+    "start": 211.38,
+    "end": 211.86
+  },
+  {
+    "word": "Different",
+    "start": 212.82,
+    "end": 213.1
+  },
+  {
+    "word": "defenses.",
+    "start": 213.1,
+    "end": 213.66
+  },
+  {
+    "word": "Different",
+    "start": 214.28,
+    "end": 214.58
+  },
+  {
+    "word": "defenses",
+    "start": 214.58,
+    "end": 215.22
+  },
+  {
+    "word": "sounds",
+    "start": 215.22,
+    "end": 215.86
+  },
+  {
+    "word": "expensive.",
+    "start": 215.86,
+    "end": 216.5
+  },
+  {
+    "word": "It",
+    "start": 217.28,
+    "end": 217.58
+  },
+  {
+    "word": "isn't.",
+    "start": 217.58,
+    "end": 217.92
+  },
+  {
+    "word": "One",
+    "start": 218.68,
+    "end": 218.8
+  },
+  {
+    "word": "pipeline",
+    "start": 218.8,
+    "end": 219.16
+  },
+  {
+    "word": "handles",
+    "start": 219.16,
+    "end": 219.56
+  },
+  {
+    "word": "both.",
+    "start": 219.56,
+    "end": 219.86
+  },
+  {
+    "word": "Watch.",
+    "start": 220.76,
+    "end": 221.22
+  },
+  {
+    "word": "User",
+    "start": 222.06,
+    "end": 222.36
+  },
+  {
+    "word": "submits",
+    "start": 222.36,
+    "end": 222.72
+  },
+  {
+    "word": "query.",
+    "start": 222.72,
+    "end": 223.04
+  },
+  {
+    "word": "GPT",
+    "start": 223.04,
+    "end": 224.54
+  },
+  {
+    "word": "5",
+    "start": 224.54,
+    "end": 225.16
+  },
+  {
+    "word": ".5",
+    "start": 225.16,
+    "end": 225.72
+  },
+  {
+    "word": "drafts",
+    "start": 225.72,
+    "end": 226.34
+  },
+  {
+    "word": "the",
+    "start": 226.34,
+    "end": 226.4
+  },
+  {
+    "word": "answer.",
+    "start": 226.4,
+    "end": 226.7
+  },
+  {
+    "word": "1200",
+    "start": 227.74,
+    "end": 228.16
+  },
+  {
+    "word": "tokens.",
+    "start": 228.16,
+    "end": 228.6
+  },
+  {
+    "word": "Six",
+    "start": 229.08,
+    "end": 229.28
+  },
+  {
+    "word": "cents.",
+    "start": 229.28,
+    "end": 229.64
+  },
+  {
+    "word": "Three",
+    "start": 230.16,
+    "end": 230.46
+  },
+  {
+    "word": "seconds.",
+    "start": 230.46,
+    "end": 230.94
+  },
+  {
+    "word": "Draft",
+    "start": 231.84,
+    "end": 232.22
+  },
+  {
+    "word": "has",
+    "start": 232.22,
+    "end": 232.58
+  },
+  {
+    "word": "potential",
+    "start": 232.58,
+    "end": 233.18
+  },
+  {
+    "word": "hallucinations.",
+    "start": 233.18,
+    "end": 234.1
+  },
+  {
+    "word": "Those",
+    "start": 235.0,
+    "end": 235.42
+  },
+  {
+    "word": "red",
+    "start": 235.42,
+    "end": 235.72
+  },
+  {
+    "word": "flags.",
+    "start": 235.72,
+    "end": 236.24
+  },
+  {
+    "word": "Claude",
+    "start": 237.06,
+    "end": 237.46
+  },
+  {
+    "word": "scans",
+    "start": 237.46,
+    "end": 237.7
+  },
+  {
+    "word": "the",
+    "start": 237.7,
+    "end": 237.92
+  },
+  {
+    "word": "draft.",
+    "start": 237.92,
+    "end": 238.16
+  },
+  {
+    "word": "Verifies",
+    "start": 239.12,
+    "end": 239.6
+  },
+  {
+    "word": "real",
+    "start": 239.6,
+    "end": 240.02
+  },
+  {
+    "word": "facts.",
+    "start": 240.02,
+    "end": 240.54
+  },
+  {
+    "word": "Removes",
+    "start": 241.36,
+    "end": 241.94
+  },
+  {
+    "word": "fabricated",
+    "start": 241.94,
+    "end": 242.72
+  },
+  {
+    "word": "ones.",
+    "start": 242.72,
+    "end": 242.94
+  },
+  {
+    "word": "Total.",
+    "start": 243.88,
+    "end": 244.26
+  },
+  {
+    "word": "24",
+    "start": 245.18,
+    "end": 245.64
+  },
+  {
+    "word": "cents.",
+    "start": 245.64,
+    "end": 246.24
+  },
+  {
+    "word": "11",
+    "start": 247.12,
+    "end": 247.38
+  },
+  {
+    "word": "seconds.",
+    "start": 247.38,
+    "end": 248.06
+  },
+  {
+    "word": "Hallucination",
+    "start": 248.96,
+    "end": 249.44
+  },
+  {
+    "word": "checked.",
+    "start": 249.44,
+    "end": 250.04
+  },
+  {
+    "word": "Compare.",
+    "start": 250.7,
+    "end": 251.22
+  },
+  {
+    "word": "Claude",
+    "start": 251.22,
+    "end": 252.6
+  },
+  {
+    "word": "alone.",
+    "start": 252.6,
+    "end": 252.82
+  },
+  {
+    "word": "95",
+    "start": 253.92,
+    "end": 254.34
+  },
+  {
+    "word": "cents.",
+    "start": 254.34,
+    "end": 255.02
+  },
+  {
+    "word": "20",
+    "start": 255.44,
+    "end": 255.62
+  },
+  {
+    "word": "seconds.",
+    "start": 255.62,
+    "end": 256.16
+  },
+  {
+    "word": "Same",
+    "start": 256.88,
+    "end": 257.32
+  },
+  {
+    "word": "accuracy.",
+    "start": 257.32,
+    "end": 257.98
+  },
+  {
+    "word": "For",
+    "start": 258.84,
+    "end": 259.02
+  },
+  {
+    "word": "times",
+    "start": 259.02,
+    "end": 259.28
+  },
+  {
+    "word": "the",
+    "start": 259.28,
+    "end": 259.42
+  },
+  {
+    "word": "cost.",
+    "start": 259.42,
+    "end": 259.66
+  },
+  {
+    "word": "Here's",
+    "start": 260.58,
+    "end": 260.9
+  },
+  {
+    "word": "the",
+    "start": 260.9,
+    "end": 260.98
+  },
+  {
+    "word": "code.",
+    "start": 260.98,
+    "end": 261.24
+  },
+  {
+    "word": "Save",
+    "start": 262.18,
+    "end": 262.34
+  },
+  {
+    "word": "it.",
+    "start": 262.34,
+    "end": 262.54
+  },
+  {
+    "word": "The",
+    "start": 262.96,
+    "end": 263.04
+  },
+  {
+    "word": "pipeline",
+    "start": 263.04,
+    "end": 263.4
+  },
+  {
+    "word": "solves",
+    "start": 263.4,
+    "end": 263.86
+  },
+  {
+    "word": "most",
+    "start": 263.86,
+    "end": 264.18
+  },
+  {
+    "word": "cases.",
+    "start": 264.18,
+    "end": 264.64
+  },
+  {
+    "word": "Not",
+    "start": 265.56,
+    "end": 265.74
+  },
+  {
+    "word": "all.",
+    "start": 265.74,
+    "end": 265.98
+  },
+  {
+    "word": "Honesty",
+    "start": 266.78,
+    "end": 267.12
+  },
+  {
+    "word": "break.",
+    "start": 267.12,
+    "end": 267.48
+  },
+  {
+    "word": "Sometimes",
+    "start": 268.52,
+    "end": 269.06
+  },
+  {
+    "word": "neither",
+    "start": 269.06,
+    "end": 269.38
+  },
+  {
+    "word": "is",
+    "start": 269.38,
+    "end": 269.62
+  },
+  {
+    "word": "the",
+    "start": 269.62,
+    "end": 269.72
+  },
+  {
+    "word": "right",
+    "start": 269.72,
+    "end": 269.88
+  },
+  {
+    "word": "choice.",
+    "start": 269.88,
+    "end": 270.34
+  },
+  {
+    "word": "Real",
+    "start": 271.36,
+    "end": 271.46
+  },
+  {
+    "word": "-time",
+    "start": 271.46,
+    "end": 271.7
+  },
+  {
+    "word": "decisions",
+    "start": 271.7,
+    "end": 272.2
+  },
+  {
+    "word": "under",
+    "start": 272.2,
+    "end": 272.76
+  },
+  {
+    "word": "50",
+    "start": 272.76,
+    "end": 273.2
+  },
+  {
+    "word": "milliseconds.",
+    "start": 273.2,
+    "end": 273.8
+  },
+  {
+    "word": "Both",
+    "start": 275.0,
+    "end": 275.14
+  },
+  {
+    "word": "too",
+    "start": 275.14,
+    "end": 275.42
+  },
+  {
+    "word": "slow.",
+    "start": 275.42,
+    "end": 275.86
+  },
+  {
+    "word": "Use",
+    "start": 276.6,
+    "end": 276.84
+  },
+  {
+    "word": "a",
+    "start": 276.84,
+    "end": 276.94
+  },
+  {
+    "word": "smaller",
+    "start": 276.94,
+    "end": 277.26
+  },
+  {
+    "word": "model.",
+    "start": 277.26,
+    "end": 277.66
+  },
+  {
+    "word": "Anything",
+    "start": 277.66,
+    "end": 278.62
+  },
+  {
+    "word": "requiring",
+    "start": 278.62,
+    "end": 279.34
+  },
+  {
+    "word": "true",
+    "start": 279.34,
+    "end": 279.9
+  },
+  {
+    "word": "memory",
+    "start": 279.9,
+    "end": 280.36
+  },
+  {
+    "word": "of",
+    "start": 280.36,
+    "end": 280.64
+  },
+  {
+    "word": "you.",
+    "start": 280.64,
+    "end": 280.86
+  },
+  {
+    "word": "Neither",
+    "start": 281.68,
+    "end": 281.98
+  },
+  {
+    "word": "has",
+    "start": 281.98,
+    "end": 282.22
+  },
+  {
+    "word": "persistent",
+    "start": 282.22,
+    "end": 282.76
+  },
+  {
+    "word": "context",
+    "start": 282.76,
+    "end": 283.24
+  },
+  {
+    "word": "yet.",
+    "start": 283.24,
+    "end": 283.7
+  },
+  {
+    "word": "Live",
+    "start": 284.62,
+    "end": 284.8
+  },
+  {
+    "word": "data.",
+    "start": 284.8,
+    "end": 285.16
+  },
+  {
+    "word": "Both",
+    "start": 286.04,
+    "end": 286.32
+  },
+  {
+    "word": "will",
+    "start": 286.32,
+    "end": 286.52
+  },
+  {
+    "word": "confabulate",
+    "start": 286.52,
+    "end": 287.24
+  },
+  {
+    "word": "freshness.",
+    "start": 287.24,
+    "end": 287.8
+  },
+  {
+    "word": "Use",
+    "start": 288.68,
+    "end": 289.06
+  },
+  {
+    "word": "search",
+    "start": 289.06,
+    "end": 289.46
+  },
+  {
+    "word": "ground",
+    "start": 289.46,
+    "end": 289.7
+  },
+  {
+    "word": "to",
+    "start": 289.7,
+    "end": 289.78
+  },
+  {
+    "word": "models.",
+    "start": 289.78,
+    "end": 290.08
+  },
+  {
+    "word": "And",
+    "start": 291.06,
+    "end": 291.18
+  },
+  {
+    "word": "here's",
+    "start": 291.18,
+    "end": 291.48
+  },
+  {
+    "word": "the",
+    "start": 291.48,
+    "end": 291.56
+  },
+  {
+    "word": "wildcard.",
+    "start": 291.56,
+    "end": 292.14
+  },
+  {
+    "word": "Anthropic",
+    "start": 293.06,
+    "end": 293.62
+  },
+  {
+    "word": "has",
+    "start": 293.62,
+    "end": 293.76
+  },
+  {
+    "word": "a",
+    "start": 293.76,
+    "end": 293.84
+  },
+  {
+    "word": "model",
+    "start": 293.84,
+    "end": 294.2
+  },
+  {
+    "word": "called",
+    "start": 294.2,
+    "end": 294.52
+  },
+  {
+    "word": "Mythos.",
+    "start": 294.52,
+    "end": 295.18
+  },
+  {
+    "word": "Restricted",
+    "start": 296.0,
+    "end": 296.64
+  },
+  {
+    "word": "to",
+    "start": 296.64,
+    "end": 296.74
+  },
+  {
+    "word": "eight",
+    "start": 296.74,
+    "end": 297.0
+  },
+  {
+    "word": "companies.",
+    "start": 297.0,
+    "end": 297.64
+  },
+  {
+    "word": "Beats",
+    "start": 298.52,
+    "end": 298.76
+  },
+  {
+    "word": "both",
+    "start": 298.76,
+    "end": 299.0
+  },
+  {
+    "word": "Claude",
+    "start": 299.0,
+    "end": 299.48
+  },
+  {
+    "word": "and",
+    "start": 299.48,
+    "end": 299.68
+  },
+  {
+    "word": "GPT",
+    "start": 299.68,
+    "end": 300.38
+  },
+  {
+    "word": "on",
+    "start": 300.38,
+    "end": 300.84
+  },
+  {
+    "word": "almost",
+    "start": 300.84,
+    "end": 301.24
+  },
+  {
+    "word": "everything.",
+    "start": 301.24,
+    "end": 301.82
+  },
+  {
+    "word": "When",
+    "start": 302.56,
+    "end": 302.76
+  },
+  {
+    "word": "it",
+    "start": 302.76,
+    "end": 302.84
+  },
+  {
+    "word": "goes",
+    "start": 302.84,
+    "end": 303.0
+  },
+  {
+    "word": "public,",
+    "start": 303.0,
+    "end": 303.48
+  },
+  {
+    "word": "the",
+    "start": 303.64,
+    "end": 303.72
+  },
+  {
+    "word": "math",
+    "start": 303.72,
+    "end": 303.98
+  },
+  {
+    "word": "changes.",
+    "start": 303.98,
+    "end": 304.5
+  },
+  {
+    "word": "Sign",
+    "start": 305.34,
+    "end": 305.74
+  },
+  {
+    "word": "contracts",
+    "start": 305.74,
+    "end": 306.28
+  },
+  {
+    "word": "with",
+    "start": 306.28,
+    "end": 306.64
+  },
+  {
+    "word": "renegotiations",
+    "start": 306.64,
+    "end": 307.48
+  },
+  {
+    "word": "clauses.",
+    "start": 307.48,
+    "end": 307.96
+  },
+  {
+    "word": "Renegotiations",
+    "start": 308.72,
+    "end": 309.52
+  },
+  {
+    "word": "clauses",
+    "start": 309.52,
+    "end": 310.02
+  },
+  {
+    "word": "only",
+    "start": 310.02,
+    "end": 310.62
+  },
+  {
+    "word": "matter",
+    "start": 310.62,
+    "end": 311.04
+  },
+  {
+    "word": "if",
+    "start": 311.04,
+    "end": 311.32
+  },
+  {
+    "word": "you",
+    "start": 311.32,
+    "end": 311.44
+  },
+  {
+    "word": "understand",
+    "start": 311.44,
+    "end": 311.92
+  },
+  {
+    "word": "where",
+    "start": 311.92,
+    "end": 312.28
+  },
+  {
+    "word": "each",
+    "start": 312.28,
+    "end": 312.68
+  },
+  {
+    "word": "company",
+    "start": 312.68,
+    "end": 313.02
+  },
+  {
+    "word": "is",
+    "start": 313.02,
+    "end": 313.24
+  },
+  {
+    "word": "going.",
+    "start": 313.24,
+    "end": 313.52
+  },
+  {
+    "word": "They're",
+    "start": 314.38,
+    "end": 314.5
+  },
+  {
+    "word": "not",
+    "start": 314.5,
+    "end": 314.66
+  },
+  {
+    "word": "heading",
+    "start": 314.66,
+    "end": 314.96
+  },
+  {
+    "word": "to",
+    "start": 314.96,
+    "end": 315.08
+  },
+  {
+    "word": "the",
+    "start": 315.08,
+    "end": 315.14
+  },
+  {
+    "word": "same",
+    "start": 315.14,
+    "end": 315.36
+  },
+  {
+    "word": "place.",
+    "start": 315.36,
+    "end": 315.66
+  },
+  {
+    "word": "Open",
+    "start": 316.72,
+    "end": 316.88
+  },
+  {
+    "word": "AI's",
+    "start": 316.88,
+    "end": 317.36
+  },
+  {
+    "word": "roadmap.",
+    "start": 317.36,
+    "end": 317.66
+  },
+  {
+    "word": "One",
+    "start": 318.84,
+    "end": 318.96
+  },
+  {
+    "word": "super",
+    "start": 318.96,
+    "end": 319.36
+  },
+  {
+    "word": "app",
+    "start": 319.36,
+    "end": 319.58
+  },
+  {
+    "word": "for",
+    "start": 319.58,
+    "end": 320.0
+  },
+  {
+    "word": "everything.",
+    "start": 320.0,
+    "end": 320.64
+  },
+  {
+    "word": "Chagypeti,",
+    "start": 321.64,
+    "end": 322.28
+  },
+  {
+    "word": "Pruskodex,",
+    "start": 322.42,
+    "end": 323.06
+  },
+  {
+    "word": "Prubrozer,",
+    "start": 323.26,
+    "end": 323.76
+  },
+  {
+    "word": "Prusdesk,",
+    "start": 324.08,
+    "end": 324.7
+  },
+  {
+    "word": "Dupajon.",
+    "start": 324.78,
+    "end": 325.28
+  },
+  {
+    "word": "They're",
+    "start": 326.08,
+    "end": 326.26
+  },
+  {
+    "word": "competing",
+    "start": 326.26,
+    "end": 326.6
+  },
+  {
+    "word": "with",
+    "start": 326.6,
+    "end": 326.86
+  },
+  {
+    "word": "Google",
+    "start": 326.86,
+    "end": 327.1
+  },
+  {
+    "word": "search.",
+    "start": 327.1,
+    "end": 327.68
+  },
+  {
+    "word": "Not",
+    "start": 328.08,
+    "end": 328.28
+  },
+  {
+    "word": "with",
+    "start": 328.28,
+    "end": 328.46
+  },
+  {
+    "word": "Anthropic.",
+    "start": 328.46,
+    "end": 329.04
+  },
+  {
+    "word": "Anthropics",
+    "start": 329.96,
+    "end": 330.52
+  },
+  {
+    "word": "roadmap.",
+    "start": 330.52,
+    "end": 330.96
+  },
+  {
+    "word": "Precision",
+    "start": 331.74,
+    "end": 332.38
+  },
+  {
+    "word": "tools",
+    "start": 332.38,
+    "end": 332.78
+  },
+  {
+    "word": "for",
+    "start": 332.78,
+    "end": 333.24
+  },
+  {
+    "word": "hard",
+    "start": 333.24,
+    "end": 333.48
+  },
+  {
+    "word": "problems.",
+    "start": 333.48,
+    "end": 334.0
+  },
+  {
+    "word": "They're",
+    "start": 334.76,
+    "end": 335.08
+  },
+  {
+    "word": "competing",
+    "start": 335.08,
+    "end": 335.46
+  },
+  {
+    "word": "with",
+    "start": 335.46,
+    "end": 335.72
+  },
+  {
+    "word": "McKinsey.",
+    "start": 335.72,
+    "end": 336.24
+  },
+  {
+    "word": "Not",
+    "start": 336.9,
+    "end": 337.0
+  },
+  {
+    "word": "with",
+    "start": 337.0,
+    "end": 337.2
+  },
+  {
+    "word": "Open",
+    "start": 337.2,
+    "end": 337.44
+  },
+  {
+    "word": "AI.",
+    "start": 337.44,
+    "end": 337.74
+  },
+  {
+    "word": "So,",
+    "start": 338.8,
+    "end": 339.02
+  },
+  {
+    "word": "match",
+    "start": 339.5,
+    "end": 340.26
+  },
+  {
+    "word": "their",
+    "start": 340.26,
+    "end": 340.46
+  },
+  {
+    "word": "roadmap",
+    "start": 340.46,
+    "end": 340.8
+  },
+  {
+    "word": "to",
+    "start": 340.8,
+    "end": 341.14
+  },
+  {
+    "word": "yours.",
+    "start": 341.14,
+    "end": 341.38
+  },
+  {
+    "word": "Are",
+    "start": 342.3,
+    "end": 342.44
+  },
+  {
+    "word": "you",
+    "start": 342.44,
+    "end": 342.54
+  },
+  {
+    "word": "building",
+    "start": 342.54,
+    "end": 342.78
+  },
+  {
+    "word": "an",
+    "start": 342.78,
+    "end": 342.92
+  },
+  {
+    "word": "OS?",
+    "start": 342.92,
+    "end": 343.16
+  },
+  {
+    "word": "Bet",
+    "start": 344.28,
+    "end": 344.36
+  },
+  {
+    "word": "on",
+    "start": 344.36,
+    "end": 344.48
+  },
+  {
+    "word": "Open",
+    "start": 344.48,
+    "end": 344.78
+  },
+  {
+    "word": "AI.",
+    "start": 344.78,
+    "end": 345.12
+  },
+  {
+    "word": "Are",
+    "start": 345.8,
+    "end": 346.12
+  },
+  {
+    "word": "you",
+    "start": 346.12,
+    "end": 346.24
+  },
+  {
+    "word": "building",
+    "start": 346.24,
+    "end": 346.52
+  },
+  {
+    "word": "consultant?",
+    "start": 346.52,
+    "end": 347.1
+  },
+  {
+    "word": "Bet",
+    "start": 348.12,
+    "end": 348.22
+  },
+  {
+    "word": "on",
+    "start": 348.22,
+    "end": 348.38
+  },
+  {
+    "word": "Anthropic.",
+    "start": 348.38,
+    "end": 348.98
+  },
+  {
+    "word": "Building",
+    "start": 349.8,
+    "end": 350.0
+  },
+  {
+    "word": "both.",
+    "start": 350.0,
+    "end": 350.34
+  },
+  {
+    "word": "Use",
+    "start": 351.18,
+    "end": 351.46
+  },
+  {
+    "word": "both.",
+    "start": 351.46,
+    "end": 351.74
+  },
+  {
+    "word": "That's",
+    "start": 352.48,
+    "end": 353.0
+  },
+  {
+    "word": "why",
+    "start": 353.0,
+    "end": 353.1
+  },
+  {
+    "word": "the",
+    "start": 353.1,
+    "end": 353.22
+  },
+  {
+    "word": "routing",
+    "start": 353.22,
+    "end": 353.52
+  },
+  {
+    "word": "layer",
+    "start": 353.52,
+    "end": 353.84
+  },
+  {
+    "word": "matters.",
+    "start": 353.84,
+    "end": 354.2
+  },
+  {
+    "word": "Strategy",
+    "start": 354.9,
+    "end": 355.36
+  },
+  {
+    "word": "is",
+    "start": 355.36,
+    "end": 355.76
+  },
+  {
+    "word": "just",
+    "start": 355.76,
+    "end": 355.92
+  },
+  {
+    "word": "talk",
+    "start": 355.92,
+    "end": 356.24
+  },
+  {
+    "word": "until",
+    "start": 356.24,
+    "end": 356.6
+  },
+  {
+    "word": "Monday.",
+    "start": 356.6,
+    "end": 356.96
+  },
+  {
+    "word": "So",
+    "start": 357.82,
+    "end": 358.14
+  },
+  {
+    "word": "here's",
+    "start": 358.14,
+    "end": 358.42
+  },
+  {
+    "word": "what",
+    "start": 358.42,
+    "end": 358.5
+  },
+  {
+    "word": "to",
+    "start": 358.5,
+    "end": 358.58
+  },
+  {
+    "word": "do",
+    "start": 358.58,
+    "end": 358.68
+  },
+  {
+    "word": "Monday",
+    "start": 358.68,
+    "end": 358.96
+  },
+  {
+    "word": "morning.",
+    "start": 358.96,
+    "end": 359.34
+  },
+  {
+    "word": "Five",
+    "start": 359.34,
+    "end": 360.42
+  },
+  {
+    "word": "things.",
+    "start": 360.42,
+    "end": 360.88
+  },
+  {
+    "word": "One,",
+    "start": 361.86,
+    "end": 362.04
+  },
+  {
+    "word": "audit",
+    "start": 362.88,
+    "end": 363.3
+  },
+  {
+    "word": "your",
+    "start": 363.3,
+    "end": 363.42
+  },
+  {
+    "word": "current",
+    "start": 363.42,
+    "end": 363.76
+  },
+  {
+    "word": "AI",
+    "start": 363.76,
+    "end": 364.12
+  },
+  {
+    "word": "bill.",
+    "start": 364.12,
+    "end": 364.54
+  },
+  {
+    "word": "Is",
+    "start": 365.36,
+    "end": 365.64
+  },
+  {
+    "word": "one",
+    "start": 365.64,
+    "end": 365.88
+  },
+  {
+    "word": "model",
+    "start": 365.88,
+    "end": 366.34
+  },
+  {
+    "word": "handling",
+    "start": 366.34,
+    "end": 366.82
+  },
+  {
+    "word": "everything?",
+    "start": 366.82,
+    "end": 367.48
+  },
+  {
+    "word": "You're",
+    "start": 368.38,
+    "end": 368.54
+  },
+  {
+    "word": "overpaying.",
+    "start": 368.54,
+    "end": 369.2
+  },
+  {
+    "word": "Two,",
+    "start": 369.88,
+    "end": 370.1
+  },
+  {
+    "word": "apply",
+    "start": 371.14,
+    "end": 371.38
+  },
+  {
+    "word": "the",
+    "start": 371.38,
+    "end": 371.52
+  },
+  {
+    "word": "decision",
+    "start": 371.52,
+    "end": 371.78
+  },
+  {
+    "word": "tree.",
+    "start": 371.78,
+    "end": 372.22
+  },
+  {
+    "word": "Tag",
+    "start": 373.08,
+    "end": 373.26
+  },
+  {
+    "word": "your",
+    "start": 373.26,
+    "end": 373.4
+  },
+  {
+    "word": "top",
+    "start": 373.4,
+    "end": 373.62
+  },
+  {
+    "word": "10",
+    "start": 373.62,
+    "end": 373.9
+  },
+  {
+    "word": "use",
+    "start": 373.9,
+    "end": 374.14
+  },
+  {
+    "word": "cases.",
+    "start": 374.14,
+    "end": 374.56
+  },
+  {
+    "word": "ACT",
+    "start": 375.54,
+    "end": 376.0
+  },
+  {
+    "word": "or",
+    "start": 376.0,
+    "end": 376.56
+  },
+  {
+    "word": "Reason.",
+    "start": 376.56,
+    "end": 376.92
+  },
+  {
+    "word": "Three,",
+    "start": 377.46,
+    "end": 377.7
+  },
+  {
+    "word": "implement",
+    "start": 378.84,
+    "end": 379.02
+  },
+  {
+    "word": "the",
+    "start": 379.02,
+    "end": 379.22
+  },
+  {
+    "word": "pipeline",
+    "start": 379.22,
+    "end": 379.68
+  },
+  {
+    "word": "for",
+    "start": 379.68,
+    "end": 380.14
+  },
+  {
+    "word": "high",
+    "start": 380.14,
+    "end": 380.42
+  },
+  {
+    "word": "stakes",
+    "start": 380.42,
+    "end": 380.78
+  },
+  {
+    "word": "tasks.",
+    "start": 380.78,
+    "end": 381.28
+  },
+  {
+    "word": "Codes",
+    "start": 382.32,
+    "end": 382.46
+  },
+  {
+    "word": "at",
+    "start": 382.46,
+    "end": 382.56
+  },
+  {
+    "word": "the",
+    "start": 382.56,
+    "end": 382.66
+  },
+  {
+    "word": "link",
+    "start": 382.66,
+    "end": 382.78
+  },
+  {
+    "word": "below.",
+    "start": 382.78,
+    "end": 383.08
+  },
+  {
+    "word": "Four,",
+    "start": 383.76,
+    "end": 384.3
+  },
+  {
+    "word": "add",
+    "start": 385.36,
+    "end": 385.56
+  },
+  {
+    "word": "renegotiations",
+    "start": 385.56,
+    "end": 386.4
+  },
+  {
+    "word": "clauses",
+    "start": 386.4,
+    "end": 386.9
+  },
+  {
+    "word": "to",
+    "start": 386.9,
+    "end": 387.48
+  },
+  {
+    "word": "any",
+    "start": 387.48,
+    "end": 387.88
+  },
+  {
+    "word": "AI",
+    "start": 387.88,
+    "end": 388.4
+  },
+  {
+    "word": "contract",
+    "start": 388.4,
+    "end": 389.06
+  },
+  {
+    "word": "you",
+    "start": 389.06,
+    "end": 389.34
+  },
+  {
+    "word": "signed",
+    "start": 389.34,
+    "end": 389.66
+  },
+  {
+    "word": "this",
+    "start": 389.66,
+    "end": 389.84
+  },
+  {
+    "word": "quarter.",
+    "start": 389.84,
+    "end": 390.2
+  },
+  {
+    "word": "Five,",
+    "start": 390.92,
+    "end": 391.38
+  },
+  {
+    "word": "subscribe.",
+    "start": 392.38,
+    "end": 392.82
+  },
+  {
+    "word": "When",
+    "start": 393.66,
+    "end": 393.92
+  },
+  {
+    "word": "mythos",
+    "start": 393.92,
+    "end": 394.38
+  },
+  {
+    "word": "goes",
+    "start": 394.38,
+    "end": 394.6
+  },
+  {
+    "word": "public,",
+    "start": 394.6,
+    "end": 395.12
+  },
+  {
+    "word": "we",
+    "start": 395.48,
+    "end": 395.7
+  },
+  {
+    "word": "run",
+    "start": 395.7,
+    "end": 395.94
+  },
+  {
+    "word": "this",
+    "start": 395.94,
+    "end": 396.16
+  },
+  {
+    "word": "back.",
+    "start": 396.16,
+    "end": 396.56
+  },
+  {
+    "word": "Smarter",
+    "start": 397.36,
+    "end": 397.76
+  },
+  {
+    "word": "is",
+    "start": 397.76,
+    "end": 398.0
+  },
+  {
+    "word": "not",
+    "start": 398.0,
+    "end": 398.24
+  },
+  {
+    "word": "always",
+    "start": 398.24,
+    "end": 398.62
+  },
+  {
+    "word": "more",
+    "start": 398.62,
+    "end": 398.86
+  },
+  {
+    "word": "honest.",
+    "start": 398.86,
+    "end": 399.16
+  },
+  {
+    "word": "Pick",
+    "start": 400.2,
+    "end": 400.32
+  },
+  {
+    "word": "by",
+    "start": 400.32,
+    "end": 400.48
+  },
+  {
+    "word": "task.",
+    "start": 400.48,
+    "end": 400.92
+  },
+  {
+    "word": "Build",
+    "start": 401.62,
+    "end": 401.96
+  },
+  {
+    "word": "the",
+    "start": 401.96,
+    "end": 402.14
+  },
+  {
+    "word": "routing",
+    "start": 402.14,
+    "end": 402.42
+  },
+  {
+    "word": "layer.",
+    "start": 402.42,
+    "end": 402.76
+  },
+  {
+    "word": "See",
+    "start": 403.54,
+    "end": 403.86
+  },
+  {
+    "word": "you",
+    "start": 403.86,
+    "end": 403.96
+  },
+  {
+    "word": "Monday.",
+    "start": 403.96,
+    "end": 404.2
+  }
+]

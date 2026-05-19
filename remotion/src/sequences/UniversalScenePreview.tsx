@@ -41,7 +41,7 @@ export const makeUniversalScenePreview = (sceneId: string): React.FC => {
   // AbsoluteFill picks them up automatically — never hardcode dimensions here.
   const Preview: React.FC = () => (
     <AbsoluteFill style={{ backgroundColor: D.bg, overflow: 'hidden' }}>
-      <UniversalScene blocks={blocks} />
+      <UniversalScene blocks={blocks} captions={words} />
       {words.length > 0 && (
         <VideoCaptions wordTimestamps={words} wordsPerGroup={4} accentColor={D.cyan} />
       )}

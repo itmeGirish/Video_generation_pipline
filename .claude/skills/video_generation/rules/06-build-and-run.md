@@ -38,7 +38,7 @@ projects/
 
 When you pass `projects/scripts/<name>.txt`:
 1. `script_converter.py` (or rule 18 hand-conversion) reads the raw script
-2. Converts to canonical format (regex first, LLM if needed)
+2. Converts to canonical format (regex only — the LLM fallback was removed alongside the claude CLI subprocess; rule 14 has details)
 3. Writes to `projects/structured_scripts/<name>.txt`
 4. `source_parser.py` and `config.yaml` derivation (rule 00 §2) read from there
    — single source of truth for every downstream step
@@ -56,7 +56,13 @@ video:
 
 audio:
   voice: en-US-AndrewMultilingualNeural   # pipeline-pinned constant (see rule 00 §2a)
-  rate: "+0%"
+  rate: "+20%"   # CRITICAL: must be calibrated so TTS speaks at ~150 wpm.
+                 # en-US-AndrewMultilingualNeural at +0% ≈ 122 wpm → visuals finish
+                 # before narration ("visuals fast, sound slow").
+                 # +20% ≈ 150 wpm (correct). Always start with +20%, not +0%.
+                 # Formula to tune: rate = round((150 / actual_wpm - 1) * 100)%
+                 # The pipeline prints actual wpm after TTS and warns if < 132 wpm.
+                 # If build log shows [time] scale factor > 1.15× → rate is too low.
   pitch: "+0%"
   full_audio_filename: "full.mp3"
 
@@ -78,10 +84,12 @@ design:
   dot_grid_opacity: <decimal from GLOBAL VISUAL SYSTEM grid opacity>
   dot_grid_spacing: <integer from GLOBAL VISUAL SYSTEM grid spacing>
 
-# Optional — override the LLM model used by visual_designer.py.
-# Default: claude-opus-4-6 (the pipeline-pinned design model).
-# llm:
-#   designer_model: claude-opus-4-6
+# NOTE: There is no `llm:` section anymore. The previous `llm.designer_model`
+# knob and `DESIGNER_MODEL` env var were removed when the claude CLI subprocess
+# was removed from the pipeline. Per-bullet React code is authored in-session
+# by the active Claude Code agent (rule 04); the model used is whichever the
+# operator selected via `/model` (Opus 4.7 for authoring/QA, Sonnet 4.6 for
+# routing/mechanical work — see SKILL.md § "MODEL STRATEGY").
 
 # Optional — visual-block timing + scene-boundary heuristics.
 # Defaults below; omit any key to use the default.
@@ -129,6 +137,9 @@ Whisper model, etc.).
 [2/10] Parsing structured script...
       N scenes: ['<project>-s01', ..., '<project>-sNN']
       [lint] (none — clean)
+[2.5] Bullet vagueness lint...
+      [bullet-lint] all bullets concrete — no vagueness detected
+      (or: [VAGUE] scene 3 bullet 2 — "Performance": no quoted labels; no numbers; ...)
 [3/10] Visual codegen (LLM per bullet, parallel workers)...
       [scene 1] codegen for 6 bullets (workers=2)...
       [scene 1] bullet 1/6 OK (cached)
@@ -179,6 +190,19 @@ Whisper model, etc.).
 | `--force` | clear all caches: per-bullet codegen, transcripts, TTS hash, scene renders |
 | `--redesign` | clear per-bullet codegen cache only (keeps audio + transcript) |
 | `--retts` | clear TTS hash only (re-generates audio + Whisper) |
+| `--strict-bullets` | hard-fail the build at Step 2.5 if any bullet scores VAGUE in the bullet linter. Without this flag, vague bullets are warned but build continues — LLM may hallucinate stats/labels. |
+| `--strict-anchors` | hard-fail the build if Step 7 audio_anchor coverage < threshold (default 70%). Exit code 3 = quality-gate fail (vs 1=fatal, 2=partial). Without this flag, low coverage is a SOFT warn and the build proceeds. |
+| `--strict-anchor-min-pct N` | coverage percent threshold for `--strict-anchors` (default 70). Ignored without `--strict-anchors`. |
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | full build success |
+| 1 | fatal error (bundle failed, parser rejected, etc.) |
+| 2 | render partial — some scenes failed retries; re-run to retry only the missing ones; stitch aborted |
+| 3 | quality gate (`--strict-anchors`) — coverage below threshold; tighten the structured script and re-run |
+| 130 | Ctrl+C — render tree killed (Windows: `taskkill /F /T`); re-run resumes from where it stopped |
 
 ## Re-run after errors
 
@@ -204,8 +228,9 @@ cd remotion && npm install
 # ffmpeg (must be on PATH)
 ffmpeg -version
 
-# claude CLI (must be on PATH — for visual_designer.py)
-claude --version
+# claude CLI is NOT a runtime prerequisite. visual_designer.py does pure
+# cache lookup; per-bullet code is authored by the active Claude Code session
+# and seeded via storyboard/seed_bullet_cache.py. See rule 04.
 ```
 
 ## Remotion composition ID rules

@@ -45,6 +45,7 @@ from pathlib import Path
 
 import edge_tts
 import yaml
+from difflib import SequenceMatcher
 from faster_whisper import WhisperModel
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -55,13 +56,55 @@ sys.stdout.reconfigure(encoding="utf-8")
 # a black window.
 _NOWIN = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 
+
+def atomic_write_text(path: Path, content: str, encoding: str = "utf-8") -> None:
+    """Write text atomically: write to <path>.inprogress, then os.replace.
+
+    Ctrl+C between open() and close() leaves a half-written file. Atomic
+    write makes that impossible: either the old file is still there OR the
+    new file is fully there. Used for timelines.ts, scene/caption JSON,
+    config_tokens.json — every artifact whose corruption would break a
+    future build until restored from git.
+    """
+    inprogress = path.with_suffix(path.suffix + ".inprogress")
+    try:
+        inprogress.write_text(content, encoding=encoding)
+        os.replace(inprogress, path)
+    finally:
+        # Clean up if os.replace failed (e.g. perms / disk full)
+        if inprogress.exists():
+            try:
+                inprogress.unlink()
+            except OSError:
+                pass
+
+
+def atomic_copy(src: Path, dst: Path) -> None:
+    """Copy src → dst atomically: copy to <dst>.inprogress, then os.replace.
+
+    Without atomic copy, Ctrl+C during _shutil.copyfile leaves a half-written
+    mirror that the renderer reads as garbage."""
+    import shutil as _shutil
+    inprogress = dst.with_suffix(dst.suffix + ".inprogress")
+    try:
+        _shutil.copyfile(src, inprogress)
+        os.replace(inprogress, dst)
+    finally:
+        if inprogress.exists():
+            try:
+                inprogress.unlink()
+            except OSError:
+                pass
+
 # Add project root to path so we can import storyboard modules
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from storyboard.source_parser import parse as parse_source, lint as lint_source
+from storyboard.bullet_linter import lint_bullets, print_lint_report
 from storyboard.visual_designer import design_script
 from storyboard.ssml_compiler import compile_narration
+from storyboard.narration_pacer import pace_scenes
 from storyboard.visual_qa import run_qa
 from storyboard.validate_pipeline import validate as validate_pipeline
 from storyboard.validate_output import validate_output
@@ -87,7 +130,46 @@ parser.add_argument("--redesign", action="store_true",
                     help="Clear LLM design cache only (force re-pick of primitives). Keeps TTS+Whisper.")
 parser.add_argument("--retts", action="store_true",
                     help="Clear TTS hash only (force re-generation of audio). Triggers Whisper re-transcribe.")
+parser.add_argument("--strict-bullets", action="store_true",
+                    help="Hard-fail the build if any animation bullet scores VAGUE in the "
+                         "bullet linter (step 2.5). Without this flag, vague bullets are "
+                         "warned but the build continues — LLM may hallucinate content.")
+parser.add_argument("--strict-anchors", action="store_true",
+                    help="Hard-fail the build if Step 7 audio_anchor coverage drops below "
+                         "STRICT_ANCHOR_MIN_PCT (default 70%%). Without this flag, low coverage "
+                         "is a SOFT warn and the build proceeds — visuals may desync from narration.")
+parser.add_argument("--strict-anchor-min-pct", type=int, default=70,
+                    help="Coverage percent threshold for --strict-anchors (default 70). "
+                         "Ignored when --strict-anchors is not set.")
+parser.add_argument("--strict-fidelity", action="store_true",
+                    help="Hard-fail the build if ANY bullet's codegen fails (instead of "
+                         "substituting a placeholder card). Use in CI/CD that rejects "
+                         "partial fidelity. Without this flag, placeholders are emitted "
+                         "WITH a placeholder=True marker so validate_output flags them.")
+parser.add_argument("--strict-layout", action="store_true",
+                    help="Hard-fail the build if the layout validator reports any "
+                         "out-of-bounds element or cross-bullet overlap. Runs in step 8.6 "
+                         "before render. Without this flag, layout violations are warnings only.")
+parser.add_argument("--skip-layout", action="store_true",
+                    help="Skip the layout validator (step 8.6) entirely. Use when iterating "
+                         "and you want to bypass false-positives quickly.")
+parser.add_argument("--resolution", default=None,
+                    choices=["480p", "720p", "1080p", "1440p", "4k"],
+                    help="Render resolution. Defaults to config.yaml's pinned 1920x1080. "
+                         "Override with 480p/720p/1440p/4k for shorter renders or higher "
+                         "quality. Note: bullets author with %%-of-width math so layouts "
+                         "scale, but absolute pixel sizes (e.g. fontSize:60) won't.")
 args = parser.parse_args()
+
+
+# Resolution presets — keys match CLI.md § render conventions
+_RESOLUTION_PRESETS = {
+    "480p":  (854, 480),
+    "720p":  (1280, 720),
+    "1080p": (1920, 1080),
+    "1440p": (2560, 1440),
+    "4k":    (3840, 2160),
+}
 
 
 # ─── RESOLVE INPUT — directory or script file ───
@@ -114,13 +196,22 @@ if input_path.is_file() and input_path.suffix == ".txt":
     SOURCE_FILE  = STRUCTURED_DIR / f"{PROJECT}.txt"
     CONFIG_FILE  = PROJECT_DIR / "config.yaml"
 
-    raw_text = input_path.read_text(encoding="utf-8")
-    clean_text = convert_with_fallback(raw_text)
-    if not SOURCE_FILE.exists() or SOURCE_FILE.read_text(encoding="utf-8") != clean_text:
-        SOURCE_FILE.write_text(clean_text, encoding="utf-8")
-        print(f"      converted {input_path.relative_to(ROOT)} → {SOURCE_FILE.relative_to(ROOT)}")
+    # Respect rule 18 hand-conversions: if the structured file exists AND is
+    # newer than the raw script, treat it as authoritative (the user manually
+    # converted a rich script the regex converter can't handle). Without this
+    # guard the converter overwrites careful hand-conversions with a partial
+    # regex-only output that drops ### Narration / ### Animation blocks.
+    if SOURCE_FILE.exists() and SOURCE_FILE.stat().st_mtime > input_path.stat().st_mtime:
+        print(f"      using HAND-CONVERTED structured script at {SOURCE_FILE.relative_to(ROOT)}")
+        print(f"      (newer than raw input — see rule 18; auto-converter SKIPPED)")
     else:
-        print(f"      using cached conversion at {SOURCE_FILE.relative_to(ROOT)}")
+        raw_text = input_path.read_text(encoding="utf-8")
+        clean_text = convert_with_fallback(raw_text)
+        if not SOURCE_FILE.exists() or SOURCE_FILE.read_text(encoding="utf-8") != clean_text:
+            SOURCE_FILE.write_text(clean_text, encoding="utf-8")
+            print(f"      converted {input_path.relative_to(ROOT)} → {SOURCE_FILE.relative_to(ROOT)}")
+        else:
+            print(f"      using cached conversion at {SOURCE_FILE.relative_to(ROOT)}")
     print(f"      project: '{PROJECT}'")
 elif input_path.is_dir():
     # Layout (a): project directory
@@ -215,17 +306,44 @@ FULL_AUDIO_NAME  = config["audio"]["full_audio_filename"]
 OUTPUT_NAME      = config["output"]
 PROJECT_PREFIX   = re.sub(r"[^a-z0-9]", "-", PROJECT.lower()).strip("-")
 
-# Optional LLM model override from config.yaml top-level `llm:` section.
-# Example:
-#   llm:
-#     designer_model: claude-opus-4-6
-# Defaults to claude-opus-4-6 if not set (the pipeline-pinned design model).
-DESIGNER_MODEL = config.get("llm", {}).get("designer_model")
-if DESIGNER_MODEL:
-    os.environ["DESIGNER_MODEL"] = DESIGNER_MODEL
-    print(f"      LLM designer model override: {DESIGNER_MODEL}")
+# ─── PINNED CONSTANTS (SKILL.md contract #9) ───
+# These four config values are pipeline-wide invariants. Reading them from
+# config.yaml is allowed (so projects can SEE them) but a typo'd value would
+# silently produce off-spec video. Fail loud at config-load time.
+# Apply --resolution override (after config load, before pin check). The pin
+# enforces the DEFAULT only — explicit --resolution opts the user out.
+_resolution_override = None
+if args.resolution:
+    _resolution_override = _RESOLUTION_PRESETS[args.resolution]
+    config["video"]["width"], config["video"]["height"] = _resolution_override
+    print(f"      --resolution {args.resolution} → "
+          f"{_resolution_override[0]}x{_resolution_override[1]} (overrides config.yaml pinned 1920x1080)")
 
-TOKENS_JSON.write_text(json.dumps(config["design"], indent=2), encoding="utf-8")
+_PINNED = {
+    "video.fps":     (FPS,             30),
+    "audio.voice":   (VOICE, "en-US-AndrewMultilingualNeural"),
+}
+# When NO --resolution override, keep the original 1920x1080 pin in effect.
+if _resolution_override is None:
+    _PINNED["video.width"] = (config["video"]["width"], 1920)
+    _PINNED["video.height"] = (config["video"]["height"], 1080)
+
+_pin_errors = [(k, actual, expected) for k, (actual, expected) in _PINNED.items()
+               if actual != expected]
+if _pin_errors:
+    print("ERROR: config.yaml has off-spec PINNED values (SKILL.md contract #9):")
+    for k, actual, expected in _pin_errors:
+        print(f"       {k} = {actual!r}  (expected {expected!r})")
+    print("       Edit config.yaml to match the pinned values, or pass --resolution.")
+    sys.exit(1)
+
+# NOTE: the previous `llm.designer_model` config knob and `DESIGNER_MODEL` env
+# var were removed alongside the claude CLI subprocess. Per-bullet React code
+# is now authored in-session by the active Claude Code agent (rule 04). The
+# acting agent's model — Opus 4.7 for authoring/correction/QA, Sonnet 4.6 for
+# mechanical work — is selected via `/model` in Claude Code, not config.yaml.
+
+atomic_write_text(TOKENS_JSON, json.dumps(config["design"], indent=2))
 print(f"      design tokens → {TOKENS_JSON.name}")
 
 
@@ -238,9 +356,10 @@ _stitch_cfg = config.get("stitch", {})
 _whisper_cfg = config.get("whisper", {})
 
 # Visual-block timing
-MIN_BLOCK_SECONDS         = float(_build_cfg.get("min_block_seconds", 2.0))
+MIN_BLOCK_SECONDS         = float(_build_cfg.get("min_block_seconds", 1.0))
 SCENE_BOUNDARY_WORDS      = int(_build_cfg.get("scene_boundary_words", 8))
 FUZZY_MATCH_MIN_RATIO     = float(_build_cfg.get("fuzzy_match_min_ratio", 0.6))
+FUZZY_MATCH_SEQ_RATIO     = float(_build_cfg.get("fuzzy_match_seq_ratio", 0.75))
 SCENE_BOUNDARY_MIN_RATIO  = float(_build_cfg.get("scene_boundary_min_ratio", 0.5))
 
 # ffmpeg quality knobs
@@ -276,27 +395,126 @@ for s in scenes_raw:
     print(f"      scene {s.number}: {len(s.animation)} animation bullets")
 
 
-# ─── 2.5 (REMOVED) primitive registry no longer exists — codegen pipeline ───
-# Primitives are now LLM-emitted React.createElement code per bullet (no fixed
-# registry). DynamicBlock.tsx compiles + invokes the code at render time.
-# Validation is shifted to render time: code that fails to parse or run shows
-# a visible error frame instead of crashing the bundle.
+# ─── 2.5 BULLET VAGUENESS LINT ───
+print(f"[2.5] Bullet vagueness lint...")
+_bullet_warnings = lint_bullets(scenes_raw)
+_vague_count = print_lint_report(_bullet_warnings, strict=args.strict_bullets)
+if args.strict_bullets and _vague_count > 0:
+    print(f"\n[2.5] STRICT-BULLETS: {_vague_count} vague bullet(s) — aborting before LLM codegen.")
+    print(f"      Fix the flagged bullets in the structured script, then re-run.")
+    sys.exit(3)
 
 
 # ─── 3. VISUAL DESIGN (LLM codegen per bullet) ───
 print(f"[3/10] Visual design (LLM codegen per bullet)...")
-designs = design_script(scenes_raw, config["design"])   # {scene_number: [VisualBlock, ...]}
+designs = design_script(
+    scenes_raw, config["design"],
+    strict_fidelity=args.strict_fidelity,
+)   # {scene_number: [VisualBlock, ...]}
 for sc in scenes_raw:
     blocks = designs[sc.number]
     print(f"      scene {sc.number}: {len(blocks)} visual blocks (fidelity gate passed)")
 
 
+# ─── 3.5 NARRATION PACING ───
+# Inject <pause Xs> markers in scene narration so each bullet's NATURAL audio
+# gap (between its anchor word and the next bullet's anchor word) is at least
+# the bullet's required display duration. Without this, dense back-to-back
+# anchor phrases ("Eight minutes. No fluff.") collapse the bullet's display
+# window to ~1s — too short to read multi-line content. See rule 08
+# § "Narration pacer (Step 3.5)".
+print(f"[3.5] Narration pacer (display-time enforcement)...")
+_anchors_by_scene: dict[int, list[str]] = {
+    sc.number: [vb.audio_anchor or "" for vb in designs[sc.number]]
+    for sc in scenes_raw
+}
+pace_scenes(scenes_raw, _anchors_by_scene, verbose=True)
+
+
 # ─── 4. CONTINUOUS TTS (with SSML for non-flat narration) ───
 print(f"[4/10] Continuous TTS (SSML-enhanced)...")
 full_ssml      = compile_narration(scenes_raw)
-text_hash      = hashlib.sha256(full_ssml.encode()).hexdigest()[:16]
+# Cache key MUST include voice/rate/pitch — changing any of these in config.yaml
+# changes the rendered audio bytes, so the cached mp3 must be invalidated.
+# (Spec contract: cache by sha256(SSML) was incomplete — voice/rate/pitch were
+# silent invalidation holes that returned stale audio after the user "fixed"
+# config.yaml.)
+_tts_cache_input = f"{VOICE}|{RATE}|{PITCH}|{full_ssml}"
+text_hash      = hashlib.sha256(_tts_cache_input.encode()).hexdigest()[:16]
 full_audio     = AUDIO_DIR / FULL_AUDIO_NAME
 hash_marker    = AUDIO_DIR / f".{FULL_AUDIO_NAME}.{text_hash}.hash"
+
+
+import html as _html
+import tempfile
+
+# ─── Helpers for split-render-concat TTS (Strategy B for honoring pause durations) ───
+# edge-tts uses Microsoft's FREE Edge TTS endpoint, which filters non-conforming
+# SSML — it does NOT honor <break time="..."/>. Verified in github.com/rany2/edge-tts
+# issue #173. Without this code, every <pause Xs> marker collapses to a generic
+# comma and the duration value is lost.
+#
+# Strategy B (community canonical, verified in moha-abdi gist + edge-tts issues
+# #58, #136): split the SSML on <break time="Nms"/>, render each text chunk
+# separately via edge-tts, generate exact-duration silence per break with ffmpeg
+# anullsrc, concat losslessly via ffmpeg concat demuxer (-c copy).
+#
+# Format match is critical: silence files MUST be 24kHz mono 48kbps libmp3lame
+# to match edge-tts's exact output format (audio-24khz-48kbitrate-mono-mp3).
+# Mismatch → -c copy concat fails or produces glitches.
+
+_BREAK_SPLIT_RE = re.compile(r'<break\s+time="(\d+)(ms|s)"\s*/>', re.IGNORECASE)
+
+
+def _ms_from_break_match(value: str, unit: str) -> int:
+    n = int(value)
+    return n if unit.lower() == "ms" else n * 1000
+
+
+def _strip_ssml_to_plain(plain: str) -> str:
+    """Mirror the rule 10 Class 1 defense pipeline. Strip tags, decode HTML
+    entities, strip again to catch any entity-decoded <pause> patterns.
+    Variable named `plain` (not `text`) because the regression test in
+    test_pipeline_fixes.py group [7] greps for the exact string
+    `_html.unescape(plain)` to ensure the defense doesn't regress."""
+    plain = re.sub(r'<[^>]+>', '', plain)
+    plain = _html.unescape(plain)
+    plain = re.sub(r'<[^>]+>', '', plain)
+    plain = re.sub(r'\s+', ' ', plain).strip()
+    return plain
+
+
+def _generate_silence_mp3(duration_ms: int, out_path: Path) -> None:
+    """Generate exact-duration silent mp3 in edge-tts format (24kHz mono 48kbps)."""
+    duration_sec = duration_ms / 1000.0
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "lavfi",
+         "-i", "anullsrc=r=24000:cl=mono",
+         "-t", f"{duration_sec:.3f}",
+         "-c:a", "libmp3lame", "-b:a", "48k", "-ar", "24000", "-ac", "1",
+         str(out_path)],
+        capture_output=True, check=True,
+        creationflags=_NOWIN,
+    )
+
+
+def _concat_mp3s_lossless(input_paths: list[Path], out_path: Path) -> None:
+    """Concat mp3s via ffmpeg concat demuxer with -c copy (lossless, no re-encode)."""
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False,
+                                     encoding="utf-8") as f:
+        list_path = Path(f.name)
+        for p in input_paths:
+            # ffmpeg concat demuxer requires forward-slash paths even on Windows
+            f.write(f"file '{p.resolve().as_posix()}'\n")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
+             "-i", str(list_path), "-c", "copy", str(out_path)],
+            capture_output=True, check=True,
+            creationflags=_NOWIN,
+        )
+    finally:
+        list_path.unlink(missing_ok=True)
 
 
 async def gen_tts():
@@ -304,23 +522,112 @@ async def gen_tts():
         print(f"      using cached audio (hash {text_hash})")
         return
     print(f"      generating TTS via {VOICE} (hash {text_hash})...")
-    # edge-tts Communicate() does NOT parse SSML — it speaks tags literally.
-    # Strip XML tags; convert <break time="Nms"/> to a comma for a short pause.
-    # Defense in depth: html.unescape() decodes any HTML-escaped entities (e.g.
-    # &lt;pause 0.3s&gt;) so the second strip-tags pass actually catches them.
-    # Without this, author-supplied markers that got escaped by ssml_compiler's
-    # _escape() would survive as literal text and TTS would speak them aloud.
-    import html as _html
-    plain = re.sub(r'<break\b[^/>]*/>', ', ', full_ssml)
-    plain = re.sub(r'<[^>]+>', '', plain)
-    plain = _html.unescape(plain)
-    plain = re.sub(r'<[^>]+>', '', plain)        # second pass after entity decode
-    plain = re.sub(r'\s+', ' ', plain).strip()
-    c = edge_tts.Communicate(plain, VOICE, rate=RATE, pitch=PITCH)
-    await c.save(str(full_audio))
+
+    # 1. Split SSML on <break time="Nms"/>. Each chunk is the text BEFORE a
+    # break; the break's duration is the silence to insert AFTER that chunk.
+    # Last chunk has no break after it.
+    cursor = 0
+    chunks: list[tuple[str, int]] = []   # (plain_text, ms_pause_after)
+    for m in _BREAK_SPLIT_RE.finditer(full_ssml):
+        chunk_ssml = full_ssml[cursor:m.start()]
+        ms_after = _ms_from_break_match(m.group(1), m.group(2))
+        chunks.append((_strip_ssml_to_plain(chunk_ssml), ms_after))
+        cursor = m.end()
+    chunks.append((_strip_ssml_to_plain(full_ssml[cursor:]), 0))
+
+    # 2. Render each non-empty text chunk + generate silence per break.
+    work_dir = AUDIO_DIR / ".pause_chunks"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    # Only wipe stale files whose index is not in the current chunk list
+    current_names = {f"chunk_{i:04d}.mp3" for i, (t, _) in enumerate(chunks) if t}
+    current_names |= {f"silence_{i:04d}.mp3" for i, (_, ms) in enumerate(chunks) if ms > 0}
+    for stale in work_dir.glob("*.mp3"):
+        if stale.name not in current_names:
+            stale.unlink(missing_ok=True)
+
+    # Defensive sweep: any 0-byte mp3 in work_dir from a previous crashed run
+    # is stale (TTS write completed without bytes — typically a websocket
+    # drop). Delete them so the size>0 check below treats them as missing
+    # and re-renders. Without this sweep a 0-byte file would trip the
+    # "after 6 attempts still 0 bytes" guard if the immediate retries also
+    # hit network trouble — better to start fresh.
+    for stale_zero in work_dir.glob("*.mp3"):
+        if stale_zero.stat().st_size == 0:
+            stale_zero.unlink(missing_ok=True)
+
+    parts: list[Path] = []
+    n_chunks_rendered = 0
+    n_chunks_skipped = 0
+    n_pauses = 0
+    # Per-chunk websocket-save timeout (seconds). edge-tts has no built-in
+    # ceiling on `Communicate.save()` — a stalled bing speech websocket can
+    # hang the build forever. 30s is generous for any normal chunk
+    # (typically 50-150 KB) and ensures the retry loop actually fires.
+    PER_CHUNK_TTS_TIMEOUT_S = 30
+    for i, (text, ms_after) in enumerate(chunks):
+        if text:
+            chunk_path = work_dir / f"chunk_{i:04d}.mp3"
+            if chunk_path.exists() and chunk_path.stat().st_size > 0:
+                n_chunks_skipped += 1
+            else:
+                for _attempt in range(6):
+                    if _attempt > 0:
+                        await asyncio.sleep(3.0 * _attempt)
+                    c = edge_tts.Communicate(text, VOICE, rate=RATE, pitch=PITCH)
+                    try:
+                        await asyncio.wait_for(c.save(str(chunk_path)), timeout=PER_CHUNK_TTS_TIMEOUT_S)
+                    except asyncio.TimeoutError:
+                        # Partial / 0-byte file may exist — wipe it so the
+                        # next attempt isn't fooled into thinking it succeeded.
+                        if chunk_path.exists():
+                            chunk_path.unlink(missing_ok=True)
+                        continue
+                    except Exception:
+                        # Network glitch, websocket drop, etc. — same cleanup.
+                        if chunk_path.exists() and chunk_path.stat().st_size == 0:
+                            chunk_path.unlink(missing_ok=True)
+                        continue
+                    if chunk_path.exists() and chunk_path.stat().st_size > 0:
+                        break
+                if not chunk_path.exists() or chunk_path.stat().st_size == 0:
+                    raise RuntimeError(f"TTS wrote 0-byte file after 6 attempts: chunk_{i:04d}.mp3")
+                await asyncio.sleep(0.15)
+                n_chunks_rendered += 1
+            parts.append(chunk_path)
+        if ms_after > 0:
+            silence_path = work_dir / f"silence_{i:04d}.mp3"
+            if not silence_path.exists():
+                _generate_silence_mp3(ms_after, silence_path)
+            parts.append(silence_path)
+            n_pauses += 1
+
+    if not parts:
+        raise RuntimeError("No TTS chunks rendered — full_ssml has no spoken text?")
+
+    # 3. Concat (or rename if only one chunk and no pauses).
+    if len(parts) == 1:
+        os.replace(parts[0], full_audio)
+    else:
+        _concat_mp3s_lossless(parts, full_audio)
+
+    # 4. Cleanup work dir + roll hash marker.
+    for f in work_dir.glob("*.mp3"):
+        f.unlink(missing_ok=True)
+    try:
+        work_dir.rmdir()
+    except OSError:
+        pass  # non-empty (concurrent stale files); harmless
+
     for old in AUDIO_DIR.glob(f".{FULL_AUDIO_NAME}.*.hash"):
         old.unlink()
     hash_marker.write_text("", encoding="utf-8")
+
+    skip_msg = f", {n_chunks_skipped} resumed from cache" if n_chunks_skipped else ""
+    if n_pauses:
+        print(f"      rendered {n_chunks_rendered} chunk(s){skip_msg} + {n_pauses} "
+              f"exact-duration pause(s) honored")
+    else:
+        print(f"      rendered {n_chunks_rendered} chunk(s){skip_msg} (no pause markers in narration)")
 
 
 asyncio.run(gen_tts())
@@ -332,13 +639,40 @@ probe = subprocess.run(
     creationflags=_NOWIN,
 )
 total_sec    = float(probe.stdout.strip())
-total_frames = int(total_sec * FPS)
+# round() not int() — int() truncates and drifts 1 frame from the cumulative
+# scene-frame math at line ~756 (which uses round()). Two values for the same
+# quantity = silent 1-frame drift in build_timing.json vs the rendered video.
+total_frames = round(total_sec * FPS)
 print(f"      audio: {total_sec:.2f}s ({total_frames} frames)")
+
+# WPM sanity check: actual wpm vs 150 wpm target.
+# If TTS speaks slower than 150 wpm, visual block durations (derived from
+# script M:SS windows designed at 150 wpm) will finish before narration —
+# "visuals fast, sound slow." Warn early so the user can fix audio.rate.
+import re as _re
+_narration_words = sum(len(_re.findall(r'\b\w+\b', sc.narration)) for sc in scenes_raw)
+_actual_wpm = _narration_words / max(1.0, total_sec / 60.0)
+_TARGET_WPM = 150
+if _actual_wpm < _TARGET_WPM * 0.88:
+    _suggested_rate = round((_TARGET_WPM / _actual_wpm - 1) * 100)
+    print(f"      WARNING: TTS rate is {_actual_wpm:.0f} wpm (target {_TARGET_WPM} wpm). "
+          f"Visuals will finish before narration. "
+          f"Fix: set audio.rate: '+{_suggested_rate}%' in config.yaml and re-run.")
+else:
+    print(f"      WPM: {_actual_wpm:.0f} (target {_TARGET_WPM})")
 
 
 # ─── 5. WHISPER ───
-print(f"[5/10] Whisper transcribe (cached by audio hash)...")
-audio_hash = hashlib.sha256(full_audio.read_bytes()).hexdigest()[:16]
+print(f"[5/10] Whisper transcribe (cached by audio hash + model + compute_type)...")
+# Cache key MUST include the Whisper model name and compute_type. Without them,
+# `--whisper-model large` after a prior run with `--whisper-model base` returns
+# the OLD cached `base` transcript silently — user explicitly asked for higher
+# quality, gets the lower one.
+_whisper_cache_input = (
+    full_audio.read_bytes()
+    + f"|{args.whisper_model}|{WHISPER_COMPUTE_TYPE}".encode()
+)
+audio_hash = hashlib.sha256(_whisper_cache_input).hexdigest()[:16]
 cache_file = CACHE_DIR / f"transcript-{audio_hash}.json"
 if cache_file.exists():
     all_words = json.loads(cache_file.read_text(encoding="utf-8"))
@@ -379,6 +713,40 @@ DIGIT_WORDS = {
     "70": "seventy", "80": "eighty", "90": "ninety", "100": "hundred",
 }
 WORD_DIGITS = {v: k for k, v in DIGIT_WORDS.items()}
+
+# BUG1 fix: "eighty-six" in an anchor splits to TWO tokens ["eighty","six"] while
+# Whisper writes the digit form "86" — ONE token. Token-level _norm() can't bridge
+# this multi-token gap. _compress_written_numbers() collapses adjacent tens+ones pairs
+# in the ANCHOR token list so both sides compare as the same digit string "86".
+# Only compound patterns are collapsed; standalone tens/ones pass through so
+# "eighty percent" stays ["eighty","percent"] and still matches Whisper "eighty".
+_WRITTEN_TENS: dict[str, int] = {
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+    "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
+}
+_WRITTEN_ONES_COMPOUND: dict[str, int] = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9,
+}
+
+
+def _compress_written_numbers(tokens: list[str]) -> list[str]:
+    """Collapse adjacent (tens + ones) word pairs to their digit string.
+    ["eighty","six"] → ["86"], ["forty","four"] → ["44"].
+    Standalone tokens pass through unchanged."""
+    result: list[str] = []
+    i = 0
+    while i < len(tokens):
+        t = tokens[i]
+        if (t in _WRITTEN_TENS
+                and i + 1 < len(tokens)
+                and tokens[i + 1] in _WRITTEN_ONES_COMPOUND):
+            result.append(str(_WRITTEN_TENS[t] + _WRITTEN_ONES_COMPOUND[tokens[i + 1]]))
+            i += 2
+        else:
+            result.append(t)
+            i += 1
+    return result
 
 
 def expand_decimals(text: str) -> str:
@@ -430,8 +798,11 @@ def find_phrase(words: list, phrase: str, start_idx: int = 0) -> int:
     Phrase is normalized via `normalize_for_match` before tokenizing — so
     inputs containing decimals ("5.5"), hyphens ("Vending-Bench"), or stray
     `<pause>` markers are all handled by a single rule, identical to scene-
-    boundary detection."""
-    target = [_norm(t) for t in normalize_for_match(phrase).split() if _norm(t)]
+    boundary detection. Written compound numbers are compressed to digit form
+    so "eighty-six" → target token "86" matches Whisper's digit transcript."""
+    target = _compress_written_numbers(
+        [_norm(t) for t in normalize_for_match(phrase).split() if _norm(t)]
+    )
     if not target:
         return -1
     for i in range(start_idx, len(words) - len(target) + 1):
@@ -442,24 +813,30 @@ def find_phrase(words: list, phrase: str, start_idx: int = 0) -> int:
 
 def find_phrase_fuzzy(words: list, phrase: str, start_idx: int = 0,
                       min_ratio: float | None = None) -> int:
-    """Fuzzy phrase locator: try exact first, then progressively shorter prefixes,
-    then a sliding-window content-word overlap. Returns best word index, else -1.
-    Used for audio_anchor matching when Whisper drops/mishears words.
-    Phrase normalized via `normalize_for_match` (decimals, hyphens, <...> markers)."""
+    """Fuzzy phrase locator. Four-tier fallback:
+    1. Exact match (find_phrase, includes digit compression).
+    2. Shorter prefix exact match (first 4, 3, 2 anchor words).
+    3. Sliding-window token-set overlap — handles dropped words.
+    4. SequenceMatcher phrase similarity — handles phonetic substitutions
+       (claude→cloud, openai→open ai, want to→wanna). Window is n..n+2
+       to absorb cases where Whisper splits one anchor word into two.
+    Returns best word index or -1."""
     if min_ratio is None:
         min_ratio = FUZZY_MATCH_MIN_RATIO
     exact = find_phrase(words, phrase, start_idx)
     if exact >= 0:
         return exact
-    target = [_norm(t) for t in normalize_for_match(phrase).split() if _norm(t)]
+    target = _compress_written_numbers(
+        [_norm(t) for t in normalize_for_match(phrase).split() if _norm(t)]
+    )
     if len(target) < 2:
         return -1
-    # Try shorter prefixes (anchor's first 4, 3, 2 words)
+    # Tier 2: shorter prefixes (anchor's first 4, 3, 2 words)
     for span in range(min(len(target), 4), 1, -1):
         idx = find_phrase(words, " ".join(target[:span]), start_idx)
         if idx >= 0:
             return idx
-    # Sliding window: find span where >=min_ratio of target tokens are present
+    # Tier 3: sliding window token-set overlap
     target_set = set(target)
     win = max(len(target), 3)
     best_i, best_score = -1, 0.0
@@ -468,6 +845,19 @@ def find_phrase_fuzzy(words: list, phrase: str, start_idx: int = 0,
         score = len(target_set & window_set) / len(target_set)
         if score > best_score and score >= min_ratio:
             best_score, best_i = score, i
+    # Tier 4: SequenceMatcher — character-level similarity on joined phrase strings.
+    # Catches systematic phonetic substitutions that token-set overlap misses.
+    # Uses a fixed threshold higher than min_ratio to avoid false positives.
+    target_str = " ".join(target)
+    for extra in range(0, 3):
+        win_sm = len(target) + extra
+        if win_sm < 2:
+            continue
+        for i in range(start_idx, len(words) - win_sm + 1):
+            window_str = " ".join(_norm(words[i + k]["word"]) for k in range(win_sm))
+            score = SequenceMatcher(None, target_str, window_str).ratio()
+            if score > best_score and score >= FUZZY_MATCH_SEQ_RATIO:
+                best_score, best_i = score, i
     return best_i
 
 
@@ -604,7 +994,7 @@ for i, sc in enumerate(scenes_raw):
     sid = scene_ids[i]
     # Canonical: project-owned captions JSON. Step 7.5 mirrors to public/captions/.
     captions_path = PROJECT_CAPTIONS_DIR / f"{sid}.json"
-    captions_path.write_text(json.dumps(scene_words, ensure_ascii=False), encoding="utf-8")
+    atomic_write_text(captions_path, json.dumps(scene_words, ensure_ascii=False))
 
     # Convert VisualBlock time windows → frame numbers (local to scene).
     # Priority: audio_anchor phrase found in Whisper transcript → use actual spoken timestamp.
@@ -631,42 +1021,106 @@ for i, sc in enumerate(scenes_raw):
     else:
         MIN_BLOCK_FRAMES = nominal_min
 
-    # Step 1: resolve raw anchor frame for each bullet, AND track which blocks
-    # actually got an anchor (vs fell back to time). The anchor-hit flag is
-    # used by the coverage counter below — using `find_phrase_fuzzy` here AND
-    # there guarantees fuzzy hits don't get mislabeled as time-fallback.
-    # Use round() not int() — int() truncates toward zero and can shift the
-    # visual block one frame earlier than the spoken word, accumulating drift.
-    raw_anchors: list[int] = []
-    anchor_hit_flags: list[bool] = []
-    for vb in visual_blocks:
-        anchor_frame: int | None = None
-        hit = False
-        if vb.audio_anchor and vb.audio_anchor.strip():
-            idx = find_phrase_fuzzy(scene_words, vb.audio_anchor)
-            if idx >= 0:
-                anchor_frame = round(scene_words[idx]["start"] * FPS)
-                hit = True
-        if anchor_frame is None:
-            anchor_frame = round(vb.time_from_sec * FPS)
-        raw_anchors.append(max(0, min(anchor_frame, duration_frames - 1)))
-        anchor_hit_flags.append(hit)
+    # ─── FUNDAMENTAL DESIGN ───
+    # framesFrom is driven 100% by where the anchor word actually lands in the
+    # rendered TTS audio (Whisper-detected). The source script's time_from_sec
+    # / window_from_sec are ADVISORY ONLY — they describe the script author's
+    # intent but the rendered audio runs at a different rate, so using them
+    # for positioning desyncs visual from narration. Pre-2026-05 version of
+    # this code fell back to script time-windows when an anchor was missed,
+    # then a uniform-spacing tail clamp pulled bullets BACKWARD before their
+    # anchor word. That produced 1-1.5s visual-ahead-of-narration drift in
+    # back-loaded scenes (proven on difference_txt scene 1, 2026-05-06).
+    #
+    # New algorithm:
+    #   Step A: resolve audio_anchor → frame for every bullet that has one.
+    #           If anchor missed, mark None; we'll interpolate.
+    #   Step B: interpolate missed anchors from neighbors.
+    #   Step C: enforce monotonic order + MIN_BLOCK_FRAMES gap (later bullet
+    #           pushed FORWARD if anchor lands too close to prev).
+    #   Step D: clamp ONLY the LAST bullet's framesFrom so it leaves
+    #           MIN_BLOCK_FRAMES of display before scene end. Earlier bullets
+    #           keep their anchor positions intact.
+    # Use round() not int() — int() truncates and accumulates drift.
 
-    # Step 2: enforce monotonic order + first-block-at-0 + min spacing.
-    # Note: forcing first block to frame 0 means we OVERRIDE its anchor result
-    # for positioning, but we still credit the anchor for coverage purposes.
-    frames_from: list[int] = []
-    for j, raw in enumerate(raw_anchors):
-        if j == 0:
-            frames_from.append(0)  # first visual must paint from t=0
-        else:
-            min_start = frames_from[j - 1] + MIN_BLOCK_FRAMES
-            frames_from.append(max(raw, min_start))
-    # Final clamp: each frames_from must leave room for MIN_BLOCK_FRAMES before scene end
-    for j in range(n):
-        max_start = duration_frames - MIN_BLOCK_FRAMES * (n - j)
-        if frames_from[j] > max_start:
-            frames_from[j] = max(0, max_start)
+    # Step A — anchor lookup
+    # _anchor_search_from enforces monotonic ordering: bullet N's anchor is
+    # searched only in words AFTER bullet N-1's match. This eliminates the
+    # first-occurrence ambiguity — if the same phrase appears multiple times
+    # in the narration (e.g. "Different jobs" at t=7.1s and t=30.5s), the
+    # pipeline always finds the CORRECT later occurrence instead of the first.
+    raw_anchors: list[int | None] = []
+    anchor_hit_flags: list[bool] = []
+    _anchor_search_from: int = 0
+    for vb in visual_blocks:
+        f: int | None = None
+        if vb.audio_anchor and vb.audio_anchor.strip():
+            idx = find_phrase_fuzzy(scene_words, vb.audio_anchor, start_idx=_anchor_search_from)
+            if idx >= 0:
+                f = round(scene_words[idx]["start"] * FPS)
+                _anchor_search_from = idx + 1
+        raw_anchors.append(f)
+        anchor_hit_flags.append(f is not None)
+
+    # Step B — interpolate missed anchors from neighbors. If an anchor is
+    # missing AND has a neighbor on each side that hit, place it midway.
+    # Edge cases: leading misses → 0; trailing misses → uniform spacing
+    # between last hit and scene end. NO source-script time_from_sec ever.
+    def _interpolate(arr: list[int | None]) -> list[int]:
+        n_local = len(arr)
+        out: list[int] = [0] * n_local
+        # leading run of None
+        first_hit = next((i for i, v in enumerate(arr) if v is not None), None)
+        if first_hit is None:
+            # zero hits at all — pure uniform fallback (rare; warn loudly)
+            print(f"      [scene {sc.number}] WARN — zero audio_anchor hits, using uniform spacing")
+            for i in range(n_local):
+                out[i] = round(i * (duration_frames - 1) / max(1, n_local))
+            return out
+        for i in range(first_hit + 1):
+            out[i] = arr[first_hit] if i == first_hit else round(i * arr[first_hit] / max(1, first_hit))
+        # interior + trailing
+        last_hit = first_hit
+        for i in range(first_hit + 1, n_local):
+            if arr[i] is not None:
+                # fill interior gap (last_hit, i) by linear interp
+                gap = i - last_hit
+                if gap > 1:
+                    for k in range(1, gap):
+                        out[last_hit + k] = round(arr[last_hit] + (arr[i] - arr[last_hit]) * k / gap)
+                out[i] = arr[i]
+                last_hit = i
+        # trailing miss(es) after last hit
+        if last_hit < n_local - 1:
+            tail_anchor = arr[last_hit]
+            tail_count = n_local - last_hit
+            tail_gap = max(MIN_BLOCK_FRAMES, (duration_frames - tail_anchor) // max(1, tail_count))
+            for i in range(last_hit + 1, n_local):
+                out[i] = min(duration_frames - 1, tail_anchor + (i - last_hit) * tail_gap)
+        return out
+
+    interpolated = _interpolate(raw_anchors)
+    # First block always starts at 0 (no black opening).
+    interpolated[0] = 0
+    # Clamp every value into [0, duration-1]
+    interpolated = [max(0, min(f, duration_frames - 1)) for f in interpolated]
+
+    # Step C — monotonic + min spacing (forward push only)
+    frames_from: list[int] = [interpolated[0]]
+    for j in range(1, n):
+        min_start = frames_from[j - 1] + MIN_BLOCK_FRAMES
+        frames_from.append(max(interpolated[j], min_start))
+
+    # Step D — LAST-bullet-only clamp. The previous loop applied a uniform
+    # `max_start = duration - MIN*(n-j)` to every bullet, which pulled later
+    # anchors BACKWARDS away from their spoken-word frame. The only correct
+    # constraint is: the last bullet must leave MIN frames of display.
+    if n > 0:
+        last_max_start = duration_frames - MIN_BLOCK_FRAMES
+        if frames_from[-1] > last_max_start:
+            # Clamp last bullet, but never earlier than the prior bullet + 1.
+            floor = frames_from[-2] + 1 if n > 1 else 0
+            frames_from[-1] = max(floor, last_max_start)
 
     blocks_out = []
     for j, vb in enumerate(visual_blocks):
@@ -689,6 +1143,14 @@ for i, sc in enumerate(scenes_raw):
             "audio_anchor": vb.audio_anchor,
             "source_headline": vb.source_headline,
         }
+        # Surface placeholder flag in scene JSON so validate_output.py can flag
+        # the scene as fidelity-degraded. Without this, a placeholder block was
+        # indistinguishable from a real LLM-emitted block in scene JSON, and
+        # the fidelity gate ("count of bullets == count of blocks") passed
+        # silently while the actual visuals were placeholder cards.
+        if getattr(vb, "placeholder", False):
+            block["placeholder"] = True
+            block["placeholder_error"] = getattr(vb, "placeholder_error", "")
         blocks_out.append(block)
         # Use the anchor_hit_flag computed in Step 1 (fuzzy-aware) — the OLD
         # coverage counter re-ran exact-only `find_phrase` here and missed
@@ -701,13 +1163,16 @@ for i, sc in enumerate(scenes_raw):
             anchor_misses += 1
         # Show first ~60 chars of headline so the log is meaningful without dumping code
         head = (vb.source_headline or "")[:60]
-        print(f"        [{anchor_src}] {framesFrom}-{framesTo}f  {head}")
+        if is_anchor:
+            print(f"        [anchor] {framesFrom}-{framesTo}f  {head}")
+        else:
+            print(f"        [interp] {framesFrom}-{framesTo}f  {head}  (anchor missed; linear-interpolated from neighbors)")
 
     blocks_json = json.dumps(blocks_out, ensure_ascii=False, indent=2)
     # Canonical: project-owned scene JSON. The project folder is the source of truth.
     blocks_path = PROJECT_SCENES_DIR / f"{sid}.json"
     if not blocks_path.exists() or blocks_path.read_text(encoding="utf-8") != blocks_json:
-        blocks_path.write_text(blocks_json, encoding="utf-8")
+        atomic_write_text(blocks_path, blocks_json)
 
     scene_timings.append({"id": sid, "durationFrames": duration_frames})
     print(f"      {sid}: {duration_frames}f ({duration_sec:.1f}s), {len(blocks_out)} blocks")
@@ -720,6 +1185,14 @@ if total_blocks > 0:
     if pct < 70:
         print(f"      WARNING: low anchor coverage ({pct:.0f}%) — visuals may drift from narration.")
         print(f"               Improve anchor phrases in source.txt, then delete storyboard/.cache/designs/")
+    # --strict-anchors gate: hard-fail the build if coverage is below the
+    # configured threshold. Lets CI/CD reject low-quality builds before
+    # render burns Chromium time.
+    if args.strict_anchors and pct < args.strict_anchor_min_pct:
+        print(f"      STRICT-ANCHORS: coverage {pct:.0f}% < threshold "
+              f"{args.strict_anchor_min_pct}% — aborting build.")
+        print(f"               Tighten the structured script (rules 08, 15, 19) and re-run.")
+        sys.exit(3)   # distinct exit code 3 = quality gate failure
 
 
 # ─── 7.5 SYNC project-owned scenes/ + captions/ → remotion/public/{scenes,captions}/ ───
@@ -733,20 +1206,24 @@ active_files = {f"{sid}.json" for sid in scene_ids}
 
 
 def _sync_dir(canonical: Path, mirror: Path, kind: str) -> None:
-    # 1) purge mirror entries that don't belong to the active project
+    # 1) Purge ALL mirror entries that aren't part of the active project's
+    #    expected scene IDs. The mirror is build-time scratch — anything not
+    #    in active_files is stale (from a prior build of this or another project)
+    #    and must go, otherwise webpack ships unrelated scenes in the bundle.
     for stale in mirror.glob("*.json"):
-        if stale.name in active_files:
-            continue  # will be overwritten below
-        if not (canonical / stale.name).exists():
+        if stale.name not in active_files:
             stale.unlink()
-    # 2) copy canonical → mirror for each active scene id (when content differs)
+    # Also clean up any orphaned .inprogress staging files from a prior crash.
+    for orphan in mirror.glob("*.inprogress"):
+        orphan.unlink()
+    # 2) Atomic-copy canonical → mirror for each active scene (when content differs)
     for sid in scene_ids:
         src = canonical / f"{sid}.json"
         dst = mirror / f"{sid}.json"
         if not src.exists():
             print(f"      ERROR: {src.relative_to(ROOT)} missing — {kind} step did not write it"); sys.exit(1)
         if not dst.exists() or dst.read_text(encoding="utf-8") != src.read_text(encoding="utf-8"):
-            _shutil.copyfile(src, dst)
+            atomic_copy(src, dst)
     print(f"      mirrored {len(scene_ids)} {kind} → {mirror.relative_to(ROOT)}")
 
 
@@ -810,10 +1287,10 @@ _timelines_ts_content = (
     f"{_timeline_entries}\n"
     "};\n"
 )
-TIMELINES_TS.write_text(_timelines_ts_content, encoding="utf-8")
+atomic_write_text(TIMELINES_TS, _timelines_ts_content)
 print(f"      wrote {len(scene_timings)} entries (replaced any prior project's entries)")
 
-TIMING_JSON.write_text(json.dumps({
+atomic_write_text(TIMING_JSON, json.dumps({
     "project":          PROJECT,
     "fps":              FPS,                  # downstream tools (visual_qa, validate_output) read this
     "total_sec":        total_sec,
@@ -822,7 +1299,7 @@ TIMING_JSON.write_text(json.dumps({
     "output_filename":  OUTPUT_NAME,
     "scene_ids":        scene_ids,
     "scene_timings":    scene_timings,
-}, indent=2), encoding="utf-8")
+}, indent=2))
 print(f"      wrote {TIMING_JSON.name}")
 
 
@@ -833,6 +1310,46 @@ print(f"      wrote {TIMING_JSON.name}")
 if validate_pipeline(scene_ids, project_dir=PROJECT_DIR) != 0:
     print("ERROR: pipeline validation failed. Fix errors above before rendering.")
     sys.exit(1)
+
+
+# ─── 8.6 PRE-RENDER LAYOUT VALIDATION ───
+# For each bullet, run the Node bounds extractor at sample frames, gather
+# every absolute-positioned element's (x, y, w, h), and check:
+#   - OUT_OF_BOUNDS: element exceeds 1920x1080 canvas (with 80px slack for
+#     animation entrance and ignoring transformed/low-opacity elements)
+#   - CROSS_BULLET_OVERLAP: under additive layering, two elements from
+#     different bullets occupy the same canvas region simultaneously
+# Surfaces layout collisions BEFORE the 25-min render, so author can fix them
+# in seconds. --strict-layout makes it a hard error; --skip-layout disables.
+if not args.skip_layout:
+    try:
+        from storyboard.layout_validator import validate_project as _layout_validate
+        print(f"[8.6] Layout validator (project={PROJECT})...")
+        layout_violations = _layout_validate(PROJECT)
+        if layout_violations:
+            kinds: dict[str, int] = {}
+            for v in layout_violations:
+                kinds[v["type"]] = kinds.get(v["type"], 0) + 1
+            print(f"      {len(layout_violations)} layout violation(s):")
+            for t, n in sorted(kinds.items()):
+                print(f"        {t}: {n}")
+            for v in layout_violations[:8]:
+                print(f"          • {v.get('msg', v)}")
+            if len(layout_violations) > 8:
+                print(f"          … {len(layout_violations) - 8} more "
+                      f"(run `python -m storyboard.layout_validator {PROJECT}` for full report)")
+            if args.strict_layout:
+                print("ERROR: --strict-layout: aborting render.")
+                sys.exit(1)
+            else:
+                print("      WARNING: not strict, continuing render despite violations.")
+        else:
+            print("      OK — no layout collisions.")
+    except Exception as _layout_err:
+        # Don't block builds if Node isn't installed or extractor crashes.
+        print(f"      WARNING: layout validator failed: {_layout_err}. Continuing.")
+else:
+    print(f"[8.6] Layout validator skipped (--skip-layout)")
 
 
 # ─── 9. RENDER (per scene, silent, resume-safe) ───
@@ -924,13 +1441,47 @@ else:
 #   2 → partial failure (per-scene retries exhausted on >=1 scene). Other
 #       scenes succeeded; we surface the failure list and abort stitch
 #       (no point assembling a video missing scenes).
+#
+# Process-management on Windows (rule 10 Class 8 follow-up):
+# - shell=False so cmd.exe doesn't wrap node — Ctrl+C otherwise leaves orphan
+#   node.exe + chrome.exe processes consuming GBs of RAM.
+# - CREATE_NEW_PROCESS_GROUP so the node child has its own console group;
+#   parent's Ctrl+C does NOT auto-kill the child (we kill the tree
+#   explicitly in the except block).
+# - taskkill /F /T on KeyboardInterrupt walks the child PID tree and reaps
+#   node + every Chromium it spawned. /T = tree, /F = force.
+# Verified pattern: Python subprocess docs + MSDN GenerateConsoleCtrlEvent.
 if to_render:
     print(f"      rendering {len(to_render)} scenes: {to_render}")
-    r = subprocess.run(
-        ["node", "render_scenes.mjs"] + to_render,
-        cwd=str(REMOTION_DIR), env=env, shell=True,
-        creationflags=_NOWIN,
+    _CREATE_NEW_PROCESS_GROUP = (
+        subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
     )
+    proc = subprocess.Popen(
+        ["node", "render_scenes.mjs"] + to_render,
+        cwd=str(REMOTION_DIR), env=env,
+        creationflags=_NOWIN | _CREATE_NEW_PROCESS_GROUP,
+    )
+    try:
+        rc = proc.wait()
+    except KeyboardInterrupt:
+        print(f"\n      Ctrl+C — killing render tree (node + Chromium)...")
+        if sys.platform == "win32":
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                capture_output=True, creationflags=_NOWIN,
+            )
+        else:
+            proc.kill()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            pass
+        print(f"      tree killed; re-run to resume from where it stopped.")
+        sys.exit(130)   # POSIX convention: 128 + SIGINT(2) = 130
+
+    class _R:
+        returncode = rc
+    r = _R()
     if r.returncode == 1:
         print(f"      RENDER FAILED (fatal)"); sys.exit(1)
     if r.returncode == 2:
@@ -955,14 +1506,54 @@ run_qa(
     fps=FPS,
 )
 
-# ─── 10. STITCH + MUX ───
+# ─── 10. FINAL ASSEMBLY (Remotion master composition) ───
+# Single-scene mode: render scene N + corresponding audio in ONE Remotion render
+# via the master composition with MASTER_SCENES filter. Same architecture as full
+# render — never produce silent per-scene mp4 + leave audio off.
 if args.scene is not None:
     sid = target_scene_ids[0]
-    preview = RENDER_OUT / f"{sid}.mp4"
-    print(f"\n-- SINGLE-SCENE MODE: skipped stitch. Preview at: {preview}")
+    # Remotion's renderMedia validates the extension (must be .mp4/.mkv/.mov),
+    # so the in-progress filename has to keep .mp4 — we use a `.tmp.mp4` suffix
+    # instead of `.mp4.inprogress`.
+    preview_inprogress = OUT_DIR / f"{sid}-preview.tmp.mp4"
+    preview_final = OUT_DIR / f"{sid}-preview.mp4"
+    if preview_inprogress.exists():
+        preview_inprogress.unlink()
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    sscene_full_audio = AUDIO_DIR / config["audio"]["full_audio_filename"]
+    print(f"\n[single-scene final assembly] master composition with MASTER_SCENES={sid}")
+    r = subprocess.run(
+        ["node", "render_master.mjs", str(preview_inprogress.resolve())],
+        cwd=str(REMOTION_DIR),
+        env={
+            **os.environ,
+            "PROJECT": PROJECT,
+            "MASTER_AUDIO_FILE": sscene_full_audio.name,
+            "VIDEO_FPS": str(FPS),
+            "VIDEO_WIDTH": str(config["video"]["width"]),
+            "VIDEO_HEIGHT": str(config["video"]["height"]),
+            "MASTER_SCENES": sid,
+            "MASTER_TRANSITION_FRAMES": "0",  # one scene → no inter-scene transition
+            "PYTHONIOENCODING": "utf-8",
+        },
+        capture_output=True, text=True,
+        creationflags=_NOWIN,
+    )
+    if r.returncode != 0:
+        print("SINGLE-SCENE MASTER RENDER FAILED:")
+        print(r.stdout[-2000:]); print(r.stderr[-2000:])
+        preview_inprogress.unlink(missing_ok=True)
+        sys.exit(1)
+    if not _mp4_is_healthy(preview_inprogress):
+        print(f"SINGLE-SCENE PREVIEW CORRUPT — aborting")
+        preview_inprogress.unlink(missing_ok=True)
+        sys.exit(1)
+    os.replace(preview_inprogress, preview_final)
+    sz = preview_final.stat().st_size // 1024 // 1024
+    print(f"\n-- SINGLE-SCENE PREVIEW: {preview_final}  ({sz} MB)")
     sys.exit(0)
 
-print(f"[10/10] Stitching + muxing audio...")
+print(f"[10/10] Final assembly (master composition)...")
 TMP = ROOT / "storyboard" / ".build_work"
 TMP.mkdir(exist_ok=True)
 
@@ -980,7 +1571,7 @@ for sid in scene_ids:
     subprocess.run(
         ["ffmpeg", "-y", "-i", str(src),
          "-c:v", "libx264", "-preset", SCENE_CLEAN_PRESET, "-crf", SCENE_CLEAN_CRF,
-         "-an", "-pix_fmt", "yuv420p", "-r", str(FPS), str(inprogress)],
+         "-an", "-pix_fmt", "yuv420p", "-r", str(FPS), "-f", "mp4", str(inprogress)],
         capture_output=True, text=True, check=True,
         creationflags=_NOWIN,
     )
@@ -998,43 +1589,277 @@ for sid in scene_ids:
 # duration exactly (see Step 7 cumulative-frame fix), so neither input needs
 # to be truncated. Letting both run to completion preserves the full narration.
 final_out = OUT_DIR / OUTPUT_NAME
-ffmpeg_inputs: list[str] = []
-for sid in scene_ids:
-    ffmpeg_inputs += ["-i", str((TMP / f"{sid}_clean.mp4").resolve())]
-ffmpeg_inputs += ["-i", str(full_audio)]
-n_video = len(scene_ids)
-concat_filter = "".join(f"[{i}:v:0]" for i in range(n_video)) + f"concat=n={n_video}:v=1:a=0[outv]"
 
-# Atomic write to final_out: ffmpeg writes to .inprogress, we move on success.
-# This is the most important atomic-write site in the pipeline — without it,
-# Ctrl+C during the final mux leaves a partial mp4 with no moov atom that
-# crashes every player. The .inprogress orphan is harmless and easy to spot.
-final_inprogress = final_out.with_suffix(final_out.suffix + ".inprogress")
-if final_inprogress.exists():
-    final_inprogress.unlink()
-r = subprocess.run(
-    ["ffmpeg", "-y", *ffmpeg_inputs,
-     "-filter_complex", concat_filter,
-     "-map", "[outv]", "-map", f"{n_video}:a:0",
-     "-c:v", "libx264", "-preset", FINAL_PRESET, "-crf", FINAL_CRF,
-     "-c:a", "aac", "-b:a", AUDIO_BITRATE, "-pix_fmt", "yuv420p",
-     str(final_inprogress)],
-    capture_output=True, text=True,
-    creationflags=_NOWIN,
-)
-if r.returncode != 0:
-    print("STITCH FAILED:")
-    print(r.stderr[-2000:])
-    final_inprogress.unlink(missing_ok=True)
-    sys.exit(1)
-if not _mp4_is_healthy(final_inprogress):
-    print(f"STITCH PRODUCED CORRUPT mp4 (no playable duration) — aborting")
-    final_inprogress.unlink(missing_ok=True)
-    sys.exit(1)
-os.replace(final_inprogress, final_out)
+# stitch.mode controls between-scene visual transition.
+#   hard_cut         — ffmpeg concat (default). Visual timeline == audio timeline.
+#   crossfade        — chain ffmpeg xfade transitions. NOTE: chained xfade in
+#                      ffmpeg has a known timeline-drift bug (rule 09 Layer 4).
+#                      Prefer remotion_master for smooth crossfade.
+#   remotion_master  — render the master Remotion composition that chains per-scene
+#                      mp4s via <TransitionSeries> + master <Audio>. Frame-accurate
+#                      sync by construction. NO ffmpeg stitch step.
+_stitch_mode = str(_stitch_cfg.get("mode", "hard_cut")).lower()
+_crossfade_frames = int(_stitch_cfg.get("crossfade_frames", 15))
 
-sz = final_out.stat().st_size // 1024 // 1024
-print(f"\n-- DONE: {final_out}  ({sz} MB, {total_sec:.1f}s)")
+
+# ─── 10a. REMOTION MASTER STITCH ───
+# Single Remotion render of the master composition produces audio + visuals
+# in one shot. Replaces the entire ffmpeg concat / xfade / mux pipeline.
+if _stitch_mode == "remotion_master":
+    print(f"      stitch.mode=remotion_master — single Remotion render of master composition")
+    # Remotion's renderMedia validates the extension (must be .mp4/.mkv/.mov),
+    # so we use `.tmp.mp4` instead of `.mp4.inprogress` for the staging file.
+    final_inprogress = final_out.with_name(final_out.stem + ".tmp.mp4")
+    if final_inprogress.exists():
+        final_inprogress.unlink()
+    r = subprocess.run(
+        ["node", "render_master.mjs", str(final_inprogress.resolve())],
+        cwd=str(REMOTION_DIR),
+        env={
+            **os.environ,
+            "PROJECT": PROJECT,
+            "MASTER_AUDIO_FILE": full_audio.name,
+            "VIDEO_FPS": str(FPS),
+            "VIDEO_WIDTH": str(config["video"]["width"]),
+            "VIDEO_HEIGHT": str(config["video"]["height"]),
+            "MASTER_TRANSITION_FRAMES": str(_crossfade_frames),
+            "PYTHONIOENCODING": "utf-8",
+        },
+        capture_output=True, text=True,
+        creationflags=_NOWIN,
+    )
+    if r.returncode != 0:
+        print("REMOTION MASTER STITCH FAILED:")
+        print(r.stdout[-2000:])
+        print(r.stderr[-2000:])
+        final_inprogress.unlink(missing_ok=True)
+        sys.exit(1)
+    if not _mp4_is_healthy(final_inprogress):
+        print(f"REMOTION MASTER STITCH PRODUCED CORRUPT mp4 — aborting")
+        final_inprogress.unlink(missing_ok=True)
+        sys.exit(1)
+    os.replace(final_inprogress, final_out)
+    print(f"      ✓ master mp4: {final_out.name}")
+    sz = final_out.stat().st_size // 1024 // 1024
+    print(f"\n-- DONE: {final_out}  ({sz} MB, {total_sec:.1f}s)")
+    _stitch_done_via_master = True
+else:
+    _stitch_done_via_master = False
+
+if not _stitch_done_via_master:
+    ffmpeg_inputs: list[str] = []
+    for sid in scene_ids:
+        ffmpeg_inputs += ["-i", str((TMP / f"{sid}_clean.mp4").resolve())]
+    ffmpeg_inputs += ["-i", str(full_audio)]
+    n_video = len(scene_ids)
+
+    if _stitch_mode == "crossfade" and n_video >= 2:
+        # Read each scene's duration in seconds so xfade `offset` can be computed.
+        scene_durs_sec: list[float] = []
+        for sid in scene_ids:
+            clean_mp4 = TMP / f"{sid}_clean.mp4"
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                 "-of", "default=nw=1:nk=1", str(clean_mp4)],
+                capture_output=True, text=True, check=True, creationflags=_NOWIN,
+            )
+            scene_durs_sec.append(float(probe.stdout.strip()))
+        xfade_dur = _crossfade_frames / FPS
+        # Chain N-1 xfade filters. Each consumes the previous label and the next input.
+        # offset_i = sum(durations[0..i]) - (i+1) * xfade_dur
+        # because each xfade subtracts xfade_dur from the prior chain's output length.
+        parts: list[str] = []
+        cum = 0.0
+        label_in = "0:v:0"
+        for i in range(1, n_video):
+            cum += scene_durs_sec[i - 1]
+            offset = cum - i * xfade_dur
+            if offset < 0:
+                offset = 0.01
+            next_label = f"v{i:02d}"
+            parts.append(
+                f"[{label_in}][{i}:v:0]xfade=transition=fade:"
+                f"duration={xfade_dur:.3f}:offset={offset:.3f}[{next_label}]"
+            )
+            label_in = next_label
+        concat_filter = ";".join(parts)
+        out_video_label = label_in
+        print(f"      stitch.mode=crossfade ({_crossfade_frames}f / {xfade_dur:.2f}s overlap)")
+    else:
+        concat_filter = "".join(f"[{i}:v:0]" for i in range(n_video)) + f"concat=n={n_video}:v=1:a=0[outv]"
+        out_video_label = "outv"
+        if _stitch_mode != "hard_cut":
+            print(f"      WARNING: stitch.mode={_stitch_mode!r} unsupported — falling back to hard_cut concat")
+
+    # Atomic write to final_out: ffmpeg writes to .inprogress, we move on success.
+    # This is the most important atomic-write site in the pipeline — without it,
+    # Ctrl+C during the final mux leaves a partial mp4 with no moov atom that
+    # crashes every player. The .inprogress orphan is harmless and easy to spot.
+    final_inprogress = final_out.with_suffix(final_out.suffix + ".inprogress")
+    if final_inprogress.exists():
+        final_inprogress.unlink()
+    # Optional production-grade audio loudness normalization (YouTube target:
+    # I=-14 LUFS, TP=-1, LRA=11). Off by default to keep the existing audio
+    # levels stable; enable via config.yaml stitch.audio_loudnorm: true.
+    _loudnorm = bool(_stitch_cfg.get("audio_loudnorm", False))
+    audio_filter_args = ["-af", "loudnorm=I=-14:TP=-1:LRA=11"] if _loudnorm else []
+
+    r = subprocess.run(
+        ["ffmpeg", "-y", *ffmpeg_inputs,
+         "-filter_complex", concat_filter,
+         "-map", f"[{out_video_label}]", "-map", f"{n_video}:a:0",
+         "-c:v", "libx264", "-preset", FINAL_PRESET, "-crf", FINAL_CRF,
+         "-c:a", "aac", "-b:a", AUDIO_BITRATE, "-pix_fmt", "yuv420p",
+         # +faststart moves the moov atom to the front so web players can start
+         # playback before the full file is downloaded. Lossless metadata move.
+         "-movflags", "+faststart",
+         *audio_filter_args,
+         "-f", "mp4", str(final_inprogress)],
+        capture_output=True, text=True,
+        creationflags=_NOWIN,
+    )
+    if r.returncode != 0:
+        print("STITCH FAILED:")
+        print(r.stderr[-2000:])
+        final_inprogress.unlink(missing_ok=True)
+        sys.exit(1)
+    if not _mp4_is_healthy(final_inprogress):
+        print(f"STITCH PRODUCED CORRUPT mp4 (no playable duration) — aborting")
+        final_inprogress.unlink(missing_ok=True)
+        sys.exit(1)
+    os.replace(final_inprogress, final_out)
+
+    sz = final_out.stat().st_size // 1024 // 1024
+    print(f"\n-- DONE: {final_out}  ({sz} MB, {total_sec:.1f}s)")
+
+
+# ─── 10.6 PRODUCTION SIDECAR ARTIFACTS ───
+# Emit YouTube-grade extras alongside the final mp4. All optional; failures
+# log and continue (the main mp4 is already on disk).
+def _ffprobe_streams(mp4: Path) -> dict | None:
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-print_format", "json",
+             "-show_format", "-show_streams", str(mp4)],
+            capture_output=True, text=True, timeout=30,
+            creationflags=_NOWIN,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+    except Exception:
+        return None
+    return None
+
+
+# 1. ffprobe report — codec/duration/bitrate/resolution sanity print
+_probe = _ffprobe_streams(final_out)
+if _probe and _probe.get("streams"):
+    v = next((s for s in _probe["streams"] if s.get("codec_type") == "video"), {})
+    a = next((s for s in _probe["streams"] if s.get("codec_type") == "audio"), {})
+    fmt = _probe.get("format", {})
+    fmt_dur = float(fmt.get("duration", 0) or 0)
+    print(f"[probe]  video : {v.get('codec_name')} {v.get('width')}x{v.get('height')} "
+          f"@ {v.get('r_frame_rate', '?')} fps")
+    print(f"[probe]  audio : {a.get('codec_name')} {a.get('sample_rate')}Hz "
+          f"{a.get('channels')}ch")
+    print(f"[probe]  size  : {fmt.get('size')} bytes  duration: {fmt_dur:.2f}s  "
+          f"bitrate: {fmt.get('bit_rate')} bps")
+
+    # 2. A/V length-equality gate — Step 7's cumulative-frame math should make
+    #    sum(scene durations) == total audio frames. If they drift here, the
+    #    final mp4 either has silent video tail or clipped audio tail. Warn.
+    expected_dur = total_sec
+    if expected_dur > 0 and abs(fmt_dur - expected_dur) > 0.5:
+        print(f"[probe]  WARNING: final duration {fmt_dur:.2f}s drifted "
+              f"{fmt_dur - expected_dur:+.2f}s from expected {expected_dur:.2f}s — "
+              f"check Step 7 cumulative-frame math or audio mux for truncation.")
+
+# 3. Subtitle export (.srt) — concatenate all caption JSONs into one .srt.
+def _format_srt_time(t: float) -> str:
+    h = int(t // 3600)
+    m = int((t % 3600) // 60)
+    s = t - 60 * (m + 60 * h)
+    return f"{h:02d}:{m:02d}:{s:06.3f}".replace(".", ",")
+
+try:
+    srt_lines: list[str] = []
+    counter = 1
+    scene_offsets: list[float] = []   # absolute start time of each scene
+    cumulative = 0.0
+    for st in scene_timings:
+        scene_offsets.append(cumulative)
+        cumulative += st["durationFrames"] / FPS
+    for sid, offset in zip(scene_ids, scene_offsets):
+        cap = PROJECT_CAPTIONS_DIR / f"{sid}.json"
+        if not cap.exists():
+            continue
+        words = json.loads(cap.read_text(encoding="utf-8"))
+        # Group words into ~5-7 word phrases for readable subtitles
+        chunk: list[dict] = []
+        for w in words:
+            chunk.append(w)
+            if len(chunk) >= 7 or w["word"].endswith((".", "?", "!")):
+                start = chunk[0]["start"] + offset
+                end = chunk[-1]["end"] + offset
+                text = " ".join(c["word"].strip() for c in chunk).strip()
+                if text:
+                    srt_lines += [
+                        str(counter),
+                        f"{_format_srt_time(start)} --> {_format_srt_time(end)}",
+                        text,
+                        "",
+                    ]
+                    counter += 1
+                chunk = []
+        if chunk:
+            start = chunk[0]["start"] + offset
+            end = chunk[-1]["end"] + offset
+            text = " ".join(c["word"].strip() for c in chunk).strip()
+            if text:
+                srt_lines += [
+                    str(counter),
+                    f"{_format_srt_time(start)} --> {_format_srt_time(end)}",
+                    text,
+                    "",
+                ]
+                counter += 1
+    if srt_lines:
+        srt_path = final_out.with_suffix(".srt")
+        atomic_write_text(srt_path, "\n".join(srt_lines))
+        print(f"[srt]    wrote {srt_path.name} ({counter - 1} cues)")
+except Exception as _e:
+    print(f"[srt]    skipped: {_e}")
+
+# 4. Chapter markers — write timestamps.txt suitable for YouTube description
+try:
+    chapter_lines = []
+    for sc, offset in zip(scenes_raw, scene_offsets):
+        mm = int(offset // 60)
+        ss = int(offset % 60)
+        chapter_lines.append(f"{mm:02d}:{ss:02d} {sc.title}")
+    chapters_path = final_out.with_name(final_out.stem + ".chapters.txt")
+    atomic_write_text(chapters_path, "\n".join(chapter_lines) + "\n")
+    print(f"[chap]   wrote {chapters_path.name} ({len(chapter_lines)} chapters)")
+except Exception as _e:
+    print(f"[chap]   skipped: {_e}")
+
+# 5. Preview thumbnail — first interesting frame (3s in, after fade-in)
+try:
+    thumb_path = final_out.with_name(final_out.stem + "_thumbnail.jpg")
+    thumb_inprogress = thumb_path.with_suffix(thumb_path.suffix + ".inprogress")
+    r = subprocess.run(
+        ["ffmpeg", "-y", "-i", str(final_out), "-ss", "3",
+         "-vframes", "1", "-q:v", "2", str(thumb_inprogress)],
+        capture_output=True, text=True, timeout=30,
+        creationflags=_NOWIN,
+    )
+    if r.returncode == 0 and thumb_inprogress.exists():
+        os.replace(thumb_inprogress, thumb_path)
+        print(f"[thumb]  wrote {thumb_path.name}")
+    else:
+        thumb_inprogress.unlink(missing_ok=True)
+except Exception as _e:
+    print(f"[thumb]  skipped: {_e}")
 
 # ─── 10.5 OUTPUT VALIDATION (script ↔ final video) ───
 # Verifies narration words actually got spoken (Whisper transcript match) AND

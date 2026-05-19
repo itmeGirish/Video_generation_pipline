@@ -21,28 +21,28 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import hashlib
-import json
 import re
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LLM_CACHE = ROOT / "storyboard" / ".cache" / "conversions"
-LLM_CACHE.mkdir(parents=True, exist_ok=True)
-CLAUDE_BIN = shutil.which("claude") or shutil.which("claude.cmd") or "claude"
 
 
 # ─── normalization rules ───
 
 def _normalize_emdash(text: str) -> str:
-    """Standardize dashes: en-dash for time windows, em-dash for title separator.
-    Different writers use —, –, --, -- with different conventions.
+    """Standardize dashes for the parser:
+       - ` -- ` (ASCII double-dash with spaces) → ` — ` (em-dash)
+       - ` --- ` (triple-dash) → ` — ` (em-dash)
+       - 'word--word' (no spaces) → 'word—word'
+    Time windows use en-dash; title separators use em-dash. The parser already
+    accepts both shapes but we normalize so downstream regexes are simpler and
+    diffs across scripts stay clean.
     """
-    # In scene headers: "## SCENE N — \"Title\" (M:SS – M:SS)"
-    # Both — and – work in the parser regex, but normalize for consistency.
+    text = re.sub(r" --- ", " — ", text)
+    text = re.sub(r" -- ", " — ", text)
+    # Compact form 'word--word' (no surrounding spaces) becomes em-dash
+    text = re.sub(r"(?<=\w)--(?=\w)", "—", text)
     return text
 
 
@@ -61,9 +61,17 @@ def _strip_preamble(text: str) -> str:
 
 
 def _strip_html_entities(text: str) -> str:
-    """Remove &nbsp; • etc. that confuse the lexer."""
-    text = re.sub(r"&nbsp;", " ", text)
-    text = re.sub(r"&[a-z]+;", "", text)
+    """Decode HTML entities like &nbsp; that confuse the lexer.
+
+    The previous version stripped ALL `&...;` entities (including legitimate
+    `&amp;` / `&copy;` / `&trade;` that appear in narration prose), making
+    'AT&amp;T' lose 'amp' and become 'AT;T'. Now we use html.unescape, which
+    converts entities to their actual chars (&amp; → &, &nbsp; → space, &lt; → <).
+    """
+    import html as _html
+    text = _html.unescape(text)
+    # &nbsp; decodes to non-breaking-space \xa0 — replace with regular space
+    text = text.replace("\xa0", " ")
     text = re.sub(r"[•·]", "-", text)
     return text
 
@@ -174,44 +182,35 @@ EXACT RULES:
 
 
 def _llm_convert(raw: str) -> str:
-    """Use Claude CLI to convert any script to canonical format. Cached by hash."""
-    h = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
-    cache_file = LLM_CACHE / f"{h}.txt"
-    if cache_file.exists():
-        return cache_file.read_text(encoding="utf-8")
-
-    proc = subprocess.run(
-        [CLAUDE_BIN, "--print", "--model", "claude-opus-4-6",
-         "--append-system-prompt", _LLM_SYSTEM_PROMPT],
-        input=raw, capture_output=True, text=True, encoding="utf-8", timeout=600,
+    """Removed: this used to spawn the `claude` CLI to repair scripts the regex
+    pass couldn't normalize. The subprocess path is gone. Hand-convert the
+    raw script per `.claude/skills/video_generation/rules/18-rich-script-conversion.md`
+    and drop the result in `projects/structured_scripts/<name>.txt`."""
+    raise RuntimeError(
+        "script_converter LLM fallback is disabled — claude CLI subprocess removed.\n"
+        "  Hand-convert the raw script per rule 18 (rich-script-conversion) and write\n"
+        "  the canonical output to projects/structured_scripts/<name>.txt. The pipeline\n"
+        "  reads the structured file directly."
     )
-    if proc.returncode != 0:
-        raise RuntimeError(f"LLM converter failed: {proc.stderr[-500:]}")
-    out = proc.stdout.strip()
-    # Strip optional markdown fences if model added them
-    fence = re.match(r"^```(?:\w+)?\s*\n(.*?)\n```\s*$", out, re.DOTALL)
-    if fence:
-        out = fence.group(1).strip()
-    cache_file.write_text(out, encoding="utf-8")
-    return out
 
 
 def convert_with_fallback(raw: str) -> str:
-    """Try regex normalization first. If the result doesn't parse, fall back to LLM.
-    This is the function build_video.py should call."""
-    # Try the cheap regex pass first
+    """Regex-only normalization. If the regex pass cannot recover SCENE headers,
+    we raise — there is no LLM fallback now that the claude CLI subprocess is gone.
+    The caller must hand-convert the raw script to `projects/structured_scripts/`."""
     candidate = convert(raw)
-    # Test: does it have at least one SCENE header?
     if not re.search(r"^##\s*SCENE\s+\d+", candidate, re.MULTILINE):
-        # Regex couldn't normalize → try the LLM
-        print("      regex converter found no SCENE headers — falling back to LLM converter...")
-        return _llm_convert(raw)
-    # Sanity: count SCENE headers in raw vs converted; if mismatch, suspect LLM is needed
+        raise RuntimeError(
+            "regex converter found no SCENE headers — and the LLM fallback is disabled.\n"
+            "  Hand-convert the raw script per rule 18 and write to projects/structured_scripts/."
+        )
     raw_scenes = len(re.findall(r"(?im)^#{1,3}\s*SCENE\s+\d+|^scene\s+\d+", raw, re.MULTILINE))
     out_scenes = len(re.findall(r"^##\s*SCENE\s+\d+", candidate, re.MULTILINE))
     if raw_scenes > 0 and out_scenes == 0:
-        print(f"      regex converter lost scenes ({raw_scenes} → {out_scenes}) — falling back to LLM...")
-        return _llm_convert(raw)
+        raise RuntimeError(
+            f"regex converter lost scenes ({raw_scenes} → {out_scenes}) — and the LLM fallback is disabled.\n"
+            "  Hand-convert the raw script per rule 18 and write to projects/structured_scripts/."
+        )
     return candidate
 
 

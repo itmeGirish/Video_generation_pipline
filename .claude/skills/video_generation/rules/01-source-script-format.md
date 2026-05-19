@@ -67,13 +67,16 @@ subsequent runs (re-converts only if the raw script changed).
 
 Run the converter standalone:
 ```bash
-# Default: regex first, LLM fallback if needed
+# Regex normalization (default). If regex can't recover ## SCENE headers it
+# raises — the LLM fallback was REMOVED alongside the claude CLI subprocess.
+# Hand-convert per rule 18 if regex fails.
 python storyboard/script_converter.py projects/scripts/<name>.txt --out projects/structured_scripts/<name>.txt
 
-# Force LLM pass (for tricky scripts with totally different structure)
-python storyboard/script_converter.py projects/scripts/<name>.txt --llm --out projects/structured_scripts/<name>.txt
+# `--llm` flag still exists in the parser but the codepath now raises
+# RuntimeError pointing at rule 18. Treat it as deprecated / no-op.
+# python storyboard/script_converter.py projects/scripts/<name>.txt --llm  # → raises
 
-# Regex only (no network, no LLM cost)
+# Same as default but explicit (no behavioural difference now)
 python storyboard/script_converter.py projects/scripts/<name>.txt --regex-only --out projects/structured_scripts/<name>.txt
 
 # Overwrite the input in place (DANGEROUS — only when intentionally normalizing the raw)

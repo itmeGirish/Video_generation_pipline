@@ -1,0 +1,25 @@
+const NARRATION_TEXT = "Okay. I want to leave you with something bigger than benchmarks. A way of seeing this whole thing that I think most people are missing. <pause 0.4s> OpenAI isn't competing with Anthropic. <pause 0.5s> I know. Sounds wrong. But look at what each company is actually doing. <pause 0.3s> OpenAI shipped six models in eight months. Look at this on screen \u2014 the release cadence looks like a heartbeat getting faster. GPT-5, five-point-one, five-point-two, five-point-three, five-point-four, five-point-five. The model from last August? Retired. Gone. <pause 0.3s> They have nine hundred million weekly users. Fifty million paying subscribers. They're building toward the largest tech IPO in history. And they're merging everything into a single super app. <pause 0.3s> That's not a model company. That's a PLATFORM company. <pause 0.2s> OpenAI isn't competing with Anthropic. OpenAI is competing with Google Search. With Microsoft Office. With the concept of doing things manually on a computer. <pause 0.3s> Now look at Anthropic. Three releases in the same period. Bigger jumps each time. Built a model too powerful to release. Created a defense partnership with eight trillion-dollar companies. Running a hallucination rate less than half the competition. <pause 0.3s> That's not a platform company. That's a PRECISION company. <pause 0.2s> Anthropic isn't competing with OpenAI. Anthropic is competing with McKinsey. With Deloitte. With the concept of paying an expert to get the answer right the first time. <pause 0.4s> OpenAI wins if the future is: AI does everything, good enough, all in one place. <pause 0.2s> Anthropic wins if the future is: AI does the hard things, correctly, and you trust the output. <pause 0.4s> And you know what? The market is big enough for both. Because every company on earth needs a search engine AND a consultant. <pause 0.3s> That's not a rivalry. That's an ecosystem.";
+const bgOp=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
+const lOp=interpolate(frame,[12,26],[0,1],{extrapolateRight:'clamp'});
+const rOp=interpolate(frame,[20,34],[0,1],{extrapolateRight:'clamp'});
+const PR=Math.round(Math.min(width,height)*.18);
+const pulseMag=Math.sin(frame*.08)*.2+.8;
+const pulseCy=Math.sin(frame*.08+1.2)*.15+.85;
+return React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,opacity:bgOp}},
+  React.createElement('div',{style:{position:'absolute',top:Math.round(height*.06),left:'50%',transform:'translateX(-50%)',color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(width*.009),letterSpacing:4,opacity:.5}},'OPENAI WINS IF…  vs  ANTHROPIC WINS IF…'),
+  React.createElement('div',{style:{position:'absolute',left:Math.round(width*.06),top:'50%',transform:'translateY(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:Math.round(height*.02),opacity:lOp}},
+    React.createElement('div',{style:{width:PR*2,height:PR*2,borderRadius:'50%',backgroundColor:D.violet,opacity:.65*pulseMag,boxShadow:`0 0 ${Math.round(60*pulseMag)}px ${D.violet}`,display:'flex',alignItems:'center',justifyContent:'center'}},
+      React.createElement('div',{style:{color:D.bg,fontFamily:D.font_mono,fontSize:Math.round(width*.008),textAlign:'center',lineHeight:1.6,fontWeight:700}},`900M users\n50M subs`)
+    ),
+    React.createElement('div',{style:{color:D.violet,fontFamily:D.font_display,fontSize:Math.round(width*.016),fontWeight:900,letterSpacing:2}},'THE PLATFORM'),
+    React.createElement('div',{style:{color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(width*.0075),textAlign:'center',lineHeight:1.7}},'AI does everything\ngood enough\nall in one place')
+  ),
+  React.createElement('div',{style:{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%,-50%)',color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(width*.018),opacity:.3}},'vs'),
+  React.createElement('div',{style:{position:'absolute',right:Math.round(width*.06),top:'50%',transform:'translateY(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:Math.round(height*.02),opacity:rOp}},
+    React.createElement('div',{style:{width:PR*2,height:PR*2,borderRadius:'50%',backgroundColor:D.cyan,opacity:.55*pulseCy,boxShadow:`0 0 ${Math.round(40*pulseCy)}px ${D.cyan}`,display:'flex',alignItems:'center',justifyContent:'center'}},
+      React.createElement('div',{style:{color:D.bg,fontFamily:D.font_mono,fontSize:Math.round(width*.008),textAlign:'center',lineHeight:1.6,fontWeight:700}},'36%\nhalluc.')
+    ),
+    React.createElement('div',{style:{color:D.cyan,fontFamily:D.font_display,fontSize:Math.round(width*.016),fontWeight:900,letterSpacing:2}},'THE CONSULTANT'),
+    React.createElement('div',{style:{color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(width*.0075),textAlign:'center',lineHeight:1.7}},'AI does the hard things\ncorrectly\nyou trust the output')
+  )
+);

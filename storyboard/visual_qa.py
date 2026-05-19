@@ -41,7 +41,13 @@ def _probe_duration(path: Path) -> float:
 
 def _midpoint_frame_brightness(path: Path, fps: int) -> float:
     """Extract midpoint frame and compute mean brightness (0..255). -1 on error.
-    Uses ffmpeg's signalstats filter — fast and dependency-free."""
+    Uses ffmpeg's signalstats filter — fast and dependency-free.
+
+    Uses OUTPUT seek (`-i file -ss t`), not INPUT seek (`-ss t -i file`).
+    Input seek is fast but lands on the nearest preceding keyframe — which
+    can be a black backdrop-fade frame seconds before the actual midpoint,
+    producing false "black midpoint" alarms. Output seek is slower but exact.
+    """
     dur = _probe_duration(path)
     if dur <= 0:
         return -1.0
@@ -50,7 +56,7 @@ def _midpoint_frame_brightness(path: Path, fps: int) -> float:
         # signalstats only prints stats when chained with metadata=print.
         # Real format: lavfi.signalstats.YAVG=118.409 (with =, not :)
         r = subprocess.run(
-            ["ffmpeg", "-ss", str(midpoint_sec), "-i", str(path),
+            ["ffmpeg", "-i", str(path), "-ss", str(midpoint_sec),
              "-vf", "signalstats,metadata=print", "-vframes", "1", "-f", "null", "-"],
             capture_output=True, text=True, timeout=30,
             creationflags=_NOWIN,

@@ -127,16 +127,21 @@ propagate — check the env in the subprocess call.
 ## Why `Sequence` uses `premountFor`
 
 ```tsx
-<Sequence from={framesFrom} durationInFrames={dur} premountFor={fps}>
-  <Comp {...props} />
+// Actual code in remotion/src/universal/UniversalScene.tsx:
+const seqDur = sceneEnd - b.framesFrom;
+<Sequence from={b.framesFrom} durationInFrames={seqDur} premountFor={fps}>
+  <DynamicBlock code={b.code} captions={captionsArr} blockFramesFrom={b.framesFrom} />
 </Sequence>
 ```
 
-`premountFor={fps}` (1 second of frames) tells Remotion to mount the component
-1 second before its `from`. Without this, complex primitives that load fonts
-or do layout calculation flash on first frame.
+Two things to note:
+1. **`durationInFrames` extends to scene end**, NOT to `framesTo`. Blocks
+   stack additively (rule 04 § "Additive-layering contract", rule 09 Layer 1).
+2. **`premountFor={fps}`** (1 second of frames) tells Remotion to mount the
+   component 1 second before its `from`. Without this, complex primitives that
+   load fonts or do layout calculation flash on first frame.
 
-Don't remove it without testing.
+Don't remove either without testing.
 
 ---
 
@@ -185,12 +190,59 @@ universal pipeline ignores these. Don't touch unless working on legacy code.
 
 | File | Rendered | Played |
 |------|----------|--------|
-| `remotion/out/<sid>.mp4` | yes (silent, per-scene) | only by `--scene` preview |
-| `projects/<name>/audio/<file>.mp3` | yes (TTS) | as audio track in final |
-| `projects/<name>/out/<title>.mp4` | yes (concat + mux) | THE final video |
+| `remotion/out/<sid>.mp4` | yes (silent, per-scene) | input to master/stitch; standalone preview via `--scene` |
+| `projects/<name>/audio/<file>.mp3` | yes (TTS) | input to master/stitch (audio track of final) |
+| `projects/<name>/out/<title>.mp4` | yes (Step 10 stitch OR remotion_master render) | THE final video |
 
 Each per-scene mp4 is silent (audio is muxed only at the end). If a scene mp4
-plays silently in QuickTime, that's NORMAL — audio comes from ffmpeg mux.
+plays silently in QuickTime, that's NORMAL — audio comes in at Step 10.
+
+## Master Remotion composition (stitch.mode=remotion_master)
+
+When `stitch.mode: remotion_master` (rule 09 Layer 4), Step 10 does NOT run
+ffmpeg concat/xfade/mux. Instead it runs ONE Remotion render that produces
+audio + video together:
+
+```
+build_video.py Step 10 (remotion_master branch)
+    ▼
+node render_master.mjs <output_path>
+   env: PROJECT, MASTER_AUDIO_FILE, VIDEO_FPS/WIDTH/HEIGHT, MASTER_TRANSITION_FRAMES
+    ▼
+remotion/render_master.mjs
+    1. copies projects/<name>/audio/<file>.mp3 → remotion/public/<file>.mp3
+       (so staticFile() can resolve it inside the bundle)
+    2. bundle({entryPoint: src/index.ts, publicDir: remotion/public})
+    3. selectComposition({serveUrl, id: '<project>-master'})
+    4. renderMedia({codec: h264, audioCodec: aac, ...})
+    5. cleans up the copied audio file
+    ▼
+remotion/src/MasterComposition.tsx (registered in Root.tsx)
+    <Audio src={staticFile(MASTER_AUDIO_FILE)} />
+    <TransitionSeries>
+      <Sequence durationInFrames=tl[s01]><Video src=staticFile('out/s01.mp4') /></Sequence>
+      <Transition fade durationInFrames=TRANSITION_FRAMES />
+      <Sequence durationInFrames=tl[s02]><Video src=staticFile('out/s02.mp4') /></Sequence>
+      ...
+    </TransitionSeries>
+    ▼
+final mp4 at projects/<name>/out/<title>.mp4
+```
+
+**Total master duration formula** (matches what `MasterComposition.computeMasterDurationFrames` returns):
+```
+total = sum(scene_durations[i]) - (N-1) * TRANSITION_FRAMES
+```
+because each `<TransitionSeries.Transition>` consumes `TRANSITION_FRAMES` from
+each adjacent pair.
+
+**Why this is preferred over the ffmpeg path**: ffmpeg `xfade` chained-trim has
+a known quirk where only the first and last filter reliably compress the
+timeline. A 10-scene render with 9 chained xfades typically left video ~4s
+longer than expected, drifting audio out of sync by scene 8-10.
+`remotion_master` avoids the entire class because Remotion computes the
+timeline arithmetic up-front from `durationInFrames` props and then renders
+exactly that — no per-filter accumulation.
 
 ---
 

@@ -8,6 +8,7 @@
   "amber": "#FFB800",
   "green": "#00FF88",
   "red": "#FF3B3B",
+  "soft_red": "#FF6B6B",
   "white": "#E8E8E8",
   "font_display": "'Inter', sans-serif",
   "font_mono": "'JetBrains Mono', monospace",
@@ -15,6 +16,6 @@
   "dot_grid_spacing": 40,
   "spring_damping": 14,
   "spring_stiffness": 180,
-  "fade_frames": 6,
+  "fade_frames": 0,
   "type_speed_cps": 22
 }

@@ -1,8 +1,8 @@
 ---
 name: script-conversion
-description: How any-format `.txt` script gets converted to the canonical structured-script format that the parser expects. Two-stage: regex first (fast), LLM fallback (robust).
+description: How any-format `.txt` script gets converted to the canonical structured-script format the parser expects. REGEX ONLY — the LLM fallback was REMOVED with the claude CLI subprocess. Hand-convert via rule 18 if regex fails.
 metadata:
-  tags: conversion, normalization, llm, regex, script, structured-scripts
+  tags: conversion, normalization, regex, script, structured-scripts, no-llm
 ---
 
 # Script Conversion
@@ -21,32 +21,30 @@ The parser (`source_parser.py`) expects ONE canonical format. Without
 conversion, scripts fail to parse — or worse, parse partially and produce
 wrong output.
 
-## The solution — two-stage converter
+## The solution — single-stage regex converter (LLM fallback removed)
 
 `storyboard/script_converter.py` runs as **Step 0.5** of `build_video.py`
-whenever you pass a `.txt` path (Layout B):
+whenever you pass a `.txt` path:
 
 ```
-projects/scripts/<name>.txt              (raw, ANY structure)
+projects/scripts/<name>.txt              (raw, light structural drift)
               │
-              ▼  Stage 1: regex converter
+              ▼  Regex converter
               │   - strips preamble before first ## SCENE
               │   - strips engagement-move lines
-              │   - normalizes em-dashes in scene headers
-              │   - normalizes em-dashes in animation bullet headers
+              │   - normalizes em-dashes in scene headers + bullet headers
               │   - removes HTML entities (&nbsp;, •, ·)
               │   - collapses excess blank lines
               │
               ▼  parses cleanly?
               │
    ┌──────────┴──────────┐
-   │ yes                 │ no
+   │ yes                 │ no — regex failed
    ▼                     ▼
-   │              Stage 2: LLM converter
-   │              - Claude with strict prompt
-   │              - converts ANY structure → canonical format
-   │              - preserves all narration + animation content
-   │              - cached by sha256(raw input)
+   │           HARD ERROR. The LLM fallback that USED to spawn the
+   │           claude CLI here was REMOVED (no subprocess allowed).
+   │           Hand-convert per rule 18 and write to:
+   │             projects/structured_scripts/<name>.txt
    │                     │
    └──────────┬──────────┘
               ▼
@@ -99,17 +97,10 @@ python storyboard/build_video.py projects/scripts/<name>.txt
 
 **Standalone:**
 ```bash
-# Default — regex first, LLM fallback if needed.
-# Output goes to the canonical structured_scripts folder.
+# Regex-only normalization. The --llm flag is OBSOLETE — kept for argparse
+# compatibility but invokes the same regex pass. If the regex pass fails,
+# the converter raises and you must hand-convert per rule 18.
 python storyboard/script_converter.py projects/scripts/<name>.txt \
-    --out projects/structured_scripts/<name>.txt
-
-# Force LLM (most robust, slower, costs tokens)
-python storyboard/script_converter.py projects/scripts/<name>.txt --llm \
-    --out projects/structured_scripts/<name>.txt
-
-# Regex only (free, no network, may fail on unusual scripts)
-python storyboard/script_converter.py projects/scripts/<name>.txt --regex-only \
     --out projects/structured_scripts/<name>.txt
 ```
 

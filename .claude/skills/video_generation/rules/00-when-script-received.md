@@ -88,7 +88,7 @@ projects/structured_scripts/<name>.txt   ← CANONICAL output
 | Raw script shape | How to convert |
 |---|---|
 | Already canonical (`## SCENE N — "Title" (M:SS – M:SS)`, `### Narration` / `### Animation`, `**M:SS – M:SS — Headline.**` bullets) | `python storyboard/script_converter.py projects/scripts/<name>.txt --out projects/structured_scripts/<name>.txt --regex-only` |
-| Mostly canonical with minor drift (em-dash variants, html entities, engagement-move lines) | `python storyboard/script_converter.py projects/scripts/<name>.txt --out projects/structured_scripts/<name>.txt` (regex first, LLM fallback if needed) |
+| Mostly canonical with minor drift (em-dash variants, html entities, engagement-move lines) | `python storyboard/script_converter.py projects/scripts/<name>.txt --out projects/structured_scripts/<name>.txt` (regex only — the LLM fallback was removed alongside the `claude` CLI subprocess; if regex fails, hand-convert per rule 18) |
 | Movie-script style — `Frame 0–60` timing, `### VO:` / `### ANIMATION:`, separate `**Frames:**` line, sub-scenes, design-token preamble, bespoke metaphors | **Hand-convert per rule 18** and write to `projects/structured_scripts/<name>.txt`. The auto-converter cannot handle these today. |
 
 ### 1.2 Verify the converted file parses (HARD GATE)

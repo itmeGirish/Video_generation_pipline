@@ -137,9 +137,11 @@ def test_decimal_expansion() -> None:
 
 def test_no_window_constants_present() -> None:
     print("\n[5] All subprocess-spawning files set CREATE_NO_WINDOW")
+    # visual_designer.py / script_converter.py no longer spawn claude CLI —
+    # cache-only lookup. Only files that still use subprocess for ffmpeg /
+    # ffprobe / whisper need the no-window flag.
     files = [
         "storyboard/build_video.py",
-        "storyboard/visual_designer.py",
         "storyboard/visual_qa.py",
         "storyboard/validate_output.py",
     ]
@@ -153,6 +155,13 @@ def test_no_window_constants_present() -> None:
         check(f"{f}: {cf_count} creationflags vs {len(run_calls)} subprocess calls",
               cf_count >= len(run_calls),
               f"{cf_count} creationflags but {len(run_calls)} subprocess.run/Popen calls")
+    # Belt-and-braces: verify the LLM subprocess paths really are gone.
+    for f in ("storyboard/visual_designer.py", "storyboard/script_converter.py"):
+        text = (ROOT / f).read_text(encoding="utf-8")
+        check(f"{f} contains no subprocess.run call (claude CLI removed)",
+              "subprocess.run" not in text)
+        check(f"{f} contains no CLAUDE_BIN reference",
+              "CLAUDE_BIN" not in text)
 
 
 def test_time_fallback_proportional_scaling() -> None:
@@ -398,6 +407,181 @@ def test_render_stability_settings() -> None:
           "r.returncode == 2" in bv and "RENDER PARTIAL" in bv)
 
 
+def test_remotion_version_floor() -> None:
+    """Regression test that pins a minimum @remotion/* version.
+
+    Background: at v4.0.242 we were 200+ patches behind v4.0.455. The cutoff
+    at v4.0.245 introduced pinned Chrome Headless Shell — below that, Chrome
+    can auto-upgrade and break headless mode entirely. Maintainer warning is
+    explicit at remotion.dev/docs/miscellaneous/chrome-headless-shell.
+
+    This test prevents accidental downgrade. To bump higher in the future,
+    update MIN_REMOTION_VERSION + run `npm install <pkg>@<new>`.
+    """
+    print("\n[21] Remotion version floor (Chrome Headless Shell pinning)")
+    import json as _json
+    pkg = _json.loads((ROOT / "remotion" / "package.json").read_text(encoding="utf-8"))
+    deps = pkg.get("dependencies", {})
+
+    MIN_REMOTION_VERSION = (4, 0, 245)   # minimum for pinned Chrome Headless Shell
+
+    def _parse(v: str) -> tuple[int, int, int]:
+        # strip ^/~ if present, then split on dots
+        v = v.lstrip("^~")
+        parts = v.split(".")
+        return (int(parts[0]), int(parts[1]), int(parts[2]))
+
+    remotion_pkgs = [k for k in deps if k == "remotion" or k.startswith("@remotion/")]
+    check(f"package.json declares ≥1 remotion package (found {len(remotion_pkgs)})",
+          len(remotion_pkgs) > 0)
+    for p in remotion_pkgs:
+        v = deps[p]
+        try:
+            ver = _parse(v)
+        except Exception:
+            check(f"{p} version '{v}' parses as semver", False)
+            continue
+        check(f"{p}@{v} >= {'.'.join(str(x) for x in MIN_REMOTION_VERSION)}",
+              ver >= MIN_REMOTION_VERSION,
+              f"below v4.0.245 the Chrome Headless Shell auto-upgrade can break "
+              f"headless mode (per remotion.dev/docs/miscellaneous/chrome-headless-shell)")
+
+
+def test_render_browser_reuse_and_watchdog() -> None:
+    """Verifies the openBrowser + cancelSignal watchdog wiring in
+    render_scenes.mjs, and the Ctrl+C tree-kill in build_video.py.
+
+    Sources for each defense:
+      - openBrowser / puppeteerInstance: remotion.dev/docs/renderer/open-browser
+      - cancelSignal / makeCancelSignal: remotion.dev/docs/renderer/make-cancel-signal
+      - CREATE_NEW_PROCESS_GROUP + taskkill /T pattern: Python subprocess docs +
+        MSDN GenerateConsoleCtrlEvent
+    """
+    print("\n[19] Browser reuse + watchdog + Ctrl+C tree-kill")
+    rs = (ROOT / "remotion" / "render_scenes.mjs").read_text(encoding="utf-8")
+    bv = (ROOT / "storyboard" / "build_video.py").read_text(encoding="utf-8")
+
+    # --- render_scenes.mjs side ---
+    check("render_scenes.mjs imports openBrowser",
+          "openBrowser" in rs and "import {" in rs and "from '@remotion/renderer'" in rs)
+    check("render_scenes.mjs uses ONE shared browser via openBrowser('chrome', ...)",
+          "openBrowser('chrome'" in rs)
+    check("chromiumOptions (gl, disableWebSecurity) set at openBrowser, NOT renderMedia",
+          "gl: 'swangle'" in rs and "openBrowser" in rs,
+          "When puppeteerInstance is set, chromiumOptions on renderMedia are silently "
+          "ignored — they MUST be at openBrowser time")
+    check("renderMedia receives puppeteerInstance for browser reuse",
+          "puppeteerInstance: browser" in rs)
+    check("selectComposition also receives puppeteerInstance",
+          rs.count("puppeteerInstance: browser") >= 2,
+          "both selectComposition and renderMedia must reuse the browser")
+    check("periodic browser restart bounds Chromium memory",
+          "BROWSER_RESTART_EVERY" in rs and "closeSharedBrowser" in rs)
+
+    check("hung-render watchdog uses makeCancelSignal",
+          "makeCancelSignal" in rs and "isUserCancelledRender" in rs)
+    check("watchdog tracks lastProgressAt + STALL_TIMEOUT_MS",
+          "STALL_TIMEOUT_MS" in rs and "lastProgressAt" in rs)
+    check("watchdog cancels render on stall",
+          "cancel()" in rs and "no progress for" in rs)
+    check("on stall/crash, browser is recycled before retry",
+          "closeSharedBrowser()" in rs and "openSharedBrowser()" in rs)
+
+    check("render_scenes.mjs handles SIGINT/SIGTERM/SIGBREAK to close browser",
+          "SIGINT" in rs and "SIGTERM" in rs and "SIGBREAK" in rs)
+
+    # --- build_video.py side ---
+    check("build_video.py uses subprocess.Popen (not subprocess.run with shell=True)",
+          "subprocess.Popen(" in bv and 'cwd=str(REMOTION_DIR), env=env,' in bv,
+          "shell=True breaks Ctrl+C propagation — orphan node.exe + chrome.exe stay alive")
+    check("build_video.py drops shell=True for the render call",
+          "[\"node\", \"render_scenes.mjs\"] + to_render" in bv
+          and bv.count("shell=True") == 0,
+          "any remaining shell=True risks orphan Chromium processes on Ctrl+C")
+    check("build_video.py uses CREATE_NEW_PROCESS_GROUP for the render child",
+          "CREATE_NEW_PROCESS_GROUP" in bv,
+          "without it, parent's Ctrl+C kills node before our handler can clean up")
+    check("build_video.py KeyboardInterrupt → taskkill /F /T (Windows tree-kill)",
+          "KeyboardInterrupt" in bv and 'taskkill' in bv and '/T' in bv and '/F' in bv,
+          "without /T, only the cmd shell dies — node + chrome remain")
+    check("build_video.py reports tree-kill clearly + exits 130",
+          "killing render tree" in bv and "sys.exit(130)" in bv)
+
+
+def test_strict_anchors_quality_gate() -> None:
+    """--strict-anchors flag turns the soft Step 7 warning into a hard fail."""
+    print("\n[20] --strict-anchors quality gate")
+    bv = (ROOT / "storyboard" / "build_video.py").read_text(encoding="utf-8")
+    check("--strict-anchors flag defined in argparse",
+          "--strict-anchors" in bv and "action=\"store_true\"" in bv)
+    check("--strict-anchor-min-pct flag defined",
+          "--strict-anchor-min-pct" in bv)
+    check("strict-anchors gate aborts build below threshold",
+          "args.strict_anchors and pct < args.strict_anchor_min_pct" in bv)
+    check("strict-anchors uses distinct exit code 3 (quality gate)",
+          "sys.exit(3)" in bv,
+          "exit code 3 lets CI distinguish quality-gate fail from fatal/partial")
+
+
+def test_pause_duration_honored_via_split_render_concat() -> None:
+    """Verifies the Strategy B implementation that makes <pause Xs> markers
+    produce EXACT-DURATION silence in the audio (not just a generic comma).
+
+    Background: edge-tts uses Microsoft's free Edge TTS endpoint, which
+    filters non-conforming SSML. Verified in github.com/rany2/edge-tts
+    issue #173. The library's only emitted SSML is a fixed
+    <speak><voice><prosody> envelope — <break time="..."/> tags are
+    NOT honored. Without this fix, every <pause Xs> marker collapsed to
+    the same comma-pause regardless of declared duration.
+
+    Strategy B (community canonical, github.com/rany2/edge-tts issues
+    #58, #136): split SSML on <break time="Nms"/>, render each text chunk
+    via edge-tts, generate exact-duration silence per break with ffmpeg
+    anullsrc, concat losslessly via ffmpeg concat demuxer (-c copy).
+    """
+    print("\n[18] Pause durations honored via split-render-concat (Strategy B)")
+    src = (ROOT / "storyboard" / "build_video.py").read_text(encoding="utf-8")
+
+    # 1. Break-splitter regex exists
+    check("_BREAK_SPLIT_RE compiled at module level",
+          "_BREAK_SPLIT_RE" in src and "<break" in src)
+
+    # 2. ms/s parsing helper exists
+    check("_ms_from_break_match converts seconds + milliseconds units",
+          "def _ms_from_break_match" in src and "* 1000" in src,
+          "without ms<->s conversion, <pause 1s> becomes 1ms of silence (inaudible)")
+
+    # 3. Silence generator uses edge-tts's exact format (24kHz mono 48kbps libmp3lame)
+    check("silence generator uses anullsrc at 24000Hz mono",
+          "anullsrc=r=24000:cl=mono" in src,
+          "format MUST match edge-tts (24kHz mono 48kbps mp3) for -c copy concat to work lossless")
+    check("silence encoded with libmp3lame at 48kbps",
+          "libmp3lame" in src and '"-b:a", "48k"' in src,
+          "edge-tts default output format is audio-24khz-48kbitrate-mono-mp3")
+
+    # 4. Concat uses demuxer with -c copy (lossless, sample-accurate)
+    check("concat uses ffmpeg -f concat with -c copy",
+          '"-f", "concat"' in src and '"-c", "copy"' in src,
+          "any other concat method (filter_complex, protocol) re-encodes and "
+          "introduces generation loss + click artifacts at boundaries")
+
+    # 5. The OLD broken behavior (replace <break/> with comma) is GONE from gen_tts
+    check("OLD comma-collapse hack removed from gen_tts",
+          "re.sub(r'<break\\b[^/>]*/>', ', ', full_ssml)" not in src,
+          "if this string is present, every pause is still collapsing to a comma "
+          "regardless of declared duration")
+
+    # 6. The strip-defense is still in place (rule 10 Class 1 — must not regress)
+    check("rule 10 Class 1 defense (html.unescape + 2nd strip) preserved in helper",
+          "_html.unescape(plain)" in src and src.count("re.sub(r'<[^>]+>', '', plain)") >= 2)
+
+    # 7. gen_tts emits a log line confirming pauses were honored
+    check("gen_tts logs how many pauses were honored",
+          "exact-duration pause" in src,
+          "without this log, you can't tell from a build whether the pipeline "
+          "honored the pauses or fell back to old behavior")
+
+
 def test_render_crash_defenses() -> None:
     """Verifies the three atomic-write + health-check defenses against
     render crashes that historically left corrupt mp4s on disk:
@@ -510,6 +694,68 @@ def test_dynamic_block_bindings_wiring() -> None:
           "both font families must be awaited (fitText is unsafe for partially-loaded fonts)")
 
 
+def test_model_strategy_enforced_via_subagents() -> None:
+    """The model strategy is enforced by the Agent tool's INLINE `model:`
+    parameter on the `general-purpose` subagent type — verified working in
+    Claude Code 2026-05.
+
+    Tested empirically (2026-05) by spawning a smoke-test subagent in this
+    session: `Agent(subagent_type: "general-purpose", model: "haiku", ...)`
+    returned a Haiku-cost response in ~4s. The custom file-based pattern
+    (`.claude/agents/<name>.md`) was rejected by the harness with
+    "Agent type 'X' not found", so we use the inline-model pattern instead.
+
+    This test guards the recipes in SKILL.md so they can't be silently
+    rewritten back to the unsupported file-based form."""
+    print("\n[16] Model strategy enforced via Agent tool inline `model:` param")
+
+    skill = (ROOT / ".claude" / "skills" / "video_generation" / "SKILL.md").read_text(encoding="utf-8")
+
+    # Headline sections present
+    check("SKILL.md contains MODEL STRATEGY section",
+          "MODEL STRATEGY" in skill)
+    check("SKILL.md contains ENFORCEMENT section with subagent recipes",
+          "ENFORCEMENT" in skill and "subagent" in skill.lower())
+
+    # Recipes use the verified pattern: subagent_type: "general-purpose"
+    # with inline model: "<name>". No custom-name subagents (those don't work).
+    check("SEED+BUILD recipe uses subagent_type: \"general-purpose\"",
+          'subagent_type: "general-purpose"' in skill)
+    check("SEED+BUILD recipe pins model: \"sonnet\"",
+          'model: "sonnet"' in skill)
+    check("STATUS POLL recipe pins model: \"haiku\"",
+          'model: "haiku"' in skill)
+    check("Quality review section keeps reasoning on Opus",
+          re.search(r"stay(s)?\s+on\s+(this\s+)?Opus", skill, re.IGNORECASE) is not None)
+
+    # Anti-regression: no custom subagent_type names (those silently fail).
+    # If anyone re-introduces the file-based pattern, the test catches it.
+    forbidden_types = ['"video-mechanical"', '"video-status"', '"video-quality-review"']
+    for ft in forbidden_types:
+        check(f"SKILL.md does NOT reference unsupported {ft}",
+              f'subagent_type: {ft}' not in skill,
+              f"unsupported custom subagent_type {ft} reappeared — Claude Code "
+              f"harness rejects these with 'Agent type X not found'")
+
+    # No leftover .claude/agents/ files — those were the unsupported pattern
+    agents_dir = ROOT / ".claude" / "agents"
+    check(".claude/agents/ has no orphaned agent-file definitions",
+          (not agents_dir.exists()) or not list(agents_dir.glob("*.md")),
+          f"agent files still present in {agents_dir} — they don't work in "
+          f"this Claude Code build and mislead callers into using broken patterns")
+
+    # Rule 04 must point at the enforcement (no raw `python` instructions for
+    # mechanical phases — those go through a Sonnet subagent)
+    rule04 = (ROOT / ".claude" / "skills" / "video_generation" / "rules" / "04-visual-designer.md").read_text(encoding="utf-8")
+    check("rule 04 references the Agent tool subagent enforcement",
+          "Agent" in rule04 and ("subagent" in rule04.lower() or "ENFORCEMENT" in rule04))
+
+    # Pipeline scripts must NOT pin a model — model is selected at the Agent call
+    bv = (ROOT / "storyboard" / "build_video.py").read_text(encoding="utf-8")
+    check("build_video.py has no llm.designer_model knob",
+          "config.get(\"llm\"" not in bv and "DESIGNER_MODEL = " not in bv)
+
+
 # Run ──────────────────────────────────────────────────────────────────────
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -530,9 +776,14 @@ def main() -> int:
     test_coverage_uses_anchor_hit_flags()
     test_robust_script_total()
     test_no_zero_multiplication_bug()
+    test_pause_duration_honored_via_split_render_concat()
+    test_remotion_version_floor()
+    test_render_browser_reuse_and_watchdog()
+    test_strict_anchors_quality_gate()
     test_render_crash_defenses()
     test_render_stability_settings()
     test_dynamic_block_bindings_wiring()
+    test_model_strategy_enforced_via_subagents()
     print()
     print("=" * 60)
     print(f" PASS: {PASSED}    FAIL: {FAILED}")

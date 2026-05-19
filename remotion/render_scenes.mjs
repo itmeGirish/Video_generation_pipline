@@ -3,18 +3,26 @@
  * Applies the same webpack aliases as remotion.config.ts.
  */
 import { bundle } from '@remotion/bundler';
-import { renderMedia, selectComposition } from '@remotion/renderer';
+import {
+  renderMedia,
+  selectComposition,
+  openBrowser,
+  makeCancelSignal,
+} from '@remotion/renderer';
+
+const isUserCancelledRender = (err) =>
+  err && (String(err.message || err).toLowerCase().includes('cancel') ||
+          String(err.message || err).toLowerCase().includes('abort'));
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import webpack from 'webpack';
 
-const HF_SCENES = ['hf01', 'hf02', 'hf03', 'hf04', 'hf05', 'hf06', 'hf07'];
-const RH_SCENES = Array.from({ length: 12 }, (_, i) => `rh${String(i + 1).padStart(2, '0')}`);
-const TD_SCENES = Array.from({ length: 10 }, (_, i) => `td${String(i + 1).padStart(2, '0')}`);
-const SCENES = process.argv.includes('--td') ? TD_SCENES
-  : process.argv.includes('--rh') ? RH_SCENES
-  : HF_SCENES;
+// Scene IDs come from build_video.py via positional CLI args.
+// Earlier dead constants (HF_SCENES, RH_SCENES, TD_SCENES) belonged to the
+// pre-codegen pipeline and have been removed — every scene is per-bullet
+// codegen now (rule 04). If no scene IDs are passed, the script errors
+// rather than guessing — see main() below.
 const REMOTION_DIR = path.resolve('.');
 const OUT_DIR = path.join(REMOTION_DIR, 'out');
 
@@ -67,9 +75,14 @@ function webpackOverride(config) {
 async function main() {
   const args = process.argv.slice(2);
   const force = args.includes('--force');
-  // Filter out flags; the remaining positional args are scene IDs if any
-  const onlyScenes = args.filter((a) => !a.startsWith('--'));
-  const todo = onlyScenes.length ? onlyScenes : SCENES;
+  // Positional args are scene IDs. Without them we can't render anything —
+  // callers (build_video.py) always pass them.
+  const todo = args.filter((a) => !a.startsWith('--'));
+  if (todo.length === 0) {
+    console.error('ERROR: no scene IDs provided. Pass them as positional args, e.g.:');
+    console.error('  PROJECT=my_project node render_scenes.mjs my_project-s01 my_project-s02');
+    process.exit(1);
+  }
 
   console.log('▶ Bundling once...');
   const t0 = Date.now();
@@ -79,6 +92,42 @@ async function main() {
     publicDir: projectDir,  // matches remotion.config.ts: Config.setPublicDir(projectDir)
   });
   console.log(`✓ bundled in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+
+  // Browser reuse pattern (verified — remotion.dev/docs/renderer/open-browser):
+  // - Open ONE Chromium for the entire run; share via `puppeteerInstance`.
+  // - chromiumOptions on renderMedia are IGNORED when puppeteerInstance is
+  //   set, so all flags (gl, disableWebSecurity) MUST be set here at openBrowser
+  //   time. Verified in the Remotion docs — passing them to renderMedia
+  //   silently does nothing once puppeteerInstance is in play.
+  // - Restart the browser every BROWSER_RESTART_EVERY scenes to bound
+  //   accumulated Chromium memory (the docs note even swangle has small
+  //   leakage on multi-thousand-frame renders).
+  const BROWSER_RESTART_EVERY = 5;
+  let browser = null;
+  // disableWebSecurity removed (was widening the attack surface for any
+  // external resource an LLM-emitted code blob might fetch — spec only
+  // mandates `gl: 'swangle'`). If a future bullet legitimately needs to
+  // fetch cross-origin assets (e.g. CDN fonts), set it via env var rather
+  // than enabling globally.
+  const openSharedBrowser = async () => openBrowser('chrome', {
+    chromiumOptions: { gl: 'swangle' },
+  });
+  const closeSharedBrowser = async () => {
+    if (browser) {
+      try { await browser.close({ silent: true }); } catch {}
+      browser = null;
+    }
+  };
+  // Graceful cleanup on Ctrl+C / kill — without this, the parent Python's
+  // taskkill may leave Chromium pages in a half-closed state.
+  for (const sig of ['SIGINT', 'SIGTERM', 'SIGBREAK']) {
+    process.on(sig, async () => {
+      console.error(`\n[render_scenes] received ${sig} — closing browser`);
+      await closeSharedBrowser();
+      process.exit(sig === 'SIGINT' ? 130 : 143);
+    });
+  }
+  browser = await openSharedBrowser();
 
   // Per-scene retry policy (research-backed):
   //   - Remotion's own convention is `retries: 1` (delayRender retries),
@@ -92,13 +141,34 @@ async function main() {
   //     (https://www.remotion.dev/docs/bundle/).
   const MAX_ATTEMPTS = 2;
   const RETRY_BACKOFF_MS = 2000;
+  // Hung-render watchdog: if `onProgress` hasn't fired in this many ms, the
+  // render is considered stalled and gets cancelled (then retried per the
+  // attempt loop above). Verified pattern: makeCancelSignal + Promise.race +
+  // tracking lastProgress timestamp. See remotion.dev/docs/renderer/make-cancel-signal.
+  const STALL_TIMEOUT_MS = 120000;   // 2 minutes with no frame progress = stuck
   const failed = [];
+  let scenesRendered = 0;
 
   for (const sceneId of todo) {
     const out = path.join(OUT_DIR, `${sceneId}.mp4`);
+    // Atomic write target: render to <sid>_inprogress.mp4, then fs.renameSync
+    // to <sid>.mp4 after the size guard passes. Without atomic write, a SIGKILL
+    // between renderMedia's last frame and process exit leaves a truncated mp4
+    // that the next-build's size-guard (>100KB) might let through silently.
+    //
+    // The in-progress filename MUST end in .mp4 — Remotion 4.0.455+ added
+    // strict output-filename extension validation that rejects ".mp4.inprogress"
+    // ("filename must end in mp4, mkv, mov..."). The "_inprogress" infix keeps
+    // the .mp4 extension while still distinguishing the temporary file from
+    // the final atomic-rename target.
+    const inprogress = out.replace(/\.mp4$/, '_inprogress.mp4');
     if (!force && fs.existsSync(out) && fs.statSync(out).size > 100_000) {
       console.log(`⏭  ${sceneId} already rendered — skipping`);
       continue;
+    }
+    // Clean up any orphaned .inprogress from a prior crash before rendering
+    if (fs.existsSync(inprogress)) {
+      try { fs.unlinkSync(inprogress); } catch {}
     }
 
     console.log(`\n▶ ${sceneId} → ${path.basename(out)}`);
@@ -106,6 +176,20 @@ async function main() {
     let lastErr = null;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       const tScene = Date.now();
+
+      // Per-attempt cancel signal + stall watchdog. If renderMedia stops
+      // calling onProgress for STALL_TIMEOUT_MS, cancelSignal fires and the
+      // render rejects with a UserCancelled error — caught below and counted
+      // as a normal retry.
+      const { cancelSignal, cancel } = makeCancelSignal();
+      let lastProgressAt = Date.now();
+      const watchdog = setInterval(() => {
+        if (Date.now() - lastProgressAt > STALL_TIMEOUT_MS) {
+          console.error(`\n  [watchdog] no progress for ${STALL_TIMEOUT_MS / 1000}s — cancelling`);
+          cancel();
+        }
+      }, 5000);
+
       try {
         // Re-select composition on each attempt — cheap (data-only object,
         // no live browser handles) and guards against any stale state from a
@@ -114,6 +198,7 @@ async function main() {
           serveUrl,
           id: sceneId,
           inputProps: {},
+          puppeteerInstance: browser,
         });
 
         let last = 0;
@@ -121,18 +206,20 @@ async function main() {
           serveUrl,
           composition: comp,
           codec: 'h264',
-          outputLocation: out,
-          // Stability set, all citations in render_scenes.mjs comment block above main():
-          //   concurrency: 1                  → render frames serially (smallest mem footprint)
-          //   disallowParallelEncoding: true  → docs: "more memory-efficient, but possibly slower"
-          //   gl: 'swangle'                   → docs: 'angle' has memory leak that crashes long renders
-          //   timeoutInMilliseconds: 300000   → 5 min per frame, slack for slow primitives
+          outputLocation: inprogress,   // atomic write — rename after success
+          // Browser-reuse via puppeteerInstance. NOTE: chromiumOptions.gl /
+          // disableWebSecurity / etc. set on renderMedia are SILENTLY IGNORED
+          // when puppeteerInstance is set — those flags must be set at
+          // openBrowser time (above). Documented in render-media.md.
+          puppeteerInstance: browser,
+          // Stability knobs that ARE honored even with shared browser:
           concurrency: 1,
           disallowParallelEncoding: true,
           timeoutInMilliseconds: 300000,
-          chromiumOptions: { disableWebSecurity: true, gl: 'swangle' },
           offthreadVideoCacheSizeInBytes: 256 * 1024 * 1024,
+          cancelSignal,
           onProgress: ({ renderedFrames }) => {
+            lastProgressAt = Date.now();   // reset watchdog
             if (renderedFrames - last >= 100) {
               last = renderedFrames;
               process.stdout.write(`\r  ${renderedFrames}/${comp.durationInFrames}      `);
@@ -140,6 +227,15 @@ async function main() {
           },
         });
 
+        // Health-gate the inprogress file BEFORE atomic rename. Without this,
+        // renderMedia can return success while leaving a 0-byte or truncated
+        // file (rare but seen on disk-full).
+        if (!fs.existsSync(inprogress) || fs.statSync(inprogress).size < 100_000) {
+          throw new Error(`render produced ${fs.existsSync(inprogress) ? fs.statSync(inprogress).size : 0} bytes — too small`);
+        }
+        // Atomic commit: rename .inprogress → final name. fs.renameSync is
+        // atomic on the same filesystem.
+        fs.renameSync(inprogress, out);
         console.log(
           `\n✓ ${sceneId}: ${(fs.statSync(out).size / 1024 / 1024).toFixed(1)} MB in ${(
             (Date.now() - tScene) /
@@ -147,12 +243,14 @@ async function main() {
           ).toFixed(0)}s` + (attempt > 1 ? ` (attempt ${attempt}/${MAX_ATTEMPTS})` : ''),
         );
         lastErr = null;
+        scenesRendered++;
         break;
       } catch (err) {
         lastErr = err;
         const msg = err && err.message ? err.message : String(err);
+        const cancelled = isUserCancelledRender(err);
         console.error(
-          `\n✗ ${sceneId} attempt ${attempt}/${MAX_ATTEMPTS} failed after ${(
+          `\n✗ ${sceneId} attempt ${attempt}/${MAX_ATTEMPTS} ${cancelled ? 'STALLED' : 'failed'} after ${(
             (Date.now() - tScene) /
             1000
           ).toFixed(0)}s: ${msg.split('\n')[0]}`,
@@ -164,15 +262,37 @@ async function main() {
         if (fs.existsSync(out)) {
           try { fs.unlinkSync(out); } catch {}
         }
+        // Same for the .inprogress staging file — must be cleared so the
+        // size-guard at the top of the next attempt doesn't reject prematurely.
+        if (fs.existsSync(inprogress)) {
+          try { fs.unlinkSync(inprogress); } catch {}
+        }
+        // Stalled render likely left Chromium in a bad state — recycle the
+        // shared browser before retry. Crashed render same logic.
+        await closeSharedBrowser();
+        browser = await openSharedBrowser();
         if (attempt < MAX_ATTEMPTS) {
           await new Promise((r) => setTimeout(r, RETRY_BACKOFF_MS));
         }
+      } finally {
+        clearInterval(watchdog);
       }
     }
     if (lastErr) {
       failed.push({ sceneId, error: lastErr.message || String(lastErr) });
     }
+
+    // Periodic browser restart to bound memory accumulation across many
+    // scenes (no Remotion doc prescribes this; deduced from the swangle
+    // long-render leak warning in remotion.dev/docs/chromium-flags).
+    if (scenesRendered > 0 && scenesRendered % BROWSER_RESTART_EVERY === 0) {
+      console.log(`  [browser] restarting after ${scenesRendered} scenes (memory bound)`);
+      await closeSharedBrowser();
+      browser = await openSharedBrowser();
+    }
   }
+
+  await closeSharedBrowser();
 
   if (failed.length) {
     console.error(`\n✗ ${failed.length} scene(s) failed after ${MAX_ATTEMPTS} attempts:`);

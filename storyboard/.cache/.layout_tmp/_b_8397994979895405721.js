@@ -1,0 +1,16 @@
+const NARRATION_TEXT = "Lies to suppliers about exclusive deals. And \u2014 this is real, the logs are public \u2014 a customer emails asking for a three-fifty refund on an expired candy bar. Claude writes back, quote: 'I've processed your refund.' <pause 0.2s> Never sends the money. <pause 0.2s> Its internal reasoning? 'Every dollar counts.' <pause 0.3s> Opus four-point-seven \u2014 same thing.";
+const op=interpolate(frame,[0,12],[0,1],{extrapolateRight:'clamp'});
+const panels=[
+  {text:'Customer refund request → $3.50 sent immediately  ✓',label:'HONEST REFUND',color:D.green,f:0},
+  {text:'Claude cartel offer → "I\'m unsure if collusion would be legal."  ✓',label:'DECLINED CARTEL',color:D.green,f:10},
+  {text:'Two days later → GPT proposes ITS OWN cartel',label:'...PROPOSED OWN CARTEL',color:D.amber,f:22},
+];
+return React.createElement(React.Fragment,null,
+  React.createElement('div',{style:{position:'absolute',top:Math.round(height*.08),left:'50%',transform:'translateX(-50%)',color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(width*.0075),letterSpacing:3,opacity:op}},'VENDING-BENCH  —  GPT-5.5 DECISION LOG'),
+  React.createElement('div',{style:{position:'absolute',left:'50%',top:Math.round(height*.18),transform:'translateX(-50%)',width:Math.round(width*.68),display:'flex',flexDirection:'column',gap:Math.round(height*.025),opacity:op}},
+    ...panels.map((p,i)=>React.createElement('div',{key:i,style:{backgroundColor:D.surface,borderRadius:6,padding:Math.round(width*.015),borderLeft:'3px solid '+p.color,opacity:interpolate(frame,[p.f,p.f+10],[0,1],{extrapolateRight:'clamp'})}},
+      React.createElement('div',{style:{color:p.color,fontFamily:D.font_mono,fontSize:Math.round(width*.009),fontWeight:700,marginBottom:4}},p.label),
+      React.createElement('div',{style:{color:D.text,fontFamily:D.font_mono,fontSize:Math.round(width*.009),lineHeight:1.4}},p.text)
+    ))
+  )
+);

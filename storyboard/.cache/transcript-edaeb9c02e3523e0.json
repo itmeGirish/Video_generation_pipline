@@ -1,0 +1,527 @@
+[
+  {
+    "word": "You're",
+    "start": 0.0,
+    "end": 0.18
+  },
+  {
+    "word": "spending",
+    "start": 0.18,
+    "end": 0.36
+  },
+  {
+    "word": "too",
+    "start": 0.36,
+    "end": 0.6
+  },
+  {
+    "word": "much",
+    "start": 0.6,
+    "end": 0.84
+  },
+  {
+    "word": "on",
+    "start": 0.84,
+    "end": 0.98
+  },
+  {
+    "word": "AI,",
+    "start": 0.98,
+    "end": 1.22
+  },
+  {
+    "word": "if",
+    "start": 1.62,
+    "end": 2.26
+  },
+  {
+    "word": "you're",
+    "start": 2.26,
+    "end": 2.38
+  },
+  {
+    "word": "using",
+    "start": 2.38,
+    "end": 2.62
+  },
+  {
+    "word": "one",
+    "start": 2.62,
+    "end": 2.98
+  },
+  {
+    "word": "model",
+    "start": 2.98,
+    "end": 3.36
+  },
+  {
+    "word": "for",
+    "start": 3.36,
+    "end": 3.72
+  },
+  {
+    "word": "everything.",
+    "start": 3.72,
+    "end": 4.34
+  },
+  {
+    "word": "Code,",
+    "start": 5.22,
+    "end": 5.36
+  },
+  {
+    "word": "drafts,",
+    "start": 5.66,
+    "end": 6.2
+  },
+  {
+    "word": "agents,",
+    "start": 6.6,
+    "end": 6.84
+  },
+  {
+    "word": "fact",
+    "start": 7.08,
+    "end": 7.2
+  },
+  {
+    "word": "checks,",
+    "start": 7.2,
+    "end": 7.54
+  },
+  {
+    "word": "you're",
+    "start": 7.92,
+    "end": 8.68
+  },
+  {
+    "word": "paying.",
+    "start": 8.68,
+    "end": 9.0
+  },
+  {
+    "word": "For",
+    "start": 9.9,
+    "end": 10.54
+  },
+  {
+    "word": "times",
+    "start": 10.54,
+    "end": 10.8
+  },
+  {
+    "word": "what",
+    "start": 10.8,
+    "end": 10.94
+  },
+  {
+    "word": "you",
+    "start": 10.94,
+    "end": 11.06
+  },
+  {
+    "word": "should,",
+    "start": 11.06,
+    "end": 11.38
+  },
+  {
+    "word": "here's",
+    "start": 12.1,
+    "end": 12.46
+  },
+  {
+    "word": "the",
+    "start": 12.46,
+    "end": 12.58
+  },
+  {
+    "word": "routing",
+    "start": 12.58,
+    "end": 12.9
+  },
+  {
+    "word": "layer",
+    "start": 12.9,
+    "end": 13.24
+  },
+  {
+    "word": "that",
+    "start": 13.24,
+    "end": 13.48
+  },
+  {
+    "word": "fixes",
+    "start": 13.48,
+    "end": 13.92
+  },
+  {
+    "word": "it.",
+    "start": 13.92,
+    "end": 14.22
+  },
+  {
+    "word": "Eight",
+    "start": 15.58,
+    "end": 16.22
+  },
+  {
+    "word": "minutes.",
+    "start": 16.22,
+    "end": 16.62
+  },
+  {
+    "word": "No",
+    "start": 21.3,
+    "end": 21.94
+  },
+  {
+    "word": "fluff.",
+    "start": 21.94,
+    "end": 22.24
+  },
+  {
+    "word": "Before",
+    "start": 22.78,
+    "end": 22.96
+  },
+  {
+    "word": "the",
+    "start": 22.96,
+    "end": 23.14
+  },
+  {
+    "word": "routing",
+    "start": 23.14,
+    "end": 23.4
+  },
+  {
+    "word": "layer",
+    "start": 23.4,
+    "end": 23.72
+  },
+  {
+    "word": "makes",
+    "start": 23.72,
+    "end": 24.0
+  },
+  {
+    "word": "sense,",
+    "start": 24.0,
+    "end": 24.4
+  },
+  {
+    "word": "you",
+    "start": 24.96,
+    "end": 25.08
+  },
+  {
+    "word": "need",
+    "start": 25.08,
+    "end": 25.24
+  },
+  {
+    "word": "to",
+    "start": 25.24,
+    "end": 25.36
+  },
+  {
+    "word": "know",
+    "start": 25.36,
+    "end": 25.58
+  },
+  {
+    "word": "who",
+    "start": 25.58,
+    "end": 25.78
+  },
+  {
+    "word": "you're",
+    "start": 25.78,
+    "end": 25.92
+  },
+  {
+    "word": "routing",
+    "start": 25.92,
+    "end": 26.14
+  },
+  {
+    "word": "between.",
+    "start": 26.14,
+    "end": 26.48
+  },
+  {
+    "word": "Two",
+    "start": 27.3,
+    "end": 27.58
+  },
+  {
+    "word": "flagship",
+    "start": 27.58,
+    "end": 27.98
+  },
+  {
+    "word": "models.",
+    "start": 27.98,
+    "end": 28.36
+  },
+  {
+    "word": "Two",
+    "start": 28.36,
+    "end": 29.5
+  },
+  {
+    "word": "different",
+    "start": 29.5,
+    "end": 29.74
+  },
+  {
+    "word": "jobs.",
+    "start": 29.74,
+    "end": 30.2
+  },
+  {
+    "word": "Released",
+    "start": 33.18,
+    "end": 33.52
+  },
+  {
+    "word": "April",
+    "start": 33.52,
+    "end": 33.98
+  },
+  {
+    "word": "16th.",
+    "start": 33.98,
+    "end": 35.56
+  },
+  {
+    "word": "Build",
+    "start": 35.56,
+    "end": 35.7
+  },
+  {
+    "word": "for",
+    "start": 35.7,
+    "end": 35.9
+  },
+  {
+    "word": "reasoning.",
+    "start": 35.9,
+    "end": 36.28
+  },
+  {
+    "word": "Verifies",
+    "start": 36.92,
+    "end": 37.66
+  },
+  {
+    "word": "its",
+    "start": 37.66,
+    "end": 37.94
+  },
+  {
+    "word": "own",
+    "start": 37.94,
+    "end": 38.16
+  },
+  {
+    "word": "work.",
+    "start": 38.16,
+    "end": 38.66
+  },
+  {
+    "word": "GPT",
+    "start": 39.48,
+    "end": 40.08
+  },
+  {
+    "word": "5",
+    "start": 40.08,
+    "end": 40.86
+  },
+  {
+    "word": ".5.",
+    "start": 40.86,
+    "end": 41.52
+  },
+  {
+    "word": "Released",
+    "start": 42.06,
+    "end": 42.46
+  },
+  {
+    "word": "April",
+    "start": 42.46,
+    "end": 42.9
+  },
+  {
+    "word": "23rd.",
+    "start": 42.9,
+    "end": 43.36
+  },
+  {
+    "word": "Build",
+    "start": 44.36,
+    "end": 44.56
+  },
+  {
+    "word": "for",
+    "start": 44.56,
+    "end": 44.76
+  },
+  {
+    "word": "action.",
+    "start": 44.76,
+    "end": 45.12
+  },
+  {
+    "word": "Operates",
+    "start": 45.98,
+    "end": 46.42
+  },
+  {
+    "word": "tools,",
+    "start": 46.42,
+    "end": 46.78
+  },
+  {
+    "word": "browsers,",
+    "start": 47.32,
+    "end": 47.64
+  },
+  {
+    "word": "desktops.",
+    "start": 48.1,
+    "end": 48.52
+  },
+  {
+    "word": "Different",
+    "start": 49.5,
+    "end": 49.68
+  },
+  {
+    "word": "jobs.",
+    "start": 49.68,
+    "end": 50.08
+  },
+  {
+    "word": "Use",
+    "start": 52.3,
+    "end": 52.5
+  },
+  {
+    "word": "Clawed",
+    "start": 52.5,
+    "end": 52.84
+  },
+  {
+    "word": "for",
+    "start": 52.84,
+    "end": 52.92
+  },
+  {
+    "word": "code,",
+    "start": 52.92,
+    "end": 53.24
+  },
+  {
+    "word": "research,",
+    "start": 53.66,
+    "end": 54.0
+  },
+  {
+    "word": "fact",
+    "start": 54.6,
+    "end": 54.74
+  },
+  {
+    "word": "checks,",
+    "start": 54.74,
+    "end": 55.06
+  },
+  {
+    "word": "drafts",
+    "start": 55.44,
+    "end": 55.74
+  },
+  {
+    "word": "you",
+    "start": 55.74,
+    "end": 55.8
+  },
+  {
+    "word": "ship.",
+    "start": 55.8,
+    "end": 56.14
+  },
+  {
+    "word": "Use",
+    "start": 56.14,
+    "end": 57.24
+  },
+  {
+    "word": "GPT",
+    "start": 57.24,
+    "end": 57.98
+  },
+  {
+    "word": "5",
+    "start": 57.98,
+    "end": 58.6
+  },
+  {
+    "word": ".5",
+    "start": 58.6,
+    "end": 59.16
+  },
+  {
+    "word": "for",
+    "start": 59.16,
+    "end": 59.44
+  },
+  {
+    "word": "agents,",
+    "start": 59.44,
+    "end": 59.78
+  },
+  {
+    "word": "automation,",
+    "start": 60.14,
+    "end": 60.58
+  },
+  {
+    "word": "multi",
+    "start": 61.04,
+    "end": 61.24
+  },
+  {
+    "word": "-tool",
+    "start": 61.24,
+    "end": 61.5
+  },
+  {
+    "word": "workflows.",
+    "start": 61.5,
+    "end": 61.96
+  },
+  {
+    "word": "That's",
+    "start": 62.6,
+    "end": 63.3
+  },
+  {
+    "word": "the",
+    "start": 63.3,
+    "end": 63.4
+  },
+  {
+    "word": "whole",
+    "start": 63.4,
+    "end": 63.52
+  },
+  {
+    "word": "game.",
+    "start": 63.52,
+    "end": 63.8
+  }
+]
