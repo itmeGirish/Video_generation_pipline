@@ -1,8 +1,7 @@
 ---
 name: video_generation
-description: Complete pipeline for creating production YouTube explainer videos from a structured script. The pipeline NEVER spawns the `claude` CLI — per-bullet React code is authored in-session by Claude Code and seeded into a content-addressed cache; the build then does pure cache lookup → TTS → render → stitch.
-metadata:
-  tags: video, remotion, pipeline, animation, narration, tts, in-session-codegen
+description: Complete pipeline for creating production YouTube explainer videos from a structured script. Per-bullet React code is authored in-session and seeded into cache; build does cache lookup → TTS → Whisper → render → stitch. Never spawns the claude CLI.
+when_to_use: Use when a structured script at projects/structured_scripts/<name>.txt is ready and you need to render it into a final mp4. Also use when diagnosing pipeline failures, fixing broken bullets, improving narration quality, or running post-render QA.
 ---
 
 ## NO CLAUDE CLI SUBPROCESS — ARCHITECTURAL INVARIANT
@@ -209,6 +208,8 @@ follows below.)
 | **Step 9.5** — visual QA | 12 | Coverage thresholds + post-render checks |
 | **Step 10** — stitch + within-block stagger | 09 | Backdrop fade, stitch mode, in-code cross-fade pattern |
 | **Step 10.5** — output validation | 12 | Same rule as 9.5 |
+| **Step 11** — YouTube upload standards | 22 | Resolution, codec, bitrate, audio, captions, thumbnail, chapters |
+| **Cross-cutting** — verifying rendered scenes (visual, animation, audio, YouTube upload) | 23 | V1–V8 frame inspection, filmstrip A1–A8, freeze detection, PSNR, audio WPM/coverage, YouTube T1–T12 gate |
 | **Cross-cutting** — commands, flags, config | 06 | CLI + config.yaml |
 | **Cross-cutting** — full architecture | 02 | One-page overview |
 | **Cross-cutting** — about to edit `storyboard/*.py` | 10 | 8 known bug classes + their tests |
@@ -237,6 +238,8 @@ Read rule files for each concern:
 - [rules/18-rich-script-conversion.md](rules/18-rich-script-conversion.md) — **MANDATORY first step when a raw script is given.** Read raw `projects/scripts/<name>.txt` → apply the 9-step conversion checklist → write canonical output to `projects/structured_scripts/<name>.txt`. Covers everything `script_converter.py` does NOT handle (frame timing, `### VO:`, sub-scenes, design-token preambles, bespoke metaphors). Includes the bespoke-visual handling guidance and the bullet density target. Canonical store is `projects/structured_scripts/` — never write conversion output anywhere else.
 - [rules/19-layout-and-quality-gate.md](rules/19-layout-and-quality-gate.md) — Canvas-utilization minima, phase-timing idiom (`durationInFrames * 0.3/0.6/0.9`), spring-preset → intent map, proportional typography sizing, common LLM-emitted-code failure modes, and the pre-render checklist. Read when bullet visuals look small/empty, when elements clip, or before shipping a render.
 - [rules/20-script-generation-integration.md](rules/20-script-generation-integration.md) — How `.claude/script_generation/` (the YouTube script-writer skill) feeds the pipeline via `storyboard/script_gen_to_raw.py`. Two-step bridge — generate, then convert — with no changes to the existing parser/build code.
+- [rules/22-youtube-output-validation.md](rules/22-youtube-output-validation.md) — **Final YouTube upload standards check.** 10 checks via `ffprobe`: resolution (1920×1080), frame rate (30fps), video codec (H.264), video bitrate (≥8 Mbps), audio (AAC stereo 192kbps), duration consistency, no black frames, captions (SRT), thumbnail (1280×720), chapter timestamps. Run after rule 12 passes. FAIL = do not upload.
+- [rules/23-verification-protocol.md](rules/23-verification-protocol.md) — **4-layer YouTube production quality gate.** Layer 1: V1–V8 visual inspection (canvas utilization, typography, muted-viewer walkthrough). Layer 1.5: animation filmstrip A1–A8 (5-frame filmstrip, freeze detection, PSNR motion check, REPLACE transition check). Layer 2: audio quality (WPM, AAC specs, narration coverage, 4 quality levers). Layer 3: YouTube T1–T12 technical gate. Run after every render before advancing to next scene.
 
 ## Dependency on remotion skill
 

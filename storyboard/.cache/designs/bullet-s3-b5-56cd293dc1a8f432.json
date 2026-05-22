@@ -1,0 +1,5 @@
+{
+  "code": "const w=width,h=height;\nconst sp=spring({frame,fps,config:{damping:15,stiffness:80,mass:2}});\nconst stampW=Math.round(w*0.80),stampX=Math.round(w*0.10);\nconst wrap=React.createElement('div',{style:{position:'absolute',left:stampX,top:0,width:stampW,height:h,display:'flex',alignItems:'center',justifyContent:'center',opacity:sp,transform:'scale('+sp+')'}},\n  React.createElement('div',{style:{width:'100%',border:'6px solid '+D.red,borderRadius:10,padding:Math.round(h*0.06)+' '+Math.round(w*0.04)+'px',textAlign:'center',display:'flex',flexDirection:'column',gap:Math.round(h*0.04),boxSizing:'border-box',backgroundColor:D.red+'11'}},\n    React.createElement('div',{style:{color:D.red,fontFamily:D.font_mono,fontSize:Math.round(w*0.030),fontWeight:'900',letterSpacing:'0.12em'}},'EVERY TASK ='),\n    React.createElement('div',{style:{color:D.red,fontFamily:D.font_mono,fontSize:Math.round(w*0.030),fontWeight:'900',letterSpacing:'0.12em'}},'PHD DISSERTATION BY DEFAULT')\n  )\n);\nreturn [wrap];",
+  "audio_anchor": "PhD dissertation",
+  "source_headline": "PhD dissertation warning stamp."
+}

@@ -21,180 +21,144 @@ export type SceneTimeline = {
 };
 
 export const TIMELINES: Record<string, SceneTimeline> = {
-  "chat-5-5-s01": {
-    "id": "chat-5-5-s01",
-    "durationFrames": 1172,
-    "durationSeconds": 39.067,
+  "ai-thinking-levels-s01": {
+    "id": "ai-thinking-levels-s01",
+    "durationFrames": 2243,
+    "durationSeconds": 74.767,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1172,
+        "toFrame": 2243,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "chat-5-5-s02": {
-    "id": "chat-5-5-s02",
-    "durationFrames": 854,
-    "durationSeconds": 28.467,
+  "ai-thinking-levels-s02": {
+    "id": "ai-thinking-levels-s02",
+    "durationFrames": 2088,
+    "durationSeconds": 69.6,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 854,
+        "toFrame": 2088,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "chat-5-5-s03": {
-    "id": "chat-5-5-s03",
-    "durationFrames": 2121,
-    "durationSeconds": 70.7,
+  "ai-thinking-levels-s03": {
+    "id": "ai-thinking-levels-s03",
+    "durationFrames": 2264,
+    "durationSeconds": 75.467,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2121,
+        "toFrame": 2264,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "chat-5-5-s04": {
-    "id": "chat-5-5-s04",
-    "durationFrames": 3379,
-    "durationSeconds": 112.633,
+  "ai-thinking-levels-s04": {
+    "id": "ai-thinking-levels-s04",
+    "durationFrames": 2589,
+    "durationSeconds": 86.3,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 3379,
+        "toFrame": 2589,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "chat-5-5-s05": {
-    "id": "chat-5-5-s05",
-    "durationFrames": 5711,
-    "durationSeconds": 190.367,
+  "ai-thinking-levels-s05": {
+    "id": "ai-thinking-levels-s05",
+    "durationFrames": 2131,
+    "durationSeconds": 71.033,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 5711,
+        "toFrame": 2131,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "chat-5-5-s06": {
-    "id": "chat-5-5-s06",
-    "durationFrames": 4132,
-    "durationSeconds": 137.733,
+  "ai-thinking-levels-s06": {
+    "id": "ai-thinking-levels-s06",
+    "durationFrames": 2068,
+    "durationSeconds": 68.933,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 4132,
+        "toFrame": 2068,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "chat-5-5-s07": {
-    "id": "chat-5-5-s07",
-    "durationFrames": 2868,
-    "durationSeconds": 95.6,
+  "ai-thinking-levels-s07": {
+    "id": "ai-thinking-levels-s07",
+    "durationFrames": 1187,
+    "durationSeconds": 39.567,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2868,
+        "toFrame": 1187,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "chat-5-5-s08": {
-    "id": "chat-5-5-s08",
-    "durationFrames": 3544,
-    "durationSeconds": 118.133,
+  "ai-thinking-levels-s08": {
+    "id": "ai-thinking-levels-s08",
+    "durationFrames": 2391,
+    "durationSeconds": 79.7,
     "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
+    "audioFile": "vo-ai_thinking_levels-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 3544,
-        "enterFrames": 0,
-        "exitFrames": 0,
-        "transitionIn": "hard_cut"
-      }
-    ]
-  },
-  "chat-5-5-s09": {
-    "id": "chat-5-5-s09",
-    "durationFrames": 3475,
-    "durationSeconds": 115.833,
-    "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
-    "anchors": {},
-    "phases": [
-      {
-        "id": "scene",
-        "fromFrame": 0,
-        "toFrame": 3475,
-        "enterFrames": 0,
-        "exitFrames": 0,
-        "transitionIn": "hard_cut"
-      }
-    ]
-  },
-  "chat-5-5-s10": {
-    "id": "chat-5-5-s10",
-    "durationFrames": 2868,
-    "durationSeconds": 95.6,
-    "fps": 30,
-    "audioFile": "vo-chat_5_5-full.mp3",
-    "anchors": {},
-    "phases": [
-      {
-        "id": "scene",
-        "fromFrame": 0,
-        "toFrame": 2868,
+        "toFrame": 2391,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"

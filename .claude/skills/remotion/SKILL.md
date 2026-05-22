@@ -1,13 +1,12 @@
 ---
 name: remotion-best-practices
-description: Best practices for Remotion - Video creation in React
-metadata:
-  tags: remotion, video, react, animation, composition
+description: Best practices for Remotion — video creation in React. Covers animations, timing, sequencing, transitions, text effects, and layout utilities.
+when_to_use: Use when writing or editing any .tsx file in the remotion/ directory, or when a pipeline bullet needs a new Remotion primitive. Read before authoring spring animations, Sequence/stagger timing, scene transitions, or text overflow handling.
 ---
 
 ## When to use
 
-Use this skills whenever you are dealing with Remotion code to obtain the domain-specific knowledge.
+Use this skill whenever you are dealing with Remotion code to obtain the domain-specific knowledge.
 
 ## How to use
 

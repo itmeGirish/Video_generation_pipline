@@ -1,3 +1,10 @@
+---
+name: script-formats-reference
+description: Reference guide for YouTube video format types (educational, listicle, story, review, vlog, commentary), script component breakdowns (hook, intro, CTA), tone guidelines, timing targets by video length, engagement techniques, and common mistakes to avoid.
+metadata:
+  tags: reference, formats, youtube, hook, cta, structure, tone, engagement, listicle, story
+---
+
 # YouTube Script Formats and Structures
 
 ## Common YouTube Video Types

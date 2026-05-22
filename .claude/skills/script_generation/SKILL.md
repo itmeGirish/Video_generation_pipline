@@ -1,571 +1,389 @@
 ---
 name: script-writer
-description: This skill should be used whenever users need YouTube video scripts written. On first use, collects comprehensive preferences including script type, tone, target audience, style, video length, hook style, use of humor, personality, and storytelling approach. Generates complete, production-ready YouTube scripts tailored to user's specifications for any topic. Maintains database of preferences and past scripts for consistent style.
+description: Generates complete production-grade YouTube video scripts in pipeline format (narration + animation bullets) saved to `projects/structured_scripts/<name>.txt`. Collects user style preferences on first use and maintains them across sessions. Output feeds directly into the video_generation pipeline with zero reformatting.
+when_to_use: Use when the user wants to write a new YouTube video script. Handles the full pre-production flow — strategy, research, scene structure, narration, animation bullets, content quality gate, and technical validation — before handing off to video_generation for rendering.
+model: opus
 ---
 
-# Script Writer
+# Script Writer — Production Grade
 
-## Overview
+Transforms a topic into a complete `projects/structured_scripts/<name>.txt` file
+with cinematic narration and animation bullets, ready for `build_video.py` to render.
 
-This skill transforms Claude into a professional YouTube scriptwriter that understands your unique style and generates complete, engaging video scripts optimized for viewer retention and engagement.
+**Two inputs → one output:**
+- Your style preferences (collected once, reused forever)
+- The topic / title for this video
+- Output: `projects/structured_scripts/<name>.txt`
 
-## When to Use This Skill
-
-Invoke this skill for YouTube scriptwriting tasks:
-- Writing complete video scripts
-- Creating hooks and introductions
-- Structuring content for engagement
-- Adapting scripts to different formats
-- Maintaining consistent voice and style
-- Generating multiple script variations
+---
 
 ## Workflow
 
-### Step 1: Check for Existing Preferences
+### Step 1 — Check preferences
 
 ```bash
-python3 scripts/script_db.py is_initialized
+python3 .claude/skills/script_generation/scripts/script_db.py is_initialized
 ```
 
-If "false", proceed to Step 2. If "true", proceed to Step 3.
-
-### Step 2: Initial Preference Collection
-
-Collect comprehensive scriptwriting preferences:
-
-**Script Types (can select multiple):**
-- Educational/Tutorial
-- Listicle/Top X
-- Story/Narrative
-- Review
-- Vlog style
-- Commentary/Opinion
-- How-to
-- Explainer
-- Entertainment
-
-**Tone:**
-- Professional/Authoritative
-- Casual/Friendly
-- Energetic/Enthusiastic
-- Educational/Patient
-- Inspirational/Motivational
-- Humorous/Entertaining
-- Conversational
-
-**Target Audience:**
-- Age range (teens, 20s-30s, 35-50, 50+)
-- Knowledge level (beginners, intermediate, expert)
-- Demographics
-- Interests
-- Pain points
-
-**Style Preferences:**
-- Wording style: Simple/Direct, Descriptive/Vivid, Technical/Precise, Storytelling
-- Sentence length: Short/punchy, Medium, Long/flowing
-- Paragraph structure: Quick cuts, Balanced, Longer sections
-- Use of rhetorical questions: Yes/No/Sometimes
-- Use of statistics/data: Heavy, Moderate, Light, None
-
-**Video Length Preference:**
-- Short form (3-5 minutes, ~450-750 words)
-- Medium form (7-12 minutes, ~1,050-1,800 words)
-- Long form (15-30 minutes, ~2,250-4,500 words)
-
-**Hook Style:**
-- Question-based
-- Bold statement
-- Conflict/Problem
-- Promise/Benefit
-- Shock value
-- Story opening
-
-**Personality:**
-- Energetic and animated
-- Calm and measured
-- Witty and humorous
-- Serious and thoughtful
-- Passionate and intense
-- Relatable and down-to-earth
-
-**Additional Preferences:**
-- Use humor: Yes/No/Sparingly
-- Include statistics: Always/When relevant/Rarely
-- Storytelling approach: Heavy/Moderate/Light
-- Call-to-action preference: Direct/Soft/Minimal
-- Personal anecdotes: Frequently/Occasionally/Rarely
-- Channel niche/focus
-
-**Saving Preferences:**
-
-```python
-import sys
-sys.path.append('[SKILL_DIR]/scripts')
-from script_db import save_preferences
-
-preferences = {
-    "script_types": ["educational", "listicle"],
-    "tone": "casual-friendly",
-    "target_audience": {
-        "age_range": "20s-30s",
-        "knowledge_level": "beginner-intermediate",
-        "interests": ["productivity", "technology"]
-    },
-    "style": {
-        "wording": "simple-direct",
-        "sentence_length": "short-punchy",
-        "use_questions": True,
-        "use_statistics": "moderate"
-    },
-    "video_length": "medium",
-    "hook_style": "question-problem",
-    "personality": "relatable-energetic",
-    "use_humor": True,
-    "storytelling_approach": "moderate",
-    "call_to_action_preference": "direct",
-    "channel_niche": "productivity tips"
-}
-
-save_preferences(preferences)
-```
-
-### Step 3: Generate Script for Topic
-
-When user requests a script, gather:
-
-**Essential Information:**
-1. **Topic/Title**: What the video is about
-2. **Key Points**: Main things to cover (3-5 points)
-3. **Video Length**: Specific duration or use preference
-4. **Special Requirements**: Anything specific to include/avoid
-5. **Target Keywords**: For SEO (optional)
-
-**Example Request:**
-```
-User: "Write a script about '5 Productivity Apps That Changed My Life'"
-
-Gather:
-- Video length: 10 minutes (medium form)
-- Key apps to cover: 5 specific apps
-- Angle: Personal experience + practical benefits
-- CTA: Link to full app list in description
-```
-
-### Step 4: Structure the Script
-
-Based on preferences and `references/script_formats.md`, create structure:
-
-**Standard YouTube Script Structure:**
-
-```
-[HOOK - 0:00-0:10]
-Opening line that stops the scroll
-
-[INTRO - 0:10-0:45]
-- Quick greeting
-- What video is about
-- Why viewer should watch
-- What they'll learn
-- Personal credibility/context
-
-[MAIN CONTENT - 0:45-8:30]
-Section 1: [Point 1]
-- Introduction to point
-- Explanation
-- Example/Story
-- Benefit/Application
-- Transition
-
-Section 2: [Point 2]
-- Introduction to point
-- Explanation
-- Example/Story
-- Benefit/Application
-- Transition
-
-[Continue for each main point]
-
-[CONCLUSION - 8:30-9:30]
-- Recap of main points
-- Key takeaway
-- Final thought
-- Setup for CTA
-
-[CALL TO ACTION - 9:30-10:00]
-- Primary CTA (subscribe, like, comment)
-- Secondary CTA (links, next video)
-- Sign-off
-```
-
-### Step 5: Write Complete Script
-
-Generate full script following structure with user's style preferences:
-
-**Example Script Output:**
-
-```
-===================================
-YOUTUBE SCRIPT
-===================================
-
-Title: 5 Productivity Apps That Changed My Life
-Duration: ~10 minutes (~1,500 words)
-Style: Casual-Friendly, Educational
-
-===================================
-
-[HOOK - 0:00-0:10]
-
-"I used to waste 3 hours every day on useless tasks until I found these 5 apps.
-And no, I'm not talking about the ones everyone already knows about."
-
-[INTRO - 0:10-0:45]
-
-"Hey everyone! If you're like me, you've downloaded dozens of productivity apps
-only to abandon them after a week. But these 5? They've actually stuck. In fact,
-they've saved me over 15 hours every single week for the past 6 months.
-
-Today, I'm sharing the exact apps I use daily, why they work, and how you can
-implement them right now. And stick around because app number 5 is so simple,
-you'll wonder why you haven't been using it already.
-
-Let's dive in."
-
-[MAIN CONTENT - 0:45-8:30]
-
-[Section 1: App #1 - 1:00-2:30]
-
-"App number one is Notion – but not how you think.
-
-I know, I know – everyone talks about Notion. But here's the thing: most people
-overcomplicate it. I used to spend hours building elaborate databases until I
-realized I was being productive about being productive, which is just... not
-productive.
-
-[Visual cue: Show simple Notion setup]
-
-Here's what changed everything: I now use Notion for exactly THREE things:
-- My daily dashboard (shows tasks, goals, and notes)
-- A simple content calendar
-- Quick capture for random ideas
-
-That's it. No complex databases. No elaborate systems. Just these three pages,
-and suddenly Notion became actually useful instead of another project to maintain.
-
-The key? Start simple. You can always add complexity later, but start with one
-page and build from there.
-
-Moving on to something completely different..."
-
-[Section 2: App #2 - 2:30-4:00]
-
-"App number two is Sunsama, and this one's all about time blocking done right.
-
-If you've ever written a to-do list and then just... stared at it, paralyzed
-about where to start – Sunsama solves that. It's like a calendar and task
-manager had a baby.
-
-[Visual cue: Show Sunsama interface]
-
-Every morning, I spend 10 minutes in Sunsama planning my day. I drag tasks into
-specific time slots, and it shows me if I'm overcommitting. Game changer.
-
-Before Sunsama, I'd have 20 tasks and no idea how to fit them in. Now? I can see
-I only have time for 7 tasks today, so I prioritize accordingly. It's honestly
-changed how I approach my entire day.
-
-The best part? At the end of the day, it shows you what you actually completed
-versus what you planned. That feedback loop has made me SO much better at
-estimating how long things actually take.
-
-Fair warning: it's a paid app. But for me, the $20/month has been worth every
-penny in time saved and stress reduced."
-
-[Continue for Apps 3, 4, and 5...]
-
-[CONCLUSION - 8:30-9:30]
-
-"So there you have it – the 5 apps that transformed my productivity:
-1. Notion for simple organization
-2. Sunsama for time blocking
-3. [App 3] for [benefit]
-4. [App 4] for [benefit]
-5. [App 5] for [benefit]
-
-The most important thing? Don't try to implement all 5 at once. Pick ONE, master
-it for a week, then add another. That's how these actually stick.
-
-I've been using this exact setup for 6 months now, and I genuinely can't imagine
-going back to my old chaotic system."
-
-[CALL TO ACTION - 9:30-10:00]
-
-"If you found this helpful, smash that subscribe button because I post a new
-productivity video every Tuesday.
-
-Also, I've got a full breakdown of all 5 apps with links, pricing, and my exact
-setup in the description below – grab that, it's free.
-
-Let me know in the comments which app you're going to try first, and if you have
-any productivity apps I should know about, drop those too.
-
-Thanks for watching, and I'll see you in the next one!"
-
-===================================
-[END OF SCRIPT]
-
-Word Count: ~1,500 words
-Estimated Duration: 10 minutes
-Target Audience: 20s-30s productivity enthusiasts
-Tone: Casual, friendly, relatable
-Key Hooks: Personal transformation, practical tips, simple implementation
-
-Production Notes:
-- Need B-roll of all 5 apps in use
-- Show simple vs complex Notion setups
-- Include time-lapse of daily planning routine
-- End screen: Subscribe button + Next video suggestion
-===================================
-```
-
-### Step 6: Refine Based on Feedback
-
-After presenting script:
-
-**Offer Adjustments:**
-- Make hook stronger
-- Adjust length (trim or expand)
-- Change tone (more/less formal)
-- Add/remove humor
-- Include more statistics
-- Simplify language
-- Add storytelling elements
-- Strengthen CTA
-
-**Save Final Version:**
-
-```python
-from script_db import add_script
-
-script = {
-    "title": "5 Productivity Apps That Changed My Life",
-    "type": "listicle-educational",
-    "tone": "casual-friendly",
-    "word_count": 1500,
-    "duration_minutes": 10,
-    "content": "[full script text]",
-    "notes": "Strong personal angle, relatable examples"
-}
-
-add_script(script)
-```
-
-## Best Practices
-
-### 1. Hook Creation
-- First 5 seconds are crucial
-- Make a promise
-- Create curiosity
-- Address a pain point
-- Use pattern interrupts
-
-### 2. Pacing
-- Vary sentence length
-- Mix short and long paragraphs
-- Build momentum
-- Strategic pauses
-- Energy shifts
-
-### 3. Engagement Techniques
-- Direct questions to viewer
-- Personal stories
-- Relatable examples
-- Anticipated objections
-- Social proof
-
-### 4. Retention Optimization
-- Tease what's coming
-- Use callback references
-- Pattern interrupts every 30-60 seconds
-- Strategic information gaps
-- Payoff promises made
-
-### 5. Call to Action
-- One primary CTA
-- Explain the benefit
-- Make it specific
-- Create light urgency
-- Natural integration
-
-## Script Templates
-
-### Educational Tutorial Template
-
-```
-[HOOK] Problem statement + Promise of solution
-[INTRO] Personal context + What you'll learn + Why it matters
-[SECTION 1] Concept explanation
-  - What it is
-  - Why it matters
-  - Common mistakes
-[SECTION 2] Step-by-step process
-  - Step 1 with visuals
-  - Step 2 with examples
-  - Step 3 with tips
-[SECTION 3] Common pitfalls
-  - What to avoid
-  - Troubleshooting
-[CONCLUSION] Recap + Key takeaway + Next steps
-[CTA] Subscribe + Resources + Comment prompt
-```
-
-### Listicle Template
-
-```
-[HOOK] Number tease + Unexpected angle
-[INTRO] Context + Why this list matters
-[ITEM 5] (Build suspense with countdown)
-  - What it is
-  - Why it works
-  - How to use it
-[ITEM 4] Repeat structure
-[ITEM 3] Repeat structure
-[ITEM 2] Repeat structure
-[ITEM 1] (Most important/surprising)
-  - Extra emphasis
-  - Best benefit
-[CONCLUSION] Recap numbers + Ultimate takeaway
-[CTA] Strong directive + Resource mention
-```
-
-### Story/Narrative Template
-
-```
-[HOOK] Compelling story opening
-[INTRO] Setup the story context
-[SECTION 1] The problem/conflict
-  - Build tension
-  - Show stakes
-  - Make it relatable
-[SECTION 2] The journey
-  - Challenges faced
-  - Attempts and failures
-  - Learning moments
-[SECTION 3] The resolution
-  - How it worked out
-  - The transformation
-[CONCLUSION] Lesson learned + How viewers can apply
-[CTA] Invite similar stories + Subscribe
-```
-
-## Tone Examples
-
-### Casual-Friendly
-```
-"Hey everyone! So, funny story – I completely messed this up last week.
-Like, embarrassingly bad. But here's what I learned..."
-```
-
-### Professional-Authoritative
-```
-"In today's video, we're examining the three core principles that drive
-successful implementation. Based on 5 years of data and research..."
-```
-
-### Energetic-Enthusiastic
-```
-"Okay, THIS is insane! I just discovered something that's going to blow
-your mind. Are you ready? Because once you see this..."
-```
-
-### Educational-Patient
-```
-"Let's break this down step by step. Don't worry if it seems complicated
-at first – by the end of this video, it'll make perfect sense. First..."
-```
-
-## Common Mistakes to Avoid
-
-1. **Weak hooks** - Get to the point in 5 seconds
-2. **Long intros** - Don't ramble before value
-3. **No structure** - Viewers need signposts
-4. **Monotone delivery** - Vary energy and pace
-5. **Information overload** - Focus on key points
-6. **Forgetting the audience** - Speak to them directly
-7. **Buried CTA** - Make it clear and actionable
-8. **No personality** - Let your unique voice show
-9. **Too formal** - YouTube is conversational
-10. **No visual cues** - Include filming notes
-
-## Example Interaction
-
-```
-User: "Write me a script about passive income ideas"
-
-Claude: [Checks preferences - finds casual-friendly tone, medium length, question hooks]
-
-Perfect! Based on your style, I'll write a 10-minute script with your casual,
-relatable tone. A few quick questions:
-
-1. How many passive income ideas should I cover? (3-5 works well for 10 minutes)
-2. Any specific angle? (beginner-friendly, high-earning, low startup cost?)
-3. Personal experience or research-based approach?
-
-User: "5 ideas, beginner-friendly, mix of both personal experience and research"
-
-Claude: [Generates complete script]
-
-Here's your complete script for "5 Passive Income Ideas for Beginners":
-
-[Full formatted script with hook, intro, 5 ideas with personal stories and data,
-conclusion, and CTA – all in user's casual-friendly style]
-
-The script is 1,450 words (~10 minutes) with:
-✓ Question-based hook about financial freedom
-✓ Personal story in intro about your first passive income
-✓ Each idea includes: what it is, startup cost, time investment, real example
-✓ Mix of your experience and statistics
-✓ Natural humor in transitions
-✓ Direct CTA about free passive income guide
-
-Want me to adjust anything? I can make it more personal, add more data, or
-change the energy level.
-```
-
-## Technical Notes
-
-**Data Storage:**
-- Location: `~/.claude/script_writer.json`
-- Preferences saved persistently
-- Script history maintained
-
-**CLI Commands:**
+If `false` → collect preferences (Step 2).
+If `true` → load preferences, skip to Step 3.
+
+---
+
+### Step 2 — Collect preferences (first use only)
+
+Ask the user for each of these once. Save them. Never ask again unless the user asks to update.
+
+| Preference | Options |
+|---|---|
+| **Tone** | Analytical / Dramatic / Educational / Story-driven / Casual |
+| **Audience** | Beginner / Intermediate / Expert |
+| **Hook style** | Bold statement / Contradiction / Question / Number reveal |
+| **Sentence style** | Short punchy / Medium balanced / Long flowing |
+| **Use of humor** | Yes / Sparingly / No |
+| **Personal stories** | Frequently / Occasionally / Rarely |
+| **Video length default** | Short 3-5 min / Medium 8-12 min / Long 15-20 min |
+| **CTA preference** | Direct / Soft / Minimal |
+| **Channel niche** | (free text — e.g. "AI tools", "developer productivity") |
+
+Save using:
 ```bash
-python3 scripts/script_db.py is_initialized
-python3 scripts/script_db.py get_preferences
-python3 scripts/script_db.py get_scripts
-python3 scripts/script_db.py stats
+python3 .claude/skills/script_generation/scripts/script_db.py save_preferences '<json>'
 ```
 
-**Word Count Guidelines:**
-- Speaking pace: ~150 words per minute
-- Short form (3-5 min): 450-750 words
-- Medium form (7-12 min): 1,050-1,800 words
-- Long form (15-30 min): 2,250-4,500 words
+---
 
-## Resources
+### Step 3 — Pre-production strategy (read rules/07-youtube-strategy.md)
 
-### scripts/script_db.py
-Database management for preferences, scripts, and templates.
+Before researching or writing, establish the 5 strategic foundations:
 
-### references/script_formats.md
-Comprehensive guide covering:
-- Common YouTube video types and structures
-- Script component breakdowns (hook, intro, content, conclusion, CTA)
-- Tone guidelines for different styles
-- Timing guidelines by video length
-- Engagement techniques
-- Common mistakes to avoid
-- Visual cues for scripts
-- Audience-specific adjustments
-- Platform-specific considerations
+1. **Title** — write the final title before the script. Under 60 chars. Contains a contradiction, impossible number, or "why/how/actually". Test: would you click this?
+2. **Thesis** — what the video ARGUES (not just what it covers). One sentence. Takes a side.
+3. **Thumbnail moment** — which scene and bullet creates the thumbnail frame. Decide now.
+4. **Shareable insight** — the one thing viewers will repeat to a colleague tomorrow.
+5. **Open loop map** — 4 loops: hook, planted, mid-video, pre-CTA. Map where each is raised and resolved.
+
+Do not proceed until all 5 are written out. A weak strategy = weak video regardless of production quality.
+
+---
+
+### Step 4 — Research the topic
+
+**Before writing a single word of script**, use WebSearch to find:
+
+1. **The hook fact** — the surprising, counterintuitive, or shocking thing about this topic
+2. **2-3 real statistics** — spoken as words in narration (`"eighty-six percent"`, not `"86%"`)
+3. **One real quote** — named person, verbatim quote, source
+4. **The central metaphor** — what physical object or process this topic resembles
+5. **The before/after or the race** — the contrast that proves the point
+
+No invented numbers. Every statistic must have a source.
+Write a brief research summary comment at the top of the output file (parser ignores HTML comments):
+
+```
+<!--
+RESEARCH
+Hook: [surprising fact] — Source: [citation]
+Numbers: [stat 1] — [source]; [stat 2] — [source]
+Quote: "[text]" — [Name, Role]
+Metaphor: [named object chosen]
+Contrast: [before vs after or entity A vs entity B]
+-->
+```
+
+---
+
+### Step 5 — Design the scene structure
+
+Map the video into scenes. Write the scene list, then proceed directly to Step 6 — no confirmation needed.
+
+**Scene arc (required):**
+
+```
+Scene 1:      Cold open / hook        — The surprising fact or contradiction
+Scene 2:      Context                 — Why this topic exists and what the stakes are
+Scene 3–N-1:  Body scenes             — One idea per scene, one metaphor per scene
+Scene N-1:    The turn                — The angle no other video covers
+Scene N:      Verdict + CTA           — Answer the hook, decision rule, subscribe ask
+```
+
+**Scene count by length:**
+
+| Length | Scenes | Avg scene |
+|---|---|---|
+| 3–5 min | 4–5 | ~50s |
+| 8–12 min | 7–9 | ~75s |
+| 15–20 min | 10–12 | ~90s |
+
+One idea per scene. If a scene title needs "and" — split it into two scenes.
+
+---
+
+### Step 6 — Write each scene
+
+For each scene, write in this order: **narration first, then animation bullets.**
+
+#### 5a — Narration (apply user's tone and style preferences)
+
+Write narration that matches the user's style preference AND follows pipeline sync rules:
+
+**Narration format:**
+```
+### Narration
+> First sentence. <pause 0.3s>
+> Second sentence with the hero word. <pause 0.5s>
+> Third sentence.
+```
+
+**Pipeline sync rules (non-negotiable regardless of style):**
+- `<pause Xs>` after every hero number or key reveal
+- Numbers spoken as words: `"thirty-six percent"`, not `"36%"`
+- 1-4 clear trigger phrases per scene (these become audio_anchors)
+- Short clauses before dramatic reveals, longer sentences for explanation
+
+**Style application:**
+- Dramatic tone → short punchy sentences, longer pauses, declarative reveals
+- Educational tone → building sentences, explain-then-reveal pattern
+- Casual tone → conversational openers, personal anecdotes, shorter pauses
+- Story-driven → scene-setting opening, character/entity named early
+
+Apply the user's hook style to Scene 1:
+- Bold statement: opens with the shocking fact directly
+- Contradiction: opens with two true things that seem to contradict
+- Question: opens with the question the video answers
+- Number reveal: opens with the number, then explains what it means
+
+#### 5b — Animation bullets (apply cinematic rules)
+
+For every bullet, answer all 8 questions from `Script_Agent/rules/03-animation-bullets.md` before writing the body.
+
+**Bullet format:**
+```
+### Animation
+- **M:SS – M:SS — [REPLACE if applicable] Headline.** Body.
+  Continuation body text.
+```
+
+**5 techniques — every bullet must apply all that are relevant:**
+
+**1. Named metaphor** — every scene's first bullet names a specific object:
+   Not `"a comparison visual"` → `"Two parallel capsule race lanes, MAGENTA top, CYAN bottom."`
+
+**2. Color identity** — assign tokens to entities in Scene 1, never break them:
+   Every bullet that shows an entity uses its token: `D.cyan`, `D.violet`, `D.amber`, `D.red`, `D.green`
+
+**3. Exact quantities** — numbers not adjectives:
+   Not `"shards fly out"` → `"30-40 irregular shards fly outward"`
+
+**4. Physics intent** — name one of four:
+   `bouncy spring` (damping 8) / `snappy spring` (damping 20, stiffness 200) / `heavy spring` (damping 12-15, stiffness 80-100, mass 2) / `smooth reveal` (damping 200)
+
+**5. Audio anchor target** — bullet body echoes the narration trigger phrase:
+   Narration says `"watch the needle"` → bullet body contains `"needle"` → anchor picks itself
+
+**REPLACE vs ADDITIVE:**
+- ADDITIVE (default): bullet adds to what's already on screen
+- REPLACE: bullet wipes everything and starts fresh → mark `[REPLACE]` in headline
+
+**Bullet density:** 6-9 bullets per 60s scene. 3-5 per 30s scene.
+
+---
+
+### Step 6.5 — Cut pass (CGP Grey rule)
+
+Before validation, do one cutting pass. Tighter = higher retention every time.
+CGP Grey writes 30–50 drafts. The cut IS the craft.
+
+**For every scene, ask:**
+1. Does this scene serve the thesis? (rule 07 Step 3) — if not, cut it
+2. Does this scene raise a question OR answer a prior one? — if neither, cut it
+3. Is there a sentence that explains what the visual already shows? — cut the sentence
+4. Is there background/context the viewer already knows? — cut it
+5. Does this scene have "and" in the title? — split it or cut the weaker half
+
+**For every narration sentence, ask:**
+1. Does this sentence advance the story OR trigger a visual? — if neither, cut it
+2. Is this filler: "So as you can see...", "Moving on...", "Let me explain..." — cut it
+3. Can this be said in fewer words with no loss of meaning? — rewrite it shorter
+
+**Target:** remove at least 10% of sentences from the first draft.
+A scene that survives the cut is a stronger scene.
+
+**The cut test:** read the script without the scene you're considering cutting.
+Does the video still make sense? Does it flow better? If yes — it was padding.
+
+---
+
+### Step 7 — Validate and retry until PASS (read rules/06-content-quality.md FIRST, then rules/05-validator.md)
+
+Two gates in order. Do not run gate 2 until gate 1 passes.
+**Never proceed to Step 8 until BOTH gates report PASS. Retry as many times as needed.**
+
+---
+
+#### Gate 1 — Content quality (rules/06-content-quality.md)
+
+6 tests: hook, unique angle, viewer benefit, evidence, tension-resolution, "so what".
+
+**On FAIL or WEAK verdict → retry loop:**
+
+1. List every failing test with the exact reason it failed
+2. Identify the root cause: weak hook? generic angle? no evidence? no consequence sentence?
+3. Rewrite only the failing parts — do not rewrite the whole script unless 3+ scenes fail
+4. Re-run Gate 1
+5. Repeat until verdict is STRONG or ACCEPTABLE
+
+Do not proceed to Gate 2 until Gate 1 is STRONG or ACCEPTABLE.
+
+---
+
+#### Gate 2 — Technical quality (rules/05-validator.md)
+
+8 checks: format, research, narration, bullets, anchors, density, canvas, arc.
+
+**On any FAIL or 3+ WARNs on one scene → retry loop:**
+
+1. List every FAIL and WARN with scene number and check name
+2. Fix each FAIL first (pipeline will abort on any FAIL)
+3. Fix WARNs where 3+ are on the same scene
+4. Re-run Gate 2 on the fixed scenes only
+5. Repeat until all checks are PASS or isolated WARNs (fewer than 3 per scene)
+
+---
+
+#### Retry budget
+
+There is no maximum retry limit. Keep rewriting and re-validating until both gates pass.
+After each retry, show the updated validation table so the user can see progress.
+Never save to Step 8 while either gate is failing.
+
+---
+
+### Step 8 — Save to pipeline path
+
+```
+projects/structured_scripts/<project_name>.txt
+```
+
+`<project_name>` = snake_case, matches `config.yaml` `project:` field.
+
+File must start with:
+```
+# <Video Title> — PRODUCTION DOCUMENT
+```
+
+Then research comment block, then scenes.
+
+After saving, present the script for human approval:
+
+---
+
+**SCRIPT REVIEW — <Video Title>**
+
+Show the user:
+1. Full script (all scenes, narration + bullets)
+2. Scene count + estimated total duration
+3. One-line anchor summary per scene (which word fires the first visual)
+4. Content quality verdict (Gate 1 result)
+
+Then ask exactly this:
+
+> "Script is ready. Does this look good to you, or would you like any changes before I render the video?"
+
+**WAIT for explicit approval before proceeding to video_generation.**
+
+**On user response — 3 cases:**
+
+**Case 1 — User approves:**
+User says yes / looks good / go ahead → save record to database → hand off to `video_generation`
+
+**Case 2 — User provides a modified script:**
+User pastes or describes their own version of the script.
+- Apply their changes EXACTLY as given — do not second-guess, do not add your own edits
+- Run Gate 2 technical validation only (format, narration format, bullet format, anchors)
+- If Gate 2 PASS → show updated script → ask for approval again
+- If Gate 2 FAIL → show exactly which checks failed with specific line numbers
+  → Ask: "These format issues will break the pipeline. Should I fix just these technical errors and keep everything else exactly as you wrote it?"
+  → If yes → fix ONLY the technical errors, nothing else → re-show → ask approval
+  → If no → leave as-is and wait for user's next instruction
+
+**Case 3 — User says script is not good, gives new direction:**
+User says "rewrite scene 3", "change the hook", "make it shorter" etc.
+- Apply their direction exactly
+- Re-run both gates (content + technical)
+- Re-show updated script for approval
+- Do NOT invoke video_generation until user explicitly approves
+
+**One rule above all: the user's script is the user's script.**
+Never rewrite content the user provided unless they ask you to.
+Only fix technical format errors that would break the pipeline — and only with permission.
+
+Save script record to database only after approval:
+```bash
+python3 .claude/skills/script_generation/scripts/script_db.py add_script '<json>'
+```
+
+---
+
+## What this skill produces vs what it does not
+
+| Produces | Does NOT produce |
+|---|---|
+| `projects/structured_scripts/<name>.txt` | Rendered video |
+| Narration in user's preferred style | Bullet cache (`storyboard/.cache/`) |
+| Animation bullets for pipeline | TTS audio |
+| Format-validated, parser-ready output | Scene JSON files |
+
+The video_generation pipeline picks up where this skill ends.
+
+---
+
+## Style + pipeline: how they work together
+
+The user's style preferences control the narration voice. The pipeline rules control the animation bullets.
+They do not conflict — they operate on different parts of the script.
+
+| Script element | What controls it |
+|---|---|
+| Narration tone (casual/dramatic/educational) | User preferences |
+| Narration sentence length | User preferences |
+| Narration hook style | User preferences |
+| `<pause Xs>` placement | Pipeline sync rules (non-negotiable) |
+| Numbers spoken as words | Pipeline sync rules (non-negotiable) |
+| Animation bullet metaphors | Cinematic rules (rule 03) |
+| Color tokens | Cinematic rules (rule 03) |
+| Physics intent | Cinematic rules (rule 03) |
+| REPLACE/ADDITIVE | Cinematic rules (rule 03) |
+
+---
+
+## Cross-references
+
+- `docs/script.md` — complete format reference with 5 worked examples
+- `rules/00-research.md` — finding real facts before writing
+- `rules/01-scene-structure.md` — scene arc and count rules
+- `rules/02-narration.md` — pause placement, trigger phrases, hero numbers
+- `rules/03-animation-bullets.md` — 8-question checklist, 5 techniques
+- `rules/04-format-validation.md` — parser format rules
+- `rules/05-validator.md` — technical quality gate (format, anchors, bullets, density)
+- `rules/06-content-quality.md` — content quality gate (hook, unique angle, viewer benefit, evidence)
+- `rules/07-youtube-strategy.md` — pre-production: title, thesis, thumbnail, open loops, shareable insight
+- `rules/08-retention-engineering.md` — keeping viewers: 30s hook, pattern interrupts, mid-video surprise, strong ending
+
+---
+
+## Example interaction
+
+```
+User: write a script about why Kubernetes is hard
+
+Step 1: Load preferences → dramatic tone, expert audience, bold statement hook
+Step 2: (preferences already saved)
+Step 3: WebSearch → find real stats, a real quote, the central metaphor
+Step 4: Design scene list → show user → confirm
+Step 5: Write each scene → narration first, then bullets
+Step 6: Validate format
+Step 7: Save to projects/structured_scripts/kubernetes_hard.txt
+        Report: 8 scenes, ~10 min, anchor summary per scene
+        Next: run video_generation skill to render
+```

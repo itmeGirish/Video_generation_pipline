@@ -1,0 +1,10 @@
+const NARRATION_TEXT = "Your formatting tasks are not critical. Match the thinking level to the complexity of the task \u2014 and save the heavy reasoning for the work that actually needs it. <pause 0.2s>";
+const w=width,h=height;
+const pulse=interpolate(frame,[0,15,30,45,60,75],[0.3,1.0,0.3,1.0,0.3,1.0],{extrapolateRight:'clamp'});
+const rootY=Math.round(h*0.10)+Math.round(h*0.16);
+const branchTop=rootY+Math.round(h*0.12);
+const bw=Math.round(w*0.26),bh=Math.round(h*0.26);
+const xs=[Math.round(w*0.03),Math.round(w*0.37),Math.round(w*0.71)];
+const cs=[D.green,D.amber,D.red];
+const glows=xs.map((x,i)=>React.createElement('div',{key:i,style:{position:'absolute',left:x,top:branchTop,width:bw,height:bh,border:'3px solid '+cs[i],borderRadius:8,boxShadow:'0 0 25px '+cs[i]+'66',opacity:pulse,pointerEvents:'none'}}));
+return glows;

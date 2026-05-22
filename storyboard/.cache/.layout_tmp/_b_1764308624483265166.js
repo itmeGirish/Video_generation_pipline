@@ -1,0 +1,30 @@
+const NARRATION_TEXT = "For complex tasks \u2014 the ones that genuinely require multi-step reasoning \u2014 high effort helps. <pause 0.2s> Artificial Analysis measured GPT-5 across effort levels on their aggregate intelligence index. Minimal effort scored forty-four. High effort scored sixty-eight. <pause 0.3s> A twenty-four point improvement. The cost is justified.";
+const w=width,h=height;
+const pw=Math.round(w*0.40),ph=Math.round(h*0.66),pt=Math.round(h*0.12);
+const lx=Math.round(w*0.04),rx=Math.round(w*0.56);
+const barW=Math.round(pw*0.32),maxBarH=Math.round(ph*0.52),barBottom=pt+ph-Math.round(h*0.08);
+const cLowX=lx+Math.round(pw*0.08),cHighX=lx+Math.round(pw*0.54);
+const sLowX=rx+Math.round(pw*0.08),sHighX=rx+Math.round(pw*0.54);
+// static chart frames
+const leftBorder=React.createElement('div',{style:{position:'absolute',left:lx,top:pt,width:pw,height:ph,border:'2px solid '+D.amber,borderRadius:10,backgroundColor:D.surface}});
+const leftHdr=React.createElement('div',{style:{position:'absolute',left:lx,top:pt+Math.round(h*0.025),width:pw,textAlign:'center',color:D.amber,fontFamily:D.font_mono,fontSize:Math.round(w*0.013),fontWeight:'900',letterSpacing:'0.12em'}},'COMPLEX TASKS');
+const rightBorder=React.createElement('div',{style:{position:'absolute',left:rx,top:pt,width:pw,height:ph,border:'2px solid '+D.green,borderRadius:10,backgroundColor:D.surface}});
+const rightHdr=React.createElement('div',{style:{position:'absolute',left:rx,top:pt+Math.round(h*0.025),width:pw,textAlign:'center',color:D.green,fontFamily:D.font_mono,fontSize:Math.round(w*0.013),fontWeight:'900',letterSpacing:'0.12em'}},'SIMPLE TASKS');
+const lblStyle={fontFamily:D.font_mono,fontSize:Math.round(w*0.009),textAlign:'center',color:D.text_dim};
+const barLabelY=pt+ph+Math.round(h*0.015);
+const cLowL=React.createElement('div',{style:{position:'absolute',left:cLowX,top:barLabelY,width:barW,...lblStyle}},'LOW');
+const cHighL=React.createElement('div',{style:{position:'absolute',left:cHighX,top:barLabelY,width:barW,...lblStyle}},'HIGH');
+const sLowL=React.createElement('div',{style:{position:'absolute',left:sLowX,top:barLabelY,width:barW,...lblStyle}},'LOW');
+const sHighL=React.createElement('div',{style:{position:'absolute',left:sHighX,top:barLabelY,width:barW,...lblStyle}},'HIGH');
+// animated complex task bars
+const spL=spring({frame,fps,config:{damping:8}});
+const spH=spring({frame:Math.max(0,frame-12),fps,config:{damping:8}});
+const spA=spring({frame:Math.max(0,frame-22),fps,config:{damping:8}});
+const lowH=Math.round(maxBarH*0.44),highH=Math.round(maxBarH*0.68);
+const cLowBar=React.createElement('div',{style:{position:'absolute',left:cLowX,top:barBottom-Math.round(lowH*spL),width:barW,height:Math.round(lowH*spL),backgroundColor:D.green,borderRadius:'4px 4px 0 0'}});
+const cLowVal=React.createElement('div',{style:{position:'absolute',left:cLowX,top:barBottom-Math.round(lowH*spL)-Math.round(h*0.04),width:barW,textAlign:'center',color:D.green,fontFamily:D.font_mono,fontSize:Math.round(w*0.010),fontWeight:'700',opacity:spL}},'44');
+const cHighBar=React.createElement('div',{style:{position:'absolute',left:cHighX,top:barBottom-Math.round(highH*spH),width:barW,height:Math.round(highH*spH),backgroundColor:D.amber,borderRadius:'4px 4px 0 0'}});
+const cHighVal=React.createElement('div',{style:{position:'absolute',left:cHighX,top:barBottom-Math.round(highH*spH)-Math.round(h*0.04),width:barW,textAlign:'center',color:D.amber,fontFamily:D.font_mono,fontSize:Math.round(w*0.010),fontWeight:'700',opacity:spH}},'68');
+const annot=React.createElement('div',{style:{position:'absolute',left:cHighX,top:barBottom-Math.round(highH*spH)-Math.round(h*0.10),width:Math.round(pw*0.45),color:D.amber,fontFamily:D.font_mono,fontSize:Math.round(w*0.011),fontWeight:'900',opacity:spA,whiteSpace:'nowrap'}},'↑ +24 pts');
+const src=React.createElement('div',{style:{position:'absolute',left:lx,top:pt+ph-Math.round(h*0.025),width:pw,textAlign:'center',color:D.text_dim,fontFamily:D.font_mono,fontSize:Math.round(w*0.008),opacity:spA}},'Artificial Analysis 2026');
+return [leftBorder,leftHdr,rightBorder,rightHdr,cLowL,cHighL,sLowL,sHighL,cLowBar,cLowVal,cHighBar,cHighVal,annot,src];

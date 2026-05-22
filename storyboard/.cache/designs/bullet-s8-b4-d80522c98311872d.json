@@ -1,0 +1,5 @@
+{
+  "code": "const w=width,h=height;\nconst bd=React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,opacity:interpolate(frame,[0,8],[0,1],{extrapolateRight:'clamp'})}});\nconst sp=spring({frame,fps,config:{damping:15,stiffness:80,mass:2}});\nconst wrap=React.createElement('div',{style:{position:'absolute',left:0,top:0,width:w,height:h,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:Math.round(h*0.03),opacity:sp,transform:'scale('+sp+')'}},\n  React.createElement('div',{style:{color:D.cyan,fontFamily:D.font_mono,fontSize:Math.round(w*0.026),fontWeight:'900',letterSpacing:'0.10em'}},'MATCH THINKING TO TASK.'),\n  React.createElement('div',{style:{color:D.text,fontFamily:D.font_mono,fontSize:Math.round(w*0.018)}},'Not to your anxiety.')\n);\nreturn [bd,wrap];",
+  "audio_anchor": "paying for its nervousness",
+  "source_headline": "[REPLACE] Shareable insight stamp."
+}
