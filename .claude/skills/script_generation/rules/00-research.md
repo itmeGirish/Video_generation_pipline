@@ -1,8 +1,6 @@
 ---
-name: research
-description: How to research a topic before writing any scene. Real facts only — no invented statistics. Topic-specific search strategies for AI, software, business, science, health, and history.
-metadata:
-  tags: research, facts, statistics, sources, web-search, pre-writing
+name: 00-research
+description: Researches an AI/tech topic before any scene is written, sourcing real facts only — no invented statistics. Covers the 5 required items (hook fact, real numbers, named quote, physical metaphor, before/after), a no-invented-numbers rule, an AI-topic research-intelligence playbook (what signals to hunt and where), a universal search sequence, and a fallback for non-AI domains. Use when researching a topic, finding facts or statistics for a video, fact-checking a claim, finding a hook fact, sourcing a real quote, or verifying numbers before writing a script. Not for writing narration, animation bullets, or rendering.
 ---
 
 # Step 2 — Research Before Writing
@@ -10,222 +8,155 @@ metadata:
 Never write a single scene until this step is complete.
 Generic scripts come from writing from memory. Cinematic scripts come from research.
 
+## Contents
+- What to find before writing — the 5 required items (hook fact, numbers, quote, metaphor, before/after)
+- Hard rule: no invented numbers
+- AI-topic research intelligence — the signals to hunt and how to read them
+- Universal search sequence (run for every topic)
+- Fallback: non-AI domains
+- What to do with the research — the `<!-- RESEARCH SOURCES -->` comment block
+- Guidelines — Always / quality bar
+
 ---
 
 ## What to find before writing
 
-For every topic, find ALL of the following before touching the script:
+For every topic, find ALL of the following before touching the script. Each item
+below describes the SHAPE of what to find — fill it with real, sourced facts from
+search, never with the descriptions themselves.
 
 ### 1. The surprising fact (becomes the hook)
-The one thing the viewer does not expect. The number that seems impossible.
-The contradiction. The twist.
-
-Examples:
-- "GPT-5.5 has the highest factual accuracy AND the highest hallucination rate of any frontier model"
-- "The transformer architecture is 8 years old and we still haven't found its ceiling"
-- "Claude solved concurrency bugs that every previous Claude model choked on"
-
-Use WebSearch to find this. Do not invent it.
+The one thing the viewer does not expect: the number that seems impossible, the
+contradiction, the twist. Use WebSearch to find it. Do not invent it.
 
 ### 2. Two or three real numbers
-Statistics that prove the central claim. Spoken out loud in narration — these become
+Statistics that prove the central claim, spoken out loud in narration — these make
 the best audio anchors because Whisper transcribes numbers with high confidence.
-
-- "eighty-six percent" → near-certain Whisper hit
-- "sixty-two tokens per second" → clean anchor
-- "twelve hundred lines, zero tests" → pair of numbers, dramatic contrast
+Prefer numbers that are clean to say as words and that pair into a contrast.
 
 ### 3. One real quote from a real person
-A named engineer, developer, researcher, or user who said something memorable.
-Name, role, and verbatim quote. These become testimonial scene material.
+A named engineer, researcher, founder, or user who said something memorable.
+Capture name, role, and the verbatim quote. These become testimonial scene material.
 
 ### 4. A physical metaphor the topic naturally suggests
-The topic's real-world analogue:
-- Database migration → water flowing between tanks
-- Model hallucination → a lie detector that fails
-- AI agents → an octopus with 8 arms grabbing different tools
-- Parallel processing → multiple conveyor belts running simultaneously
-
-This metaphor will become the visual language for the whole video.
-If the topic doesn't suggest one, look for what the developers themselves use
-as an analogy in documentation or talks.
+The topic's real-world analogue — a specific object or process the visual language
+can be built on. If the topic doesn't suggest one, look for the analogy the
+builders themselves use in their docs, papers, or talks. Name a specific machine
+or process, never "like a machine."
 
 ### 5. The before/after or the race
 Most compelling videos show a clear before and after, or two things competing.
-Find the evidence for it:
-- Before transformer: LSTM needed 2 weeks to train. After: 2 days.
-- GPT-5.5 vs Claude: Terminal-Bench 82.7% vs 69.4%.
-- Before migration: 1200 lines. After: 555 lines.
+Find the evidence for it with real numbers on both sides.
+
+---
+
+## Hard rule: no invented numbers
+
+**This is the most important rule. Apply it before running any searches.**
+
+If you cannot find a real statistic via WebSearch, do not include that statistic.
+Write the narration without it, or write around it:
+- pivot to a qualitative pattern instead of a number
+- tease the gap and show the benchmark on screen instead of speaking a figure
+- pivot to a named quote instead of a stat
+
+If sources conflict, cite both with their dates and let the script acknowledge the
+uncertainty rather than picking one silently.
+
+Invented numbers that Whisper transcribes become the audio_anchor target for a
+visual that shows a false statistic. That is a quality failure and a trust failure.
+
+---
+
+## AI-topic research intelligence
+
+AI is the primary domain for this channel. Treat AI research as intelligence work:
+the goal is the surprising, current, sourced signal — not a recap of what the model
+maker announced.
+
+**Freshness is non-negotiable.** Frontier facts go stale in weeks. Always include
+the current year/quarter in queries and prefer the most recent primary source.
+A benchmark or price from a year ago may already be wrong — verify it still holds.
+
+**Signals to hunt (each can be the hook):**
+- Benchmark contradictions — strong on one axis, weak on another
+- Capability vs reliability gaps — what it can do vs how often it fails
+- Speed / quality / cost tradeoffs — the figure that breaks the marketing story
+- Context-window or long-horizon failures — where it falls apart at scale
+- Adoption vs perception gaps — who actually uses it vs who claims to
+- Eval methodology caveats — when a headline number doesn't mean what it implies
+
+**Where the real signal lives (let search surface the specific source):**
+- Primary benchmark and evaluation results, with their methodology
+- Independent leaderboards and head-to-head rankings
+- Official model/system cards and release notes — then verify claims independently
+- Engineering and research write-ups with reproducible detail
+- Practitioner reports from people running the thing in production
+
+**How to read it:**
+- Separate the maker's claim from independently verified results — note which is which
+- Prefer numbers you can attribute to a named report or measurement, with a date
+- When a figure looks too clean, find the methodology before trusting it
+- Convert findings into Whisper-friendly spoken numbers for the narration
+
+**Query patterns** (replace `<topic>` and the year; let the result reveal the source):
+```
+WebSearch: "<topic> benchmark results <year>"
+WebSearch: "<topic> independent evaluation methodology"
+WebSearch: "<topic> leaderboard ranking comparison"
+WebSearch: "<topic> failure mode limitation study"
+WebSearch: "<topic> cost speed tradeoff <year>"
+WebSearch: "<topic> production case study results"
+WebSearch: "<topic> practitioner review interview quote"
+```
 
 ---
 
 ## Universal search sequence (run for every topic)
 
-Run these 4 searches first regardless of topic. Stop when you have all 5 items above.
+**Tool selection:** Use `WebSearch` for discovery (returns results with snippets).
+Use `WebFetch` when you have a specific URL to verify — it fetches the full page.
 
+Run these first, regardless of topic. Stop when you have all 5 items above.
 ```
-WebSearch: "<topic> statistics surprising fact"
+WebSearch: "<topic> statistics surprising fact <year>"
 WebSearch: "<topic> real world case study results"
 WebSearch: "<topic> expert quote interview"
 WebSearch: "<topic> before after comparison"
 ```
 
-If any of the 5 items is still missing after these 4 searches, run the topic-specific
-searches below for the relevant category.
+If any of the 5 items is still missing, deepen with the AI-intelligence patterns
+above (for AI topics) or the fallback patterns below (for non-AI topics).
 
 ---
 
-## Topic-specific search strategies
+## Fallback: non-AI domains
 
-### AI / Machine Learning
-
-Best sources: Artificial Analysis, LMSYS Chatbot Arena, HuggingFace Open LLM Leaderboard,
-official model cards, company engineering blogs.
-
-```
-WebSearch: "artificial analysis <model name> benchmark speed quality"
-WebSearch: "<company> engineering blog <topic>"
-WebSearch: "LMSYS chatbot arena <model name> elo score"
-WebSearch: "<model name> hallucination rate evaluation study"
-WebSearch: "HuggingFace open llm leaderboard <model name>"
-WebSearch: "<model name> vs <model name> developer survey results"
-```
-
-Hook targets: hallucination rates, benchmark contradictions (high accuracy + high confabulation),
-speed vs quality tradeoffs, cost-per-token surprises, context window failures.
-
----
-
-### Software Architecture / Engineering
-
-Best sources: Stack Overflow Developer Survey, GitHub state-of-octoverse, engineering blogs
-(Netflix Tech Blog, Uber Engineering, Cloudflare Blog, Stripe Engineering), ACM papers.
+If the topic is not AI/tech, keep the same discipline — surprising, sourced,
+current — and prefer primary, authoritative sources. Let search surface the
+specific source rather than pre-committing to a site.
 
 ```
-WebSearch: "Stack Overflow developer survey <topic> statistics <year>"
-WebSearch: "<company> engineering blog <topic> case study"
-WebSearch: "<topic> production incident post-mortem"
-WebSearch: "<technology> adoption statistics enterprise"
-WebSearch: "<topic> performance benchmark real world"
-WebSearch: "github octoverse <topic> developer trends"
+WebSearch: "<topic> peer reviewed study findings"
+WebSearch: "<topic> official report statistics <year>"
+WebSearch: "<topic> primary source data"
+WebSearch: "<topic> expert interview quote"
+WebSearch: "<topic> before after trend"
 ```
-
-Hook targets: adoption numbers that surprise (e.g. "74% of Fortune 500 run Kubernetes"),
-incident costs, migration timelines, lines-of-code before/after, latency improvements.
-
----
-
-### Business / Finance / Economics
-
-Best sources: McKinsey Global Institute, Harvard Business Review, Statista, World Bank,
-Forbes, Bloomberg, company earnings reports, SEC filings.
-
-```
-WebSearch: "<topic> McKinsey report statistics"
-WebSearch: "<topic> Harvard Business Review findings"
-WebSearch: "<company or industry> revenue growth statistics <year>"
-WebSearch: "<topic> economic impact cost study"
-WebSearch: "<topic> startup failure rate statistics"
-WebSearch: "site:hbr.org <topic>"
-WebSearch: "<topic> Statista market size"
-```
-
-Hook targets: failure rates, cost-per-unit surprises, market size vs perception gaps,
-time-to-payback numbers, winner-takes-all concentration statistics.
-
----
-
-### Science / Technology (non-AI)
-
-Best sources: Nature, Science, MIT Technology Review, Ars Technica, NASA, CERN,
-university press releases, peer-reviewed abstracts.
-
-```
-WebSearch: "site:nature.com <topic> findings study"
-WebSearch: "MIT technology review <topic>"
-WebSearch: "<topic> peer reviewed study results surprising"
-WebSearch: "<topic> record broken measurement"
-WebSearch: "Ars Technica <topic> explained"
-WebSearch: "<topic> NASA ESA discovery data"
-```
-
-Hook targets: scale numbers (distances, temperatures, timescales that break intuition),
-record-breaking measurements, study results that contradict folk wisdom, comparison
-to everyday objects ("the virus is 100x smaller than a human hair").
-
----
-
-### Health / Medicine / Biology
-
-Best sources: CDC, WHO, NIH, PubMed, Mayo Clinic, NEJM (New England Journal of Medicine),
-The Lancet, peer-reviewed meta-analyses.
-
-```
-WebSearch: "CDC statistics <topic> prevalence rate"
-WebSearch: "WHO global data <topic>"
-WebSearch: "PubMed meta-analysis <topic> results"
-WebSearch: "NIH <topic> clinical trial findings"
-WebSearch: "<topic> misdiagnosis rate study"
-WebSearch: "<condition> survival rate improvement last 20 years"
-```
-
-Hook targets: misdiagnosis rates, survival rate improvements, drug efficacy gaps
-(what works in trials vs real world), cost-of-illness vs cost-of-prevention comparisons.
-
----
-
-### History / Culture / Society
-
-Best sources: Pew Research, Gallup, academic journals (JSTOR), Wikipedia citations
-(follow to primary sources), BBC History, Smithsonian, primary documents.
-
-```
-WebSearch: "Pew Research <topic> survey data"
-WebSearch: "Gallup poll <topic> statistics"
-WebSearch: "<historical event> primary source eyewitness account"
-WebSearch: "<topic> historical data trend <decade>"
-WebSearch: "JSTOR <topic> academic paper"
-WebSearch: "<topic> demographic shift statistics"
-```
-
-Hook targets: attitude reversals (what people believed then vs now), demographic
-tipping points, cost-in-today's-dollars for historical events, "it was invented X
-years earlier than you think" facts.
-
----
-
-### Product / Startup / Company Analysis
-
-Best sources: Crunchbase, Pitchbook, company blog posts, SEC S-1 filings, Product Hunt,
-Y Combinator blog, a16z essays, founder interviews (Lex Fridman, Acquired podcast).
-
-```
-WebSearch: "<company> S-1 filing revenue growth metrics"
-WebSearch: "<product> user growth statistics monthly active users"
-WebSearch: "<founder name> interview quote <topic>"
-WebSearch: "<company> product launch results metrics"
-WebSearch: "Y Combinator <topic> advice statistics"
-WebSearch: "Crunchbase <company> funding valuation history"
-WebSearch: "acquired podcast <company> episode"
-```
-
-Hook targets: revenue-per-employee outliers, growth rate surprises, valuation-to-revenue
-multiples, pivot stories (what it was before), churn rates vs public narrative.
 
 ---
 
 ## What to do with the research
 
 Write a brief research summary at the TOP of the script file as a comment block:
-
 ```
 <!--
 RESEARCH SOURCES
-Hook fact: [fact] — Source: [URL or citation]
+Hook fact: [fact] — Source: [URL or citation, with date]
 Key numbers: [number 1] — [source]; [number 2] — [source]
 Real quote: "[quote]" — [Name, Role, Source]
 Metaphor: [what you chose and why]
-Before/after: [what the contrast is]
+Before/after: [the contrast, with real numbers on both sides]
 -->
 ```
 
@@ -234,28 +165,21 @@ It is only for reference during the authoring + QA phase.
 
 ---
 
-## Hard rule: no invented numbers
+## Guidelines
 
-If you cannot find a real statistic via WebSearch, do not include that statistic.
-Write the narration without it, or write around it:
-- "I've seen this pattern in dozens of real codebases" (no number needed)
-- "The performance gap is real — I'll show you the benchmark" (tease, then show chart)
-- "One developer put it best:" (pivot to quote instead of stat)
+### Always
+- Complete all 5 items (hook fact, numbers, quote, metaphor, before/after) before writing a single scene
+- Cite every number with its source — URL or publication name, with a date
+- Use `WebSearch` for discovery; use `WebFetch` when you have a specific URL to verify
+- For AI topics: prefer the most recent primary source — frontier facts go stale fast
+- Separate a maker's claim from independently verified results
+- If sources conflict: cite both with dates, let the script acknowledge the uncertainty
+- Write the `<!-- RESEARCH SOURCES -->` comment block at the top of the script file before any scene
 
-Invented numbers that Whisper transcribes become the audio_anchor target for a visual
-that shows a false statistic. That is a quality failure and a trust failure.
-
----
-
-## Research quality bar
-
-Before moving to scene structure, verify:
-
+### Quality bar — verify before proceeding to scene structure
 - [ ] Hook fact is surprising enough that a viewer would stop scrolling
-- [ ] Every number has a named source (URL, publication, company report)
+- [ ] Every number has a named source (URL, publication, report) with a date
 - [ ] The real quote is verbatim — not paraphrased
-- [ ] The metaphor is specific (not "like a machine" — like WHICH machine)
+- [ ] The metaphor is specific (a named machine or process, not "like a machine")
 - [ ] The before/after has real numbers on both sides, not vague descriptions
-
-If any item is missing → run more searches. Do not proceed with gaps.
-A script built on weak research produces a generic video no matter how good the writing is.
+- [ ] For AI topics: the key facts are current and independently verifiable

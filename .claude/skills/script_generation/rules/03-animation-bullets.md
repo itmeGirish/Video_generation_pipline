@@ -1,259 +1,384 @@
 ---
-name: animation-bullets
-description: Standards for writing animation bullets in video production scripts. Use whenever drafting or upgrading the ### Animation section of a scene. Enforces named metaphors, color tokens, exact quantities, spring physics, audio anchors, and ADDITIVE vs REPLACE marking. Every bullet must answer 8 pre-write questions before being written.
-metadata:
-  tags: animation-bullets, metaphors, physics, replace, additive, audio-anchor, color-tokens
-  applies_to: production documents for Remotion-rendered video scripts
+name: 03-animation-bullets
+description: Writes the animation bullets under each scene — the per-beat visual timeline with timecodes, REPLACE/ADD semantics, and audio_anchor phrases. Grounded in how Remotion actually animates (frame-driven interpolate/spring, motion timed to a point via delay) so each bullet maps cleanly to renderable code. Covers the bullet format, the 9-point checklist, the 6 cinematic techniques, and the physics vocabulary. Use when writing animation bullets, adding timecodes, deciding REPLACE vs ADD, choosing an audio_anchor, or translating narration into visual cues. Not for scene-level structure, narration prose, or writing Remotion code itself.
 ---
 
-# Animation Bullets — Authoring Standard
+# Step 4b — Writing Animation Bullets
 
-The animation bullet body IS the screenplay. The pipeline renders exactly what you write.
-Vague description → generic visual. Director-level description → cinematic visual.
+Animation bullets are the bridge between narration and Remotion code.
+Each bullet is one visual beat: what appears, when, and what audio triggers it.
+
+You DESIGN the animation here, from the script. The bullet is the screenplay the
+renderer follows literally — so design the best motion the beat can carry, don't
+settle for things merely appearing.
+
+But before "rich," the animation must be **clear**. Motion that doesn't carry meaning
+just confuses the viewer. Clarity first, then richness on top.
+
+## Contents
+- Clarity first — the animation must MEAN something
+- Show, don't tell — visuals carry meaning, not text
+- Motion-first — the default, not fades
+- Rich animation — layer, choreograph, support
+- Design the motion from the script — the verb is the animation
+- The three-phase motion model — enter, hold-alive, exit
+- Rich-animation recipe bank (→ references/animation_recipes.md)
+- How Remotion animates — the model every bullet must respect
+- Bullet format (exact)
+- The 10-point bullet checklist
+- The 6 cinematic techniques
+- Physics vocabulary — spring feels
+- REPLACE vs ADD — the canvas rule
+- Real images — asset syntax, auto-fetch, required motion
+- Bullet density per scene
+- Examples
+- Common failure modes
+- Guidelines — Always / Never
 
 ---
 
-## ⚠️ DERIVE DON'T COPY
+## Clarity first — the animation must MEAN something
 
-Every example in this file comes from one production script about AI thinking levels.
-The dials, towers, lab-bench plots, and rubber-stamps are ONE creator's choices for ONE topic.
+Rich motion is worthless if the viewer can't tell what it's saying. Every motion must
+carry meaning — the movement itself should TEACH the point, not decorate it. If a
+viewer would ask "why did that move?", the animation has failed.
 
-**If your topic is different, do not copy these metaphors.** Examples show *how* to write bullets,
-not *what* to write. Your metaphors come from your topic's research and the physical actions
-your topic resembles. An LLM that copies examples produces the same video for every topic.
-That is a failure mode.
+**The meaning test (every bullet must pass):**
+> If you muted the narration, would the motion alone make the point clear?
+> If not, the animation doesn't make sense — redesign it.
+
+**Motion must map to meaning:**
+- Direction means something — up = more/growth, down = less/decline, left→right = progress/time.
+- Speed means something — fast = sudden/shocking, slow = gradual/heavy.
+- Size means something — big = important/dominant, small = minor/shrinking.
+- Together/apart means something — converging = agreement, diverging = a growing gap.
+- Color follows identity — the same entity keeps its token, so the viewer tracks it.
+
+**Make it legible:**
+- One main idea per beat. If two things move at once, the viewer must know which to watch.
+- Don't animate two unrelated things in opposite directions — it splits attention.
+- Label what isn't self-evident. A bar is just a bar until a label says what it measures.
+- Give the eye time to read before the next change (this is why beats are ~6–11s, not 2s).
+- Motion that contradicts the meaning is worse than none (e.g. a "cost rising" bar that
+  shrinks reads as the opposite of the point).
+
+❌ Confusing: "shapes spin and fly around as the cost is mentioned" — energetic but
+meaningless; the viewer learns nothing.
+✅ Clear: "a single bar labeled COST rises and a counter climbs with it" — the motion IS
+the message: cost going up.
+
+Decoration is allowed only in SUPPORT of the clear main motion (rule above), never as
+the main event. Pretty + meaningless = a failed bullet.
 
 ---
 
-## 1. Parser requirements
+## Show, don't tell — visuals carry meaning, not text
 
-The bullet body must conform to this exact format or the build pipeline will reject it.
+"Rich" does NOT mean text-rich. A screen full of words is not an animation — it's a
+slide. Viewers watch motion and pictures; they do not read paragraphs while listening
+to narration. The narration already carries the words. The visual must carry the
+MEANING through shapes, motion, and imagery — not by restating the sentence in text.
+
+**The rule: the picture makes the point; text only labels it.**
+
+- The narration says it. The motion shows it. Text only labels the few things the
+  picture can't say on its own (a metric name, an entity name, a number).
+- If a bullet's main content is a block of text, it's wrong — turn the idea into a
+  visual (a bar, a flow, a metaphor object, an image) and keep only the label.
+- Don't put the narration sentence on screen. Don't paraphrase it on screen either.
+
+**Text budget per beat:**
+- A short headline (2–5 words) + a handful of labels. That's it.
+- Numbers are fine — a hero number IS a visual.
+- No paragraphs, no full sentences, no bullet-list-of-sentences on the canvas.
+
+❌ Text-rich (wrong): a card with three lines of sentence text explaining the point.
+✅ Show, don't tell: a metaphor object or chart performs the point; a 3-word label names
+it; the hero number animates in. The viewer understands by watching, not reading.
+
+When you catch yourself writing on-screen sentences, stop — design the picture that
+makes those sentences unnecessary.
+
+---
+
+## Motion-first — the default, not fades
+
+A fade is the weakest animation. Real animation is **movement**: things travel, grow,
+turn, count, fill, or sweep. Design every beat around a `transform` — `translate`
+(slide/rise/drift), `scale` (pop/grow/push-in), or `rotate` (spin/swing/tilt) — or a
+value animating over a range (a counter, a bar filling). Opacity is a layer ON TOP of
+motion, never the whole animation.
+
+- ❌ Weak: "the title fades in"
+- ✅ Strong: "the title rises 60px and scales 0.85→1, snappy spring; opacity 0→1 layered on"
+
+Reserve opacity-only for backdrops settling or calm reading text. Everything that
+should feel animated moves.
+
+---
+
+## Rich animation — layer, choreograph, support
+
+One element doing one move is the floor, not the goal. Rich animation comes from THREE
+things stacked into a single beat:
+
+**1. Layer motions on one element.** Combine 2–3 transforms so the entrance has depth:
+- slide + scale + slight rotate (a card that flies in and settles)
+- scale-up + opacity + a soft drop-shadow growing (a number that "arrives")
+- translate + a blur-to-sharp settle (a push-in reveal)
+A single transform reads as "fine." Layered transforms read as "designed."
+
+**2. Choreograph multiple elements.** A beat is a small scene with a sequence:
+- **Stagger** — elements enter one-by-one (a delay per item), not all at once.
+- **Lead and follow** — the hero element lands first, supporting labels follow ~6–10 frames later.
+- **Cause and effect** — one element's motion triggers the next (a bar fills → its value pops → a check stamps).
+Name the order and the gap between each entrance.
+
+**3. Add supporting motion.** The main subject isn't the only thing moving:
+- a backdrop that slowly drifts or a gradient that shifts
+- particles, sparks, or trail dots on an impact
+- a glow that pulses, a beam that sweeps, a connecting line that draws
+- the held elements still breathing underneath the new one
+
+A rich beat = a layered entrance + choreographed order + at least one supporting motion —
+all of it serving ONE clear meaning (see "Clarity first" above).
+A poor beat = one element, one move, then frozen — OR lots of motion that means nothing.
+
+❌ Poor: "the bar grows."
+✅ Rich: "the D.cyan bar fills 0→100% over the beat (snappy), its value counter ticks
+alongside, a glow pulses at the leading edge, and when it lands a check stamps with a
+2-frame shake while the backdrop keeps a slow drift."
+
+**Don't overdo it.** Rich ≠ chaotic. One clear focal motion plus supporting motion that
+serves it. If everything moves equally hard, nothing reads. Choreograph a hierarchy:
+one hero motion, the rest in support.
+
+---
+
+## Design the motion from the script — the verb is the animation
+
+The narration already tells you the motion. Find the verb/action in the line and make
+the visual DO that physical action:
+
+| The script says… | The motion is… |
+|---|---|
+| "costs exploded" | a number counts up fast, then a heavy-spring stamp + shake |
+| "it pulls ahead" | a bar overtakes another, race-style |
+| "it collapsed" | an element scales/drops down and settles |
+| "watch it fill up" | a level rises 0→full over the beat |
+| "three things happen" | three items stagger in one-by-one |
+| "the gap is huge" | two markers slide apart, the distance between them growing |
+
+Pick the motion that literally enacts the sentence. A bullet whose motion matches the
+spoken verb feels designed; a generic fade feels like a slide deck.
+
+---
+
+## The three-phase motion model — enter, hold-alive, exit
+
+Every element on screen for more than ~1s should have all three:
+
+1. **Enter** — a real entrance motion (slide/scale/pop), timed to the audio_anchor.
+2. **Hold-alive** — continuous subtle motion while it stays: a breathing scale (±1–2%),
+   a slow drift, a pulse, a ticking counter. A frozen element >3s trips the freeze gate
+   and reads as "the video stopped." Name at least one always-moving element per beat.
+3. **Exit / handoff** — if the next bullet REPLACEs, the element clears (wipe/fade-down);
+   if ADD, it settles to a static-but-breathing state so the new element gets focus.
+
+Don't write "enter then sit there." Write what keeps moving while it's held.
+
+---
+
+## Rich-animation recipe bank
+
+A bank of 8 reusable, buildable motion recipes — Number arrival, Race/overtake,
+Staggered reveal, Fill/drain, Build-and-connect, Impact/break, Push-in reveal, and
+Sweep/scan — each a layered entrance + supporting motion you fill with real content.
+See [references/animation_recipes.md](../references/animation_recipes.md). Combine
+recipes across consecutive bullets so no two adjacent beats animate the same way.
+
+---
+
+## How Remotion animates — the model every bullet must respect
+
+The bullets are written for a real engine. Knowing how it works keeps a bullet
+describable in code. (See the project `remotion` skill for the code-level rules.)
+
+- **Everything is frame-driven.** Animation is a function of the current frame —
+  deterministic, the same frame always renders the same pixel. There is no "play"
+  state; there is only "what does this look like at frame N."
+- **`interpolate()` maps a frame range to an output range** (e.g. frames 0–20 →
+  opacity 0–1). It is ALWAYS clamped on both ends, so values don't shoot past the
+  target. This is how fades, slides, and counters are built.
+- **`spring()` is physics-based motion** from 0→1, controlled by `damping`
+  (bounce), `stiffness` (speed), and `mass` (weight). This is how pops, slams, and
+  bouncy entrances are built.
+- **Motion is timed to a point by a delay offset** — the animation starts at a
+  chosen frame, not before. This is exactly what the `audio_anchor` does: the
+  visual fires the frame the anchor word is spoken.
+- **Staggering = per-element delay.** Sequential reveals are just each element
+  offset by an index, so "five cards fan out one by one" is a real, cheap pattern.
+
+**What this means for a bullet:** describe motion the engine can produce — an
+entrance (fade/slide/pop), a value animating over a frame range (a counter, a bar
+filling), or a staggered reveal — and tie it to an anchor moment. Don't describe
+motion that has no frame-based form ("it feels alive," "dynamic energy").
+
+---
+
+## Bullet format (exact)
 
 ```
 ### Animation
-- **M:SS – M:SS — Headline.** Body text on same line.
-  Continuation text on indented next line.
-  More continuation.
+- **0:00 – 0:04 — Headline text.** Supporting detail about what appears.
+- **0:04 – 0:09 — [REPLACE] New headline.** What replaces the previous visual.
 ```
 
-Rules:
-- Section heading is exactly `### Animation`
-- Each bullet starts with `- **`
-- Time window uses format `M:SS – M:SS` (en-dash preferred, hyphen accepted)
-- Time is followed by ` — ` (em-dash with spaces) separating time from headline
-- Headline ends with `.` before closing `**`
-- Body is everything after `**` on same line and any indented continuation lines
-- Each subsequent line of body indented 2 spaces
+Parser requirements:
+- Section starts with `### Animation`
+- Each bullet: `- **M:SS – M:SS — Headline.** Body text.`
+- Timecodes use `M:SS` with an en-dash or hyphen between
+- `[REPLACE]` tag (optional) at start of headline = clear canvas before this bullet
+- Without `[REPLACE]` = ADD to existing canvas (additive)
 
 ---
 
-## 2. The 8-question pre-write checklist
+## The 10-point bullet checklist
 
-Answer ALL 8 before writing any bullet body. If you cannot answer Q3 or Q4, the bullet is not ready.
+Every bullet must answer all 10 before it is written:
 
-```
-Q1: What must the viewer understand from this bullet — in one sentence?
-    If you cannot state it, the animation will be random.
+1. **Timecode** — when does this beat start and end? (`M:SS – M:SS`)
+2. **Headline** — the 2–5 word phrase that names this beat
+3. **REPLACE or ADD** — does this clear the canvas or add to it?
+4. **Visual element** — what actually appears (shape, text, image, chart)?
+5. **Enter motion** — a real transform entrance (slide/scale/pop) or value-over-range, NOT a bare fade. Which physical action, matching the script's verb?
+6. **Hold-alive motion** — what keeps moving while it's on screen (breathe/drift/pulse/counter)?
+7. **Color token** — which `D.*` tokens (cyan/violet/amber/red/green)?
+8. **Position** — where on the canvas?
+9. **audio_anchor** — what 2–4 word verbatim narration phrase fires it?
+10. **Duration logic** — does the timing match the narration pace, and does the motion fit inside the beat?
 
-Q2: What is the SIMPLEST visual that proves Q1 without audio?
-    If the visual requires narration to make sense, it is wrong.
-
-Q3: What named physical object or metaphor carries this idea?
-    Not "a visual." A named real-world object derived from your topic's research:
-    a machine, a container, a track, a cabinet, a web, a chain.
-
-Q4: Which color token identifies each entity on screen?
-    Every entity must have a token: D.cyan, D.violet, D.amber, D.red, D.green, D.text_dim.
-
-Q5: What is the exact quantity of each repeated element?
-    Not "some" or "several." A number.
-
-Q6: What is the spring intent for entrance animations?
-    One of: bouncy, snappy, heavy, smooth.
-
-Q7: What 2-4 words from this scene's narration fire this bullet?
-    Verbatim. This becomes the audio_anchor. Must exist in the narration.
-
-Q8: Is this bullet ADDITIVE or REPLACE?
-    Does it add to what is on screen, or wipe everything and start fresh?
-```
+Point 10 has a code reason: an animation phase that starts near the end of a short
+beat is barely visible. Keep the motion inside the beat's frame budget.
 
 ---
 
-## 3. Technique 1 — Named metaphor (required for every scene's first bullet)
+## The 6 cinematic techniques
 
-Every scene's first bullet must establish a named object. Not "something visual." A named thing.
+Every bullet should use as many of these as the beat allows.
 
-### How to derive YOUR metaphor
+### 1. Named metaphor object
+Don't write "a visual." Name the specific object:
+- Bad: "a comparison appears"
+- Good: "two glass capsules race side by side"
 
-1. **What does your topic DO physically?** (grows, flows, breaks, connects, filters, races, accumulates, decays)
-2. **What real-world object does that same physical action?**
-3. **Name the object specifically.** Not "a container" — "a glass cylinder with measurement marks and a rubber stopper."
+### 2. Color identity (assign once, never break)
+Assign `D.*` color tokens to entities early and keep them consistent:
+- `D.cyan` = your product / the hero
+- `D.violet` = the competitor / the other entity
+- `D.amber` = cost / warning
+- `D.red` = failure / danger
+- `D.green` = success / win
 
-### Pattern examples (do NOT copy these — derive your own)
+### 3. Exact quantities (numbers, not adjectives)
+The engine animates a count, not a vibe:
+- Bad: "several items appear"
+- Good: "five cards fan out, staggered"
 
-| Domain | Topic | Example metaphor | What makes it specific |
-|---|---|---|---|
-| AI / tech | Hallucination test | Lie detector machine | paper roll, oscillating needle, art-deco brass casing |
-| Infrastructure | Database migration | Water tank with valve | two glass rectangles, calibrated fill marks, valve handle |
-| Business | Market monopoly | Tipping scales | two brass pans, weight blocks, pivot point |
-| Biology | Immune response | Factory assembly line | conveyor belt, inspection stations, reject chute |
-| Finance | Compound interest | Snowball rolling downhill | diameter grows, speed increases, path visible behind |
-| History | Roman roads | Spider web on a map | nodes at cities, threads between, thickening with use |
-| Health | Drug absorption | Sponge soaking liquid | dry sponge, liquid pool, saturation point |
-| Physics | Entropy | Ice cube melting | ordered crystal → spreading puddle, arrow of time |
+### 4. Physics intent (name the spring feel)
+Name the motion in the engine's terms so it's directly buildable — see the physics
+vocabulary below.
 
-### Writing the metaphor
+### 5. Audio anchor target (echo the narration)
+The bullet body echoes the narration trigger phrase so the anchor self-selects and
+the motion fires on the spoken word:
+- narration: "watch the needle move"
+- bullet body contains: "the needle"
 
-Right:
-```
-Two brass balance scales, art-deco styling. Left pan: ENTITY A. Right pan: ENTITY B.
-Weight blocks stamp onto each pan, pans tip toward whichever side is heavier.
-```
-
-Wrong:
-```
-A comparison visual showing two sides.
-```
-
----
-
-## 4. Technique 2 — Color = character identity
-
-Assign one color token to each entity once. Use the same token in every bullet where that entity appears.
-
-### Default identity map
-
-| Entity type | Token |
-|---|---|
-| Primary model / protagonist | `D.cyan` |
-| Secondary model / antagonist | `D.violet` |
-| Warning / cost / ambiguity | `D.amber` |
-| Danger / failure / liability | `D.red` |
-| Success / verified / safe | `D.green` |
-| Background text / labels | `D.text_dim` |
-
-Use the default unless your topic requires different. If different, declare entity-to-token
-mapping ONCE at the top of the production document and use it consistently.
-
-### In bullet bodies, name the color when introducing an entity
-
-Wrong:
-```
-A card slides in from right.
-```
-
-Right:
-```
-D.cyan card spring-enters from right — "ENTITY A". D.violet card from left — "ENTITY B".
-```
+### 6. Real image vs coded vector
+- Real image (`[asset: img/...]`) for named real-world things: logos, people, places
+- Coded vector for abstract concepts: flows, comparisons, processes
 
 ---
 
-## 5. Technique 3 — Exact quantities, not adjectives
+## Physics vocabulary — spring feels
 
-The pipeline cannot render adjectives. It renders numbers.
+These map directly to `spring()` config. Name the feel; the code follows.
 
-| Adjective (cannot be coded) | Quantity (codeable) |
-|---|---|
-| "many elements" | "30-40 elements" |
-| "some particles" | "100+ particle fragments, 4-8px each" |
-| "staggered" | "staggered 12 frames per item" |
-| "several parts" | "8 spokes" or "6 nodes" |
-| "a trail effect" | "12-15 fading circles, 8px each, opacity 0.6 to 0" |
-| "a bouncy entrance" | "spring damping 8" |
-| "thumbnails" | "5 thumbnails, 240×135px each" |
-| "rises gradually" | "rises from 0% to 80% over 25 frames" |
-
-**Rule:** before any element with a count, state the count. Before any motion, state the duration.
-
----
-
-## 6. Technique 4 — Physics intent (spring config)
-
-State one of these four intents for every spring-animated entrance:
-
-| Intent word | Maps to | Use for |
+| Feel | Config intent | Use for |
 |---|---|---|
-| `"bouncy spring"` | `{damping: 8}` | Hero numbers, punchline reveals, trophies |
-| `"snappy spring"` | `{damping: 20, stiffness: 200}` | Cards, labels, UI elements, list items |
-| `"heavy spring"` | `{damping: 12-15, stiffness: 80-100, mass: 2}` | Dramatic entrances, large tiles, stamps |
-| `"smooth reveal"` | `{damping: 200}` | Ambient fades, background elements |
+| `bouncy spring` | low damping (~8) | playful entrances, node pops |
+| `snappy spring` | damping ~20, stiffness ~200 | confident reveals, bars landing |
+| `heavy spring` | damping ~12–15, stiffness ~80–100, mass ~2 | weighty slams, big-number stamps |
+| `smooth reveal` | high damping (~200) | calm fades, backdrops settling |
 
-For staggered groups, name the stagger explicitly: `"12-frame stagger"` or `"staggered 10 frames per item"`.
-
-### Also name motion shape when it matters
-
-- `"sawtooth oscillations"` not `"moves"`
-- `"pulse every 30 frames"` not `"pulses"`
-- `"level drops from 80% to 12%"` not `"shrinks"`
-- `"counter counts from 0 to 18,400 over 25 frames"` not `"counter goes up"`
-- `"arc traces from -120° to +120° with easeInOutCubic"` not `"rotates"`
+For value animations (counters, bar fills, wipes) use a clamped `interpolate` over a
+frame range rather than a spring — e.g. "counter ticks 0→[number] over the beat."
 
 ---
 
-## 7. Technique 5 — ADDITIVE vs REPLACE
+## REPLACE vs ADD — the canvas rule
 
-**ADDITIVE (default):** bullet adds to what is already on screen.
-Use when the script says "X slides in alongside Y" or "label appears on the card."
+- **ADD (default):** the bullet adds to what is already on screen. Use when an
+  element appears alongside or inside existing structure.
+- **REPLACE:** the bullet wipes all prior visuals and starts fresh. Use when the
+  scene's visual context changes entirely.
 
-**REPLACE:** bullet wipes all prior visuals and starts a new scene.
-Use when the script says "cut to a new world" or "scene changes completely."
-
-### Mark REPLACE explicitly in the headline
-
+Mark REPLACE in the headline, and start the body with a full-canvas backdrop so prior
+bullets don't bleed through:
 ```
-- **0:12 – 0:14 — [REPLACE] Scene wipes to new workspace.**
+- **0:12 – 0:16 — [REPLACE] New workspace.** Full-canvas D.bg backdrop fades in over
+  ~10 frames covering all prior bullets, then new content appears on top.
 ```
-
-### REPLACE body must start with a backdrop description
-
-```
-Full-canvas D.bg backdrop fades in over 10 frames covering all prior bullets.
-Then: new content appears on top.
-```
-
-### Decision rule
 
 | Bullet intent | Use |
 |---|---|
-| New element appears alongside existing | ADDITIVE |
-| New element appears INSIDE existing structure | ADDITIVE |
+| New element appears alongside / inside existing | ADD |
+| Same metaphor continues, more detail added | ADD |
 | Entire scene changes visual context | REPLACE |
-| Second topic begins after first concluded | REPLACE |
-| Same metaphor continues, more detail added | ADDITIVE |
+| A new sub-topic begins after the previous concluded | REPLACE |
 
 ---
 
-## 8. Audio anchor targeting
+## Real images — asset syntax, auto-fetch, required motion
 
-The audio_anchor phrase must appear in BOTH the narration AND the bullet body.
-This ensures the renderer fires the animation at the exact moment the narration says the phrase.
+Some beats land harder with a real photo or logo than with drawn shapes. Reference an
+asset in the bullet body with `[asset: img/<name>.ext]` (path relative to the project's
+`public/`). The build's asset-resolution step auto-fetches any missing asset from a
+commercial-safe source and records attribution; existing files are left untouched.
 
-### Pattern
+**When to use real vs vector:**
 
-```
-Narration:   "...watch the YOUR_ANCHOR_PHRASE. <pause 0.2s>"
-Bullet body: "YOUR_ANCHOR_PHRASE ACTION. YOUR_ANCHOR_PHRASE RESULT."
-audio_anchor: "YOUR_ANCHOR_PHRASE"
-```
+| Bullet shows | Use |
+|---|---|
+| A named company's logo | Real image |
+| A specific person / job site / real location | Real image |
+| A number, ratio, or stat | Vector (drawn) |
+| A metaphor (the metaphor IS the visual) | Vector |
+| A label, list, or text card | Vector |
 
-### Anchor selection order of preference
+The test: would a viewer expect to recognize a *real-world* thing? If yes, real image.
+For a number / metaphor / list, real photos read as stock-slide filler.
 
-1. **A number spoken out loud** — "fifty-six percent", "twenty-three times", "forty-nine point six"
-2. **An entity name + action** — "needle hits MAX", "cost meter explodes"
-3. **An imperative from the narration** — "watch the counter", "look at this"
-4. **A distinctive noun unique to this scene** — something that cannot match any other scene's narration
+**Every image MUST move** — a static image trips the freeze gate (>3s static = FAIL).
+Name one slow primary motion in the body:
 
-### Never pick
+| Motion | Use for |
+|---|---|
+| Ken Burns (slow zoom + drift) | photos |
+| Logo pop (bouncy spring + idle breathe) | logos |
+| Push-in reveal (scale settle + fade), then Ken Burns | hero photo entrance |
+| Crossfade (opacity swap, both moving) | swapping two photos in one bullet |
 
-- Generic connectors: "and then", "here's", "this", "let me show"
-- Words that appear in multiple scenes
-- Phrases longer than 5 words
+One motion per image — don't stack zoom + pan + rotate. Alternate Ken Burns direction
+scene-to-scene so consecutive photos don't drift the same way. For a specific named
+asset (a real logo, a particular chart), pre-place it by hand — blind auto-fetch can
+pick the wrong image. Never use copyrighted stock; logos in editorial/factual context
+are fine.
 
 ---
 
-## 9. Bullet density per scene
+## Bullet density per scene
 
 | Scene length | Target bullets | Seconds per bullet |
 |---|---|---|
@@ -261,115 +386,101 @@ audio_anchor: "YOUR_ANCHOR_PHRASE"
 | ~60s | 6–9 | 7–10s each |
 | ~90s | 8–12 | 7–11s each |
 
-- Fewer than 5 bullets in a 60s scene = scene feels static.
-- More than 12 bullets in a 60s scene = visual changes too fast, no absorption time.
+Too few bullets → the scene feels static. Too many → visuals change faster than the
+viewer can absorb. This bullet rhythm is also the visual engagement beat (rule 01).
 
 ---
 
-## 10. Bullet body template
+## Examples
 
-Fill this template for every bullet before writing the final body. Delete the template once the body is written.
+### Good bullet set (motion-rich additive build)
 
 ```
-Q1 (one-sentence takeaway):   ___
-Q2 (simplest visual):          ___
-Named object (Q3):             ___
-Entities & color tokens (Q4):  Entity A: D.____  Entity B: D.____
-Exact quantities (Q5):         ___
-Spring intent (Q6):            bouncy / snappy / heavy / smooth + stagger
-Audio anchor (Q7):             "___" (verbatim from narration)
-Mode (Q8):                     ADDITIVE / REPLACE
+### Animation
+- **0:00 – 0:03 — Cold open.** Black canvas. The hero number punches in centered, D.amber,
+  heavy spring; counter ticks 0→final, then a stamp + 2-frame shake. Holds with a ±1.5% breathe.
+- **0:03 – 0:07 — Context.** Below the number, a label rises 40px into place, snappy spring,
+  D.text_dim; the hero number keeps breathing above it.
+- **0:07 – 0:12 — [REPLACE] The turn.** Canvas wipes. A glass capsule slides in from the left
+  and scales 0.9→1, snappy spring, D.cyan; a slow drift keeps it alive through the hold.
 ```
+
+Every element enters with a transform (punch / rise / slide+scale) and stays alive
+(breathe / drift) — no bare fades, nothing frozen.
+
+### Bad bullet (vague, frozen, no anchor)
+
+```
+### Animation
+- **0:00 – 0:05 — Stuff happens.** Some text and a chart fade in with dynamic energy.
+```
+
+Fails: bare fade, no transform, no hold-alive motion, no audio_anchor, "dynamic energy"
+has no frame-based form.
+
+(Examples are illustrative — fill the headline/body with your real, sourced facts.)
 
 ---
 
-## 11. Worked example (reference only — do NOT copy for other topics)
+## Common failure modes
 
-**Topic:** AI thinking levels and the effort paradox.
-
-**Narration excerpt:**
-> Every frontier AI model now has a dial that controls how hard it thinks. Turn it up
-> and you'd expect better answers. But for GPT-5, turning it to high actually lowered
-> accuracy — and costs fifty-six percent more.
-
-**Bullet — first attempt (BAD):**
-```
-- **0:00 – 0:10 — Three dials, canvas-wide.**
-  Three rotary dials appear, all set to HIGH. Cost bar rises.
-```
-
-**Why it fails the checklist:**
-- Q1 not stated (no viewer takeaway declared)
-- Q3 weak — "dials" is generic, no named physical context
-- Q4 incomplete — no color token assigned to each lab's dial
-- Q5 partial — "three" present but no count of ticks, glow, needle
-- Q6 missing — no spring intent
-- Q7 missing — no audio_anchor
-- Q8 missing — REPLACE not marked despite full-canvas wipe
-
-**Same bullet — upgraded (GOOD):**
-```
-- **0:00 – 0:10 — [REPLACE] Three control-room rotary dials, factory aesthetic.**
-  Q1: Viewer must see all three AI labs ship the same physical dial pre-set to HIGH by default.
-  Named object: Industrial control-room dials with brass bezels and tick marks etched into the face.
-  Full-canvas D.bg backdrop fades in over 8 frames covering all prior visuals.
-  3 dials horizontal layout, centered vertically, 28% canvas width each, 60-frame stagger between dials.
-  Left dial: D.cyan bezel, label "CLAUDE — effort:", 5 tick positions LOW/MEDIUM/HIGH/XHIGH/MAX.
-  Center dial: D.violet bezel, label "GPT — reasoning_effort:", 4 positions LOW/MEDIUM/HIGH/XHIGH.
-  Right dial: D.amber bezel, label "GEMINI — thinking_budget:", 3 positions LOW/MEDIUM/HIGH.
-  All 3 needles pre-rotated to HIGH position, D.red glow circle (12px radius) at each HIGH tick.
-  Heavy spring entrance (damping 12, stiffness 90, mass 2), staggered 10 frames per dial.
-  audio_anchor: "controls how hard it thinks"
-```
-
-Every checklist item answered. Pipeline can render exactly this.
-
----
-
-## 12. Pre-submit checklist
-
-Before adding any bullet to the script, verify ALL of these:
-
-- [ ] Q1 (one-sentence takeaway) stated above the visual description
-- [ ] Q2 (simplest visual proving Q1) implicit in the body
-- [ ] Q3 — headline names a specific named physical object, not "a visual"
-- [ ] Q4 — every entity tagged with a color token (D.cyan, D.violet, D.amber, D.red, D.green, D.text_dim)
-- [ ] Q5 — every repeated element has a count; every motion has a duration
-- [ ] Q6 — spring intent named (bouncy / snappy / heavy / smooth)
-- [ ] Q7 — audio_anchor present, verbatim from this scene's narration
-- [ ] Q8 — [REPLACE] tag in headline if replacing; omitted (default) if additive
-- [ ] Body contains NO hex literals (use D.tokens), NO JSX, NO CSS animation keywords
-- [ ] Body contains NO words "many", "some", "several", "a few", "staggered" (without a number)
-
----
-
-## 13. Common failure modes
-
-| Failure | What it looks like | Fix |
+| Failure | Looks like | Fix |
 |---|---|---|
-| Generic visual | "Three boxes appear" | Name the specific object: "Three brass cabinets with combination locks" |
-| Adjective-only | "Bars rise dramatically" | "Bars rise from 0% to 80% over 25 frames, heavy spring" |
-| Missing color | "A card appears" | "D.cyan card appears" |
-| Missing anchor | (no audio_anchor line) | Find 2-4 words from narration; add `audio_anchor: "..."` |
-| Wrong mode | REPLACE not marked when scene changes | Add `[REPLACE]` to headline + backdrop line to body |
-| Reusing example metaphors | Lie detector for a non-AI topic | Derive your own metaphor from your topic's physical action |
-| Anchor not in narration | `audio_anchor: "watch this"` (not in script) | Pick a phrase that exists verbatim in the narration |
-| Multiple anchors match | `audio_anchor: "and then"` | Pick a distinctive phrase, not a generic connector |
+| Generic visual | "three boxes appear" | name the specific object |
+| Adjective-only motion | "bars rise dramatically" | "bars rise 0→80% over ~25 frames, heavy spring" |
+| Missing color | "a card appears" | "a D.cyan card appears" |
+| Missing anchor | no `audio_anchor` line | add a 2–4 word verbatim phrase from narration |
+| Anchor not in narration | anchor phrase doesn't exist in the script | pick a phrase spoken verbatim in this scene |
+| Generic anchor | `audio_anchor: "and then"` | pick a distinctive phrase, not a connector |
+| Wrong mode | scene changes but no REPLACE | add `[REPLACE]` + a backdrop line |
+| Static image | `[asset:]` with no motion | add Ken Burns / Logo pop — static fails the freeze gate |
+| Real photo for a number/metaphor | stock photo behind a stat | use vector |
+| Late animation phase | motion starts near the beat's end | move it earlier so it finishes inside the beat |
+| Bare fade | "X fades in" with no transform | add a slide/scale/pop; layer opacity on top |
+| Frozen hold | element enters then sits static | add a hold-alive motion (breathe/drift/pulse) |
+| Motion ignores the line | generic move unrelated to the words | make the visual enact the script's verb |
+| Meaningless motion | shapes spin/fly with no point | redesign so the motion IS the message; pass the meaning test |
+| Motion contradicts meaning | "rising cost" bar shrinks | match direction/size to the meaning (up = more) |
+| Split attention | two unrelated things move at once | one main idea per beat; demote the rest to support |
+| Text-rich slide | card with sentences / paragraphs | turn the idea into a visual; keep a 2–5 word label only |
+| Narration on screen | the spoken sentence shown as text | show the picture; the narration already says the words |
 
 ---
 
-## 14. Upgrade workflow for existing scripts
+## Guidelines
 
-If you have an existing script with weak animation bullets, apply this 5-step pass:
+### Always
+- Pass the meaning test: muted, the motion alone makes the point clear
+- Show, don't tell — the visual makes the point; text only labels it (2–5 word headline + labels)
+- Map motion to meaning (direction/speed/size/together-apart say something)
+- One main idea per beat — the viewer always knows what to watch
+- One visual beat per bullet
+- Make each beat rich: a layered entrance + choreographed order + ≥1 supporting motion
+- Choreograph a hierarchy — one hero motion, the rest in support
+- Design motion from the script's verb — the visual enacts what the line says
+- Enter with a transform (slide/scale/pop) or value-over-range, not a bare fade
+- Give every held element a hold-alive motion (breathe/drift/pulse/counter)
+- Name the specific object (not "a visual")
+- Time the entrance to the audio_anchor — start on the spoken word, not before
+- Assign and keep color identity
+- Keep the animation inside the beat's frame budget
+- Match bullet duration to narration pace
+- Use real, researched numbers in any visual
 
-1. **Read each bullet. Ask Q1.** Write the one-sentence takeaway above the headline.
-2. **Replace generic visuals with named metaphors.** "Cards" → "filing cabinets." "Bars" → "mercury thermometers."
-3. **Tag entities with color tokens.** D.cyan / D.violet / D.amber / D.red / D.green.
-4. **Convert adjectives to numbers.** "Many" → "30-40." "Staggered" → "12-frame stagger."
-5. **Find audio anchors.** For each bullet, extract the 2-4 word phrase from narration that fires it. Add `audio_anchor:` line.
-
-Time budget: ~5-7 minutes per bullet. ~50 minutes per 8-scene script.
-
----
-
-End of skill.
+### Never
+- Make a beat text-rich — no paragraphs / full sentences on the canvas; the picture makes the point
+- Put the narration sentence (or a paraphrase of it) on screen
+- Animate for decoration — motion that doesn't carry meaning just confuses
+- Let motion contradict the meaning (a "rising cost" that shrinks)
+- Move two unrelated things at once so attention splits
+- Ship a one-element, one-move, then-frozen beat — that's the floor, not the goal
+- Make everything move equally hard — choreograph a focal hierarchy instead
+- Use opacity-only as the whole animation (except backdrops / calm reading text)
+- Leave an element frozen >3s (trips the freeze gate)
+- Write a bullet with no audio_anchor
+- Describe motion with no frame-based form ("feels alive," "dynamic energy")
+- Reuse a color token for a different entity mid-video
+- Put more than one visual beat in a bullet
+- Start a key animation phase so late it can't finish inside the beat
+- Invent a number for a visual
+- Exceed the scene's time window with bullet timecodes

@@ -1,15 +1,71 @@
 ---
 name: script-formats-reference
-description: Reference guide for YouTube video format types (educational, listicle, story, review, vlog, commentary), script component breakdowns (hook, intro, CTA), tone guidelines, timing targets by video length, engagement techniques, and common mistakes to avoid.
-metadata:
-  tags: reference, formats, youtube, hook, cta, structure, tone, engagement, listicle, story
+description: Reference guide for YouTube video format types (educational, listicle, story, review, vlog, commentary), script component breakdowns (hook, intro, CTA), tone guidelines, timing targets by video length, engagement techniques, locked voice and TTS configuration, and common mistakes to avoid. Use this skill whenever drafting or reviewing a YouTube script, choosing a video format, writing hooks or CTAs, deciding video length, picking tone, generating voiceover, or auditing a script before production. Triggers include "write a script," "draft a hook," "fix my intro," "what video length," "which format," "generate VO," "voice settings," "tone for my channel," or any request to plan or edit YouTube content. Do NOT use for animation bullet writing, Remotion specs, thumbnail design, or SEO descriptions.
 ---
 
 # YouTube Script Formats and Structures
 
+## Voice and TTS configuration (locked)
+
+This is the locked voice configuration for all scripts produced under this skill. Do not substitute another voice without explicit instruction from the user.
+
+**TTS engine:** `edge-tts` (Microsoft Edge Text-to-Speech, free endpoint, no API key required)
+**Voice:** `en-US-AndrewMultilingualNeural`
+**Default rate:** `+0%` (natural pace) — adjust per script if needed
+**Default pitch:** `+0Hz` (default tone)
+**Default volume:** `+0%`
+
+### Why this voice
+
+- American accent — fits the channel's primary target audience (US/UK/Canada/Australia developers)
+- Neural quality — production-grade output, indistinguishable from professional VO for most viewers
+- Free — no API costs, no rate limits at small volume
+- Multilingual capable — handles technical terms, model names, and code well
+
+### How to invoke
+
+Standard generation command:
+
+```bash
+edge-tts --voice en-US-AndrewMultilingualNeural --text "YOUR_SCRIPT" --write-media output.mp3
+```
+
+For scripts with pause markers, use SSML:
+
+```bash
+edge-tts --voice en-US-AndrewMultilingualNeural --file script.ssml --write-media output.mp3
+```
+
+SSML pause syntax inside narration:
+
+```xml
+<break time="200ms"/>   <!-- short pause, mid-sentence emphasis -->
+<break time="500ms"/>   <!-- standard pause between beats -->
+<break time="1s"/>      <!-- dramatic pause for reveals -->
+```
+
+### Pacing direction in scripts
+
+When writing narration, include pace markers inline:
+
+```
+[pace: faster]    — for setup beats and quick transitions
+[pace: normal]    — default for most narration
+[pace: slower]    — for stakes, reveals, key takeaways
+```
+
+These are notes for the narrator/script editor. Convert to SSML `<prosody rate="...">` tags only when generating the final audio.
+
+### Voice limitations to write around
+
+- Andrew handles most technical terms well but can mispronounce: model version numbers (write "four point seven" not "4.7"), acronyms (write "M C P" not "MCP" when the letter pronunciation matters), and some non-English proper nouns. Write phonetically when in doubt.
+- For numbers, spell out under 10 and over 100 selectively for clarity ("fifty-six percent" reads better than "56 percent")
+- Em-dashes (—) are read as a pause; en-dashes (–) are skipped. Use em-dashes for emphasis pauses.
+
 ## Common YouTube Video Types
 
 ### 1. Educational/Tutorial Videos
+
 **Structure:**
 - Hook (0-10 seconds)
 - Introduction (10-30 seconds)
@@ -24,6 +80,7 @@ metadata:
 - Pause points for viewer to follow along
 
 ### 2. Listicle/Top X Videos
+
 **Structure:**
 - Hook with the promise
 - Quick intro
@@ -39,6 +96,7 @@ metadata:
 - Suspense building (save best for last)
 
 ### 3. Story/Narrative Videos
+
 **Structure:**
 - Compelling hook
 - Setup/Context
@@ -56,6 +114,7 @@ metadata:
 - Plot twists or reveals
 
 ### 4. Review Videos
+
 **Structure:**
 - Hook with verdict tease
 - Introduction to product/subject
@@ -74,6 +133,7 @@ metadata:
 - Honest assessment
 
 ### 5. Vlog Style
+
 **Structure:**
 - Energetic hook
 - What's happening today
@@ -90,6 +150,7 @@ metadata:
 - Direct address to camera
 
 ### 6. Commentary/Opinion Videos
+
 **Structure:**
 - Hook with controversial/interesting take
 - Context/Background
@@ -108,6 +169,7 @@ metadata:
 ## Script Components Breakdown
 
 ### The Hook (First 5-10 seconds)
+
 **Purpose:** Stop the scroll, capture attention immediately
 
 **Techniques:**
@@ -124,6 +186,7 @@ metadata:
 - "Everyone gets this wrong, and it's costing them..."
 
 ### The Introduction (10-45 seconds)
+
 **Purpose:** Establish credibility, set expectations, deliver on hook promise
 
 **Elements:**
@@ -133,10 +196,10 @@ metadata:
 - What they'll learn/gain
 - Quick preview of main points
 
-**Example:**
-"Hey everyone, I'm [Name], and today we're diving into [topic]. If you've ever struggled with [problem], this video is for you. I'm going to show you [solution] that [benefit]. We'll cover [point 1], [point 2], and [point 3]. Let's get started."
+**Note for faceless channels:** Skip the "Hey everyone, I'm [Name]" template. Faceless channels build credibility through content quality and visual authority, not personal introduction. Replace with a direct stakes statement and what the viewer will learn.
 
 ### The Main Content
+
 **Purpose:** Deliver the value promised in hook and intro
 
 **Best Practices:**
@@ -155,6 +218,7 @@ metadata:
 - "Before we continue, quick note about..."
 
 ### The Conclusion
+
 **Purpose:** Reinforce key takeaways, create satisfaction
 
 **Elements:**
@@ -163,10 +227,8 @@ metadata:
 - Final thoughts or reflection
 - Bridge to CTA
 
-**Example:**
-"So to recap, we covered [point 1], [point 2], and [point 3]. The main thing to remember is [key takeaway]. Now you're ready to [apply knowledge]."
-
 ### The Call to Action (CTA)
+
 **Purpose:** Guide viewer to next action
 
 **Types:**
@@ -242,6 +304,8 @@ metadata:
 - Multiple sections
 - Varied pace
 
+**Note for new channels:** Long form (15-30 min) is high-risk for channels with fewer than 10 uploads. Audience retention math makes hitting 40%+ APV very hard. Default to 7-9 minutes until retention is proven across 5-10 uploads.
+
 ## Engagement Techniques
 
 ### Pattern Interrupts
@@ -273,16 +337,18 @@ metadata:
 
 ## Common Script Mistakes to Avoid
 
-1. **Burying the lede** - Get to the point quickly
-2. **Rambling introduction** - Hook first, context later
-3. **No clear structure** - Viewers need signposts
-4. **Talking too fast** - Leave room for visuals
-5. **Being too formal** - YouTube is conversational
-6. **No personality** - Let your unique voice shine
-7. **Forgetting the CTA** - Always guide next steps
-8. **Too much information** - Focus on key takeaways
-9. **No energy variation** - Monotone loses viewers
-10. **Ignoring target audience** - Speak directly to them
+1. **Burying the lede** — Get to the point quickly
+2. **Rambling introduction** — Hook first, context later
+3. **No clear structure** — Viewers need signposts
+4. **Talking too fast** — Leave room for visuals
+5. **Being too formal** — YouTube is conversational
+6. **No personality** — Let your unique voice shine
+7. **Forgetting the CTA** — Always guide next steps
+8. **Too much information** — Focus on key takeaways
+9. **No energy variation** — Monotone loses viewers
+10. **Ignoring target audience** — Speak directly to them
+11. **Fabricated statistics** — Every claim must be verifiable; cite sources for any specific number
+12. **Wrong length for channel age** — New channels lose retention on long videos before earning the audience
 
 ## Visual Cues in Scripts
 
@@ -346,3 +412,50 @@ These help during filming and editing.
 - Downloadable resources
 - Chapters crucial
 - Timestamps helpful
+
+## Examples
+
+### Example 1: Generating VO for a 7-minute script
+
+```bash
+# Step 1: Write narration to a plain text file (script.txt)
+# Step 2: Generate VO with the locked voice
+edge-tts --voice en-US-AndrewMultilingualNeural \
+         --file script.txt \
+         --write-media output.mp3 \
+         --write-subtitles output.vtt
+```
+
+### Example 2: Script narration formatted for the locked voice
+
+```
+Every frontier AI model now has a dial that controls how hard it thinks. <break time="300ms"/>
+Turn it up and you'd expect better answers. <break time="500ms"/>
+But when researchers tested GPT five last February, turning it to high actually
+lowered accuracy — and cost fifty-six percent more.
+<break time="800ms"/>
+Same model. <break time="200ms"/> Higher setting. <break time="200ms"/> Worse results.
+```
+
+Notes on this example:
+- "GPT five" not "GPT 5" — Andrew pronounces digits inconsistently
+- "fifty-six percent" not "56 percent" — reads more naturally
+- Em-dashes used for pause emphasis
+- `<break>` tags for precise pause control
+
+## Guidelines
+
+### Always
+- Use `en-US-AndrewMultilingualNeural` as the locked voice unless the user explicitly requests a substitution
+- Spell out numbers under 10 and pronunciation-ambiguous figures
+- Use em-dashes (—) for emphasis pauses
+- Use `<break time="..."/>` for precise control
+- Match script tone to channel positioning
+- Default to 7-9 minute length for new channels
+
+### Never
+- Substitute a paid TTS service (ElevenLabs, PlayHT, etc.) without explicit user instruction
+- Include API keys or credentials in scripts
+- Write "Hey everyone, I'm [Name]" intros for faceless channels
+- Use fabricated statistics or unverified claims
+- Recommend 15-30 minute videos for channels with fewer than 10 uploads

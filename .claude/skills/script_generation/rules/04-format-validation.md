@@ -1,8 +1,6 @@
 ---
-name: format-validation
-description: How to validate the completed script against source_parser.py regex before saving. Parser errors abort the build before TTS.
-metadata:
-  tags: format, validation, parser, regex, source-parser, pipeline-compatibility
+name: 04-format-validation
+description: Validates the completed script against the source_parser.py regex before saving — the exact syntax the parser requires for scene headers, narration blocks, animation bullets, and time formats. A single format error aborts the build before TTS. Use when formatting a script for the parser, fixing a parse error, checking scene-header or bullet syntax, or debugging why a script won't parse. Not for content quality, narration writing, or animation design.
 ---
 
 # Step 5 — Format Validation
@@ -10,6 +8,14 @@ metadata:
 Run this check mentally on every scene before saving the file.
 A single format error causes `source_parser.py` to raise `ValueError` and abort the entire build before TTS.
 Fixing it after costs zero time. Finding it after a 25-minute render costs the full render.
+
+## Contents
+- Parser regex — what it looks for (scene header, narration, animation)
+- Full file structure check
+- Time window consistency check
+- Validation checklist — run before saving
+- Where to save
+- Cross-references
 
 ---
 
@@ -70,9 +76,9 @@ Source: `storyboard/source_parser.py` lines 76-79 and 218-221.
 
 **Valid bullet examples:**
 ```
-- **0:00 – 0:05 — Clean AI interface fades in.** ChatGPT-style dark-mode UI.
-- **1:42 – 1:50 — [REPLACE] Lie detector materializes.** Art-deco machine.
-- **15:08 – 15:30 — Subscribe CTA.** CYAN border card types "SUBSCRIBE" at 22 cps.
+- **0:00 – 0:05 — Interface slides in.** Dark-mode UI panel, D.bg, push-in reveal.
+- **1:42 – 1:50 — [REPLACE] A named metaphor object materializes.** e.g. a brass scale tipping.
+- **15:08 – 15:30 — Subscribe CTA.** D.cyan border card, "SUBSCRIBE" types in.
 ```
 
 **Invalid bullet examples:**
@@ -153,3 +159,13 @@ Output path: `projects/structured_scripts/<project_name>.txt`
 - Never save to `projects/<name>/source.txt` — that is a legacy path
 
 After saving, confirm the file exists and report the path to the user.
+
+---
+
+## Cross-references
+
+- Full format spec with worked examples: `references/script_formats.md`
+- Fireship-style pacing/voice/density layer: `references/fireship_format.md`
+- Animation design (meaning / motion / show-don't-tell): `rules/03-animation-bullets.md`
+- Animation validator (does it make sense / fit / can Remotion build it): `rules/03b-animation-validator.md`
+- Full quality gate that checks all of this: `rules/05-validator.md`

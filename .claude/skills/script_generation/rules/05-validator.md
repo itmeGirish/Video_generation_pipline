@@ -1,8 +1,6 @@
 ---
-name: validator
-description: Full quality gate for a completed structured script. Run before passing to video_generation. Catches format errors, content gaps, missing anchors, weak narration, and empty bullets before a 25-minute render.
-metadata:
-  tags: validation, quality-gate, anchors, bullets, narration, format, pre-render
+name: 05-validator
+description: Technical quality gate for a completed structured script — format, research, narration, bullets, anchors, density, canvas, and arc checks against source_parser.py before render. Catches format errors, missing anchors, weak narration, and empty bullets before a long render. Use when validating a script before render, running the technical gate, checking if a script is ready, verifying audio anchors, or auditing bullet quality. Not for content quality (rule 06), animation design (03/03b), or research (00).
 ---
 
 # Script Validator
@@ -49,6 +47,8 @@ Validates against `source_parser.py` regex. A single format error aborts the bui
 | No JSX | No `<div>`, `<Component>`, `</` in bullet body | JSX found in body |
 | Output path | File is at `projects/structured_scripts/<name>.txt` | File saved to wrong location |
 
+**Partial validation rule:** If Check 1 (Format) fails on any scene, skip Checks 2–8 for that scene. The file will not parse, so other checks are moot until format is fixed.
+
 ---
 
 ## Check 2 — RESEARCH (FAIL if any fail)
@@ -88,7 +88,7 @@ Every scene's first bullet must name a specific physical or visual object.
 |---|---|
 | `"Show the comparison"` | `"Two parallel capsule race lanes, MAGENTA top, CYAN bottom"` |
 | `"A chart appears"` | `"Three horizontal bars grow left-to-right, staggered 12 frames"` |
-| `"Visual transition"` | `"[REPLACE] Art-deco lie detector machine, paper roll feeds"` |
+| `"Visual transition"` | `"[REPLACE] a named metaphor object enters, e.g. a brass scale tipping"` |
 
 Check: does the first bullet of every scene contain a named object? FAIL if not.
 
@@ -102,8 +102,8 @@ Steps:
 
 | FAIL | PASS |
 |---|---|
-| Claude is D.cyan in S1, D.green in S4 | Claude is D.cyan in every scene |
-| GPT is D.violet in S2, D.amber in S5 | GPT is D.violet in every scene |
+| entity A is D.cyan in S1, D.green in S4 | entity A is D.cyan in every scene |
+| entity B is D.violet in S2, D.amber in S5 | entity B is D.violet in every scene |
 
 ### 4c — Quantities (per bullet)
 Every bullet with repeated elements must state exact counts.
@@ -152,7 +152,7 @@ For every bullet's implied audio_anchor:
 
 | FAIL | PASS |
 |---|---|
-| Bullet body: `"magenta runner launches"` but narration has no `"magenta"` | Narration: `"watch the magenta runner"` and bullet: `"MAGENTA runner"` |
+| Bullet body: `"the needle launches"` but narration has no `"needle"` | Narration: `"watch the needle"` and bullet body contains `"the needle"` |
 | Bullet body echoes a phrase from a DIFFERENT scene's narration | Bullet echoes a phrase from THIS scene's narration |
 | Bullet body contains generic words only (`"appears"`, `"card"`, `"shows"`) | Bullet body contains a distinctive noun or number from narration |
 
@@ -200,7 +200,9 @@ For each bullet, estimate: if this renders at 1920×1080, does the visual cover 
 
 ---
 
-## Validator output format
+## Examples
+
+### Validator output for a script with 2 failures
 
 Report as a structured table plus action items:
 
@@ -231,3 +233,27 @@ Only when all checks show PASS or WARN (with fewer than 3 WARNs per scene):
 VERDICT: READY FOR video_generation
 Next: invoke /video_generation with project name <name>
 ```
+
+---
+
+## Guidelines
+
+### Always
+- Run this validator on the full `projects/structured_scripts/<name>.txt` file, not a draft
+- Report results as the structured table — every scene, every check, one row per scene
+- If Check 1 fails on a scene, skip Checks 2–8 for that scene
+- Treat 3+ WARNINGs on one scene as a FAIL — cumulative quality issues block the build
+- Include specific action items in the output — name the scene, the check, and the exact problem
+
+### Never
+- Proceed to video_generation with any unresolved FAIL
+- Accept vague action items ("fix the bullets") — every FAIL must name the exact scene and bullet
+- Mark a script READY if any scene has 3+ WARNINGs
+
+### Severity reference
+
+| Level | Meaning | Action |
+|---|---|---|
+| FAIL | Hard error — build will break or output will be wrong | Must fix before video_generation |
+| WARN | Quality issue — build succeeds but output is degraded | Fix if time allows; 3+ on one scene = FAIL |
+| PASS | Meets the standard | No action needed |

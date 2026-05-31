@@ -1,7 +1,7 @@
 ---
 name: script-writer
 description: Generates complete production-grade YouTube video scripts in pipeline format (narration + animation bullets) saved to `projects/structured_scripts/<name>.txt`. Collects user style preferences on first use and maintains them across sessions. Output feeds directly into the video_generation pipeline with zero reformatting.
-when_to_use: Use when the user wants to write a new YouTube video script. Handles the full pre-production flow — strategy, research, scene structure, narration, animation bullets, content quality gate, and technical validation — before handing off to video_generation for rendering.
+when_to_use: Use when the user wants to write a new YouTube video script. Handles the full pre-production flow — strategy, research, scene structure, storytelling, narration, animation bullets, then validation, retention engineering, human review, content gate, and a world-class critique-and-improve pass — before handing off to video_generation for rendering.
 model: opus
 ---
 
@@ -119,6 +119,15 @@ One idea per scene. If a scene title needs "and" — split it into two scenes.
 
 ---
 
+### Step 5.5 — Layer the story (read rules/01b-storytelling.md)
+
+Before writing narration, turn the scene list from a list of facts into a STORY. Apply a
+narrative spine (hook/build/payoff or the story spine), connect scenes with "because of
+that" not "and then", and make sure the script has stakes, conflict, and a transformation
+with the viewer as the hero. A story is far more memorable and watchable than a list.
+
+---
+
 ### Step 6 — Write each scene
 
 For each scene, write in this order: **narration first, then animation bullets.**
@@ -155,7 +164,10 @@ Apply the user's hook style to Scene 1:
 
 #### 5b — Animation bullets (apply cinematic rules)
 
-For every bullet, answer all 8 questions from `Script_Agent/rules/03-animation-bullets.md` before writing the body.
+For every bullet, follow `rules/03-animation-bullets.md`: clarity first (the motion must
+MEAN something — pass the muted test), motion not bare fades, show-don't-tell (no text
+slides), rich/choreographed, and answer the full 10-point checklist before writing the
+body. Every beat must be one Remotion can build. (Validated in Step 7a by rule 03b.)
 
 **Bullet format:**
 ```
@@ -164,7 +176,7 @@ For every bullet, answer all 8 questions from `Script_Agent/rules/03-animation-b
   Continuation body text.
 ```
 
-**5 techniques — every bullet must apply all that are relevant:**
+**6 techniques — every bullet must apply all that are relevant:**
 
 **1. Named metaphor** — every scene's first bullet names a specific object:
    Not `"a comparison visual"` → `"Two parallel capsule race lanes, MAGENTA top, CYAN bottom."`
@@ -180,6 +192,13 @@ For every bullet, answer all 8 questions from `Script_Agent/rules/03-animation-b
 
 **5. Audio anchor target** — bullet body echoes the narration trigger phrase:
    Narration says `"watch the needle"` → bullet body contains `"needle"` → anchor picks itself
+
+**6. Real image vs coded vector** — for a NAMED real-world thing (logo, person, place),
+   reference `[asset: img/<name>.ext>]` in the body AND name the motion
+   (`KEN BURNS 1.0→1.08` / `LOGO POP (bouncy damping 9)` / `PUSH-IN reveal`). Otherwise vector.
+   Static image = A4 freeze fail. Build's Step 2.6 auto-fetches missing assets from Openverse
+   (CC commercial-safe); pre-place by hand for named logos / specific charts. See rule 03 §7.5
+   and video_generation rule 24.
 
 **REPLACE vs ADDITIVE:**
 - ADDITIVE (default): bullet adds to what's already on screen
@@ -214,48 +233,59 @@ Does the video still make sense? Does it flow better? If yes — it was padding.
 
 ---
 
-### Step 7 — Validate and retry until PASS (read rules/06-content-quality.md FIRST, then rules/05-validator.md)
+### Step 7 — Validate, critique, and improve until ready
 
-Two gates in order. Do not run gate 2 until gate 1 passes.
-**Never proceed to Step 8 until BOTH gates report PASS. Retry as many times as needed.**
+Run these passes in order. Each has its own rule file. Do not skip any — every pass we
+built exists to catch a different failure. Retry as many times as needed; never proceed
+to Step 8 with an unresolved FAIL.
 
----
-
-#### Gate 1 — Content quality (rules/06-content-quality.md)
-
-6 tests: hook, unique angle, viewer benefit, evidence, tension-resolution, "so what".
-
-**On FAIL or WEAK verdict → retry loop:**
-
-1. List every failing test with the exact reason it failed
-2. Identify the root cause: weak hook? generic angle? no evidence? no consequence sentence?
-3. Rewrite only the failing parts — do not rewrite the whole script unless 3+ scenes fail
-4. Re-run Gate 1
-5. Repeat until verdict is STRONG or ACCEPTABLE
-
-Do not proceed to Gate 2 until Gate 1 is STRONG or ACCEPTABLE.
+Order matters: validate the build is sound → engineer retention → judge it as a viewer →
+gate the content → critique and (if weak) rebuild.
 
 ---
 
-#### Gate 2 — Technical quality (rules/05-validator.md)
+#### 7a — Animation validator (rules/03b-animation-validator.md)
 
-8 checks: format, research, narration, bullets, anchors, density, canvas, arc.
+Per scene, per bullet: does the animation MAKE SENSE, FIT the scene, read as MOTION (not
+a text slide), and can Remotion actually BUILD it? Plus the "can Remotion build it" gate
+and the no-full-text-scenes rule. Fix failing beats in rule 03, re-run.
 
-**On any FAIL or 3+ WARNs on one scene → retry loop:**
+#### 7b — Technical validator (rules/05-validator.md)
 
-1. List every FAIL and WARN with scene number and check name
-2. Fix each FAIL first (pipeline will abort on any FAIL)
-3. Fix WARNs where 3+ are on the same scene
-4. Re-run Gate 2 on the fixed scenes only
-5. Repeat until all checks are PASS or isolated WARNs (fewer than 3 per scene)
+Format, research, narration, bullets, anchors, density, canvas, arc. Fix every FAIL
+(pipeline aborts on any FAIL) and any scene with 3+ WARNs. Re-run the fixed scenes.
+
+#### 7c — Retention engineering (rules/05a-retention-engineering.md)
+
+Engineer the curve: 30-second hook, pattern interrupts, re-hooks, no front-loaded payoff,
+strong ending. Fix the slow points before judging it as a viewer.
+
+#### 7d — Human script review (rules/05b-human-script-review.md)
+
+Watch it as a viewer — all 9 questions: robotic+tone, generic, understand, keep-watching,
+examples, why-watch/value, think/feel, makes-sense, and continuity (flow across cuts).
+Any FAIL or 2+ WEAKs on a scene → send back to the owning rule, revise, re-run.
+
+#### 7e — Content quality gate (rules/06-content-quality.md)
+
+All 12 tests: hook, unique angle, value, evidence, tension-resolution, "so what",
+freshness, human-not-AI, not-generic, not-over-polished, the critique pass, and viewer
+psychology. Verdict must be STRONG or ACCEPTABLE — fix FAIL/WEAK and re-run.
+
+#### 7f — Critique and improve / rebuild (rules/06b-critique-and-improve.md)
+
+Final senior pass: critique the script as a world-class YouTube writer from every angle,
+fact-check every claim (hard gate), score the quality factor, then PATCH if strong or
+REBUILD if weak at the core (< 0.6, or a broken hook/value/thesis). Loop until it clears
+the bar.
 
 ---
 
 #### Retry budget
 
-There is no maximum retry limit. Keep rewriting and re-validating until both gates pass.
-After each retry, show the updated validation table so the user can see progress.
-Never save to Step 8 while either gate is failing.
+There is no maximum retry limit. Keep validating, critiquing, and improving until every
+pass is clean. After each retry, show the updated table so the user can see progress.
+Never save to Step 8 while any pass is failing.
 
 ---
 
@@ -284,7 +314,7 @@ Show the user:
 1. Full script (all scenes, narration + bullets)
 2. Scene count + estimated total duration
 3. One-line anchor summary per scene (which word fires the first visual)
-4. Content quality verdict (Gate 1 result)
+4. Content quality verdict (rule 06) + critique/quality-factor result (rule 06b)
 
 Then ask exactly this:
 
@@ -300,9 +330,9 @@ User says yes / looks good / go ahead → save record to database → hand off t
 **Case 2 — User provides a modified script:**
 User pastes or describes their own version of the script.
 - Apply their changes EXACTLY as given — do not second-guess, do not add your own edits
-- Run Gate 2 technical validation only (format, narration format, bullet format, anchors)
-- If Gate 2 PASS → show updated script → ask for approval again
-- If Gate 2 FAIL → show exactly which checks failed with specific line numbers
+- Run the technical validator only (rule 05 — format, narration format, bullet format, anchors)
+- If it PASSES → show updated script → ask for approval again
+- If it FAILS → show exactly which checks failed with specific line numbers
   → Ask: "These format issues will break the pipeline. Should I fix just these technical errors and keep everything else exactly as you wrote it?"
   → If yes → fix ONLY the technical errors, nothing else → re-show → ask approval
   → If no → leave as-is and wait for user's next instruction
@@ -310,7 +340,7 @@ User pastes or describes their own version of the script.
 **Case 3 — User says script is not good, gives new direction:**
 User says "rewrite scene 3", "change the hook", "make it shorter" etc.
 - Apply their direction exactly
-- Re-run both gates (content + technical)
+- Re-run the Step 7 passes (validate → retention → human review → content → critique/improve)
 - Re-show updated script for approval
 - Do NOT invoke video_generation until user explicitly approves
 
@@ -362,13 +392,17 @@ They do not conflict — they operate on different parts of the script.
 - `docs/script.md` — complete format reference with 5 worked examples
 - `rules/00-research.md` — finding real facts before writing
 - `rules/01-scene-structure.md` — scene arc and count rules
+- `rules/01b-storytelling.md` — narrative layer: hook/build/payoff, story spine, cause-and-effect, stakes, transformation
 - `rules/02-narration.md` — pause placement, trigger phrases, hero numbers
-- `rules/03-animation-bullets.md` — 8-question checklist, 5 techniques
+- `rules/03-animation-bullets.md` — clarity→motion→show-don't-tell→rich; 10-point checklist; Remotion-buildable
+- `rules/03b-animation-validator.md` — does each beat make sense, fit the scene, read as motion, and can Remotion build it
 - `rules/04-format-validation.md` — parser format rules
 - `rules/05-validator.md` — technical quality gate (format, anchors, bullets, density)
-- `rules/06-content-quality.md` — content quality gate (hook, unique angle, viewer benefit, evidence)
+- `rules/05a-retention-engineering.md` — keeping viewers: 30s hook, pattern interrupts, mid-video surprise, strong ending (runs after validator, before human review)
+- `rules/05b-human-script-review.md` — watch it as a viewer: robotic/tone, generic, understand, why-watch, value, psychology
+- `rules/06-content-quality.md` — content quality gate (hook, unique angle, viewer benefit, evidence, freshness, human-not-AI, critique, psychology)
+- `rules/06b-critique-and-improve.md` — world-class critique + fact-check, score, patch or rebuild
 - `rules/07-youtube-strategy.md` — pre-production: title, thesis, thumbnail, open loops, shareable insight
-- `rules/08-retention-engineering.md` — keeping viewers: 30s hook, pattern interrupts, mid-video surprise, strong ending
 
 ---
 
@@ -381,9 +415,10 @@ Step 1: Load preferences → dramatic tone, expert audience, bold statement hook
 Step 2: (preferences already saved)
 Step 3: WebSearch → find real stats, a real quote, the central metaphor
 Step 4: Design scene list → show user → confirm
-Step 5: Write each scene → narration first, then bullets
-Step 6: Validate format
-Step 7: Save to projects/structured_scripts/kubernetes_hard.txt
-        Report: 8 scenes, ~10 min, anchor summary per scene
+Step 6: Write each scene → narration first, then bullets → cut pass
+Step 7: Validate + critique → 7a animation (03b), 7b technical (05), 7c retention (05a),
+        7d human review (05b), 7e content gate (06, 12 tests), 7f critique/improve (06b)
+Step 8: Save to projects/structured_scripts/kubernetes_hard.txt
+        Report: scene count, est. length, anchor summary, content + quality-factor verdict
         Next: run video_generation skill to render
 ```
