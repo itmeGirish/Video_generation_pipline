@@ -57,6 +57,7 @@ class VisualBlock:
     time_from_sec: float
     time_to_sec: float
     source_headline: str
+    anchor_mode: str = "appear"     # sync-to-meaning: appear (word_start) | through (start→end) | land (word_end)
     placeholder: bool = False       # True if codegen failed and a placeholder card was substituted
     placeholder_error: str = ""     # short error message for diagnostics (only set when placeholder=True)
 
@@ -672,12 +673,17 @@ def _design_bullet(
     parsed = json.loads(cache_file.read_text(encoding="utf-8"))
     _validate_cached_entry(parsed, scene, bullet_idx)
 
+    _mode = str(parsed.get("anchor_mode", "appear")).strip().lower()
+    if _mode not in ("appear", "through", "land"):
+        _mode = "appear"
+
     return VisualBlock(
         code=narration_preamble + parsed["code"],  # NARRATION_TEXT always available
         audio_anchor=parsed.get("audio_anchor", "").strip(),
         time_from_sec=bullet.time_from_sec,
         time_to_sec=bullet.time_to_sec,
         source_headline=bullet.headline,
+        anchor_mode=_mode,
     )
 
 

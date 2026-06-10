@@ -7,7 +7,8 @@ import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
 import { wipe } from '@remotion/transitions/wipe';
 import { D, resolveColor } from './design';
-import type { WordTimestamp } from '../components/VideoCaptions';
+import { Kit } from './kit';
+import type { WordTimestamp } from '../types';
 
 // LLM-emitted JS function body. Compiled once per `code` string via `new Function`,
 // then invoked every frame with the standard render-context args. The LLM is
@@ -47,6 +48,9 @@ import type { WordTimestamp } from '../components/VideoCaptions';
 //                      of `text` in captions, or null if missing. `text` is tokenized with
 //                      [a-z0-9]+ (same as audio_anchor matching). Use this to sync sub-bullet
 //                      events (e.g. flash icon when its matching word is spoken).
+//   findWordEnd      — (text, nth?=0) => bullet-relative frame where that word/phrase FINISHES,
+//                      or null. Pair with findWord for sync-to-meaning: land an impact on a
+//                      word's end, or run a motion across [findWord(w), findWordEnd(w)].
 //
 // fitText / measureText rely on the requested font being loaded. Root.tsx
 // awaits the project's display + mono fonts before render begins, so these
@@ -95,6 +99,8 @@ const RUNTIME_KEYS = [
   'Audio',
   'captions',
   'findWord',
+  'findWordEnd',
+  'Kit',
 ] as const;
 
 // Same tokenizer as audio_anchor matching (rule 04 contract #2): lowered [a-z0-9]+
@@ -110,6 +116,9 @@ const _wordToken = (w: WordTimestamp): string => {
 
 const _wordStartSec = (w: WordTimestamp): number =>
   (w.start_seconds ?? w.start ?? 0);
+
+const _wordEndSec = (w: WordTimestamp): number =>
+  (w.end_seconds ?? w.end ?? _wordStartSec(w));
 
 // Scene-relative caption start frame for the Nth occurrence of `text`.
 // `text` is tokenized; we match the first run of tokens equal to text's
@@ -138,6 +147,34 @@ const _findWordSceneFrame = (
   return null;
 };
 
+// Scene-relative caption END frame for the Nth occurrence of `text` — the moment
+// the (last token of the) word/phrase FINISHES. Mirrors _findWordSceneFrame but
+// returns the end of the match. Used for `land`/`through` in-bullet timing
+// (impact lands on word completion).
+const _findWordSceneFrameEnd = (
+  captions: WordTimestamp[],
+  text: string,
+  fps: number,
+  nth: number,
+): number | null => {
+  const wantTokens = _tokenize(text);
+  if (wantTokens.length === 0) return null;
+  let occurrencesSeen = 0;
+  for (let i = 0; i + wantTokens.length <= captions.length; i++) {
+    let match = true;
+    for (let j = 0; j < wantTokens.length; j++) {
+      if (_wordToken(captions[i + j]) !== wantTokens[j]) { match = false; break; }
+    }
+    if (match) {
+      if (occurrencesSeen === nth) {
+        return Math.round(_wordEndSec(captions[i + wantTokens.length - 1]) * fps);
+      }
+      occurrencesSeen++;
+    }
+  }
+  return null;
+};
+
 export const DynamicBlock: React.FC<Props> = ({ code, captions, blockFramesFrom }) => {
   const frame = useCurrentFrame();
   const { fps, width, height, durationInFrames } = useVideoConfig();
@@ -156,6 +193,17 @@ export const DynamicBlock: React.FC<Props> = ({ code, captions, blockFramesFrom 
     // sub-event can't fire inside this bullet — return null so authors fall
     // back. Usually this indicates a structured-script bullet-order bug:
     // the bullet should be listed before its anchor's chronological position.
+    if (bulletFrame < 0) return null;
+    return bulletFrame;
+  };
+
+  // findWordEnd('explodes') → bullet-relative frame where the word FINISHES, or
+  // null. Pair with findWord for span/land motion: e.g. a value that lands on a
+  // word's end, or runs across [findWord(w), findWordEnd(w)] (anchor_mode through).
+  const findWordEnd = (text: string, nth: number = 0): number | null => {
+    const sceneFrame = _findWordSceneFrameEnd(captionsArr, text, fps, nth);
+    if (sceneFrame === null) return null;
+    const bulletFrame = sceneFrame - fromOffset;
     if (bulletFrame < 0) return null;
     return bulletFrame;
   };
@@ -217,6 +265,8 @@ export const DynamicBlock: React.FC<Props> = ({ code, captions, blockFramesFrom 
     Audio,
     captions: captionsArr,
     findWord,
+    findWordEnd,
+    Kit,
   };
   const args = RUNTIME_KEYS.map((k) => runtimeBindings[k]);
   // Lockstep guard: TypeScript's index-signature ensures every key has a

@@ -75,3 +75,14 @@ animations/src/**/*.meta
 tmp/
 temp/
 *.tmp
+
+
+# Build / render artifacts (do not commit)
+*.mbtree
+ffmpeg2pass*
+storyboard/.build_work/
+storyboard/.trim_work/
+storyboard/.stitch_work/
+storyboard/.cache/
+remotion/out/
+remotion/public/vo-*.mp3

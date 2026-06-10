@@ -40,10 +40,23 @@ import os
 import re
 import subprocess
 import sys
+import time
+
+# Wall-clock start of the production run — used to report how long the whole
+# pipeline took to produce the final video (TTS + Whisper + render + stitch),
+# distinct from the video's playback length. Written to production_time.json at the end.
+_BUILD_START_T = time.time()
+from datetime import datetime, timezone
+_BUILD_START_ISO = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
 from dataclasses import asdict
 from pathlib import Path
 
 import edge_tts
+try:
+    from piper import PiperVoice, SynthesisConfig
+except Exception:
+    PiperVoice = None
+    SynthesisConfig = None
 import yaml
 from difflib import SequenceMatcher
 from faster_whisper import WhisperModel
@@ -108,6 +121,7 @@ from storyboard.narration_pacer import pace_scenes
 from storyboard.visual_qa import run_qa
 from storyboard.validate_pipeline import validate as validate_pipeline
 from storyboard.validate_output import validate_output
+from storyboard.fetch_images import fetch_one as fetch_image_one
 
 # ─── ARGS ───
 parser = argparse.ArgumentParser(description=(
@@ -303,6 +317,10 @@ VOICE            = config["audio"]["voice"]
 RATE             = config["audio"]["rate"]
 PITCH            = config["audio"]["pitch"]
 FULL_AUDIO_NAME  = config["audio"]["full_audio_filename"]
+ENGINE           = str(config["audio"].get("engine", "edge_tts")).lower()
+PIPER_MODEL      = config["audio"].get("model", "models/piper/en_US-ryan-high.onnx")
+LENGTH_SCALE     = float(config["audio"].get("length_scale", 1.0))
+TTS_SR, TTS_BR   = (22050, "96k") if ENGINE == "piper" else (24000, "48k")
 OUTPUT_NAME      = config["output"]
 PROJECT_PREFIX   = re.sub(r"[^a-z0-9]", "-", PROJECT.lower()).strip("-")
 
@@ -364,13 +382,44 @@ SCENE_BOUNDARY_MIN_RATIO  = float(_build_cfg.get("scene_boundary_min_ratio", 0.5
 
 # ffmpeg quality knobs
 SCENE_CLEAN_PRESET = str(_stitch_cfg.get("scene_clean_preset", "fast"))
-SCENE_CLEAN_CRF    = str(_stitch_cfg.get("scene_clean_crf", 20))
+# Intermediate "clean" re-encode is generation #2 of 3 on the ffmpeg stitch path
+# (Remotion h264 → scene_clean → final stitch). Each H.264 pass compounds loss
+# (softer text, gradient banding). The intermediate must be near-LOSSLESS so it
+# adds no visible loss before the final encode; CRF 14 is perceptually transparent
+# at ~2× temp size (the _clean.mp4 is deleted after stitch, so the size is throwaway).
+# Was 20 — that baked lossy artifacts in, then re-compressed them at final. Don't
+# raise above ~16. qp 0 (true lossless) is wasteful — the lossy final encode caps quality anyway.
+SCENE_CLEAN_CRF    = str(_stitch_cfg.get("scene_clean_crf", 14))
 FINAL_PRESET       = str(_stitch_cfg.get("final_preset", "medium"))
 FINAL_CRF          = str(_stitch_cfg.get("final_crf", 19))
-AUDIO_BITRATE      = str(_stitch_cfg.get("audio_bitrate", "192k"))
+AUDIO_BITRATE      = str(_stitch_cfg.get("audio_bitrate", "256k"))
+# Bitrate FLOOR for the final encode. rule 22/23 T4 require ≥8 Mbps; CLAUDE.md states
+# the YouTube target -b:v 8M -maxrate 10M -b:a 384k.
+# MEASURED (real 59s scene): plain CRF 19 → 5.3 Mbps (FAILS T4). Adding -maxrate/-bufsize
+# to CRF → still 5.3 Mbps (a ceiling can't raise a low average). ABR -b:v 8M → 8.17 Mbps
+# (PASSES). So a real floor REQUIRES ABR target-bitrate mode, not capped-CRF.
+# Therefore final_bitrate defaults to 8M (ABR). Set final_bitrate: null in config to
+# fall back to quality-targeted capped-CRF (smaller files, but may miss the T4 gate).
+FINAL_MAXRATE      = str(_stitch_cfg.get("final_maxrate", "10M"))
+FINAL_BUFSIZE      = str(_stitch_cfg.get("final_bufsize", "20M"))
+FINAL_BITRATE      = (_stitch_cfg["final_bitrate"] if "final_bitrate" in _stitch_cfg
+                      else "8M")   # ABR hard floor by default; null → capped-CRF
 
 # Whisper quantization
 WHISPER_COMPUTE_TYPE = str(_whisper_cfg.get("compute_type", "int8"))
+# Timestamp source: "whisper" (default, faster_whisper ASR) or "torchaudio"
+# (forced alignment of the known narration → far tighter word boundaries).
+# torchaudio is opt-in + fallback-safe: any failure reverts to whisper.
+WHISPER_ALIGNER = str(_whisper_cfg.get("aligner", "whisper")).strip().lower()
+
+# Sync-to-meaning config (anchor_mode: appear / through / land). framesFrom is
+# computed from the anchor word's start/end + the bullet's anchor_mode:
+#   appear → round(word_start*fps) − lead   (small visual lead reads cleaner; AV research)
+#   through→ round(word_start*fps)          (motion runs across the word)
+#   land   → round(word_end*fps) − entrance (impact climax lands on word completion)
+_sync_cfg = config.get("sync", {})
+SYNC_LEAD_FRAMES     = int(_sync_cfg.get("anchor_lead_frames", 2))    # visual lead for `appear`
+SYNC_ENTRANCE_FRAMES = int(_sync_cfg.get("entrance_frames", 12))      # wind-up length for `land`
 
 # Pass narration-pacing config through to ssml_compiler via env vars (so we
 # don't have to import + re-thread through every call site)
@@ -403,6 +452,81 @@ if args.strict_bullets and _vague_count > 0:
     print(f"\n[2.5] STRICT-BULLETS: {_vague_count} vague bullet(s) — aborting before LLM codegen.")
     print(f"      Fix the flagged bullets in the structured script, then re-run.")
     sys.exit(3)
+
+
+# ─── 2.6 ASSET RESOLUTION (auto-fetch missing [asset:] images from description) ───
+# The SCRIPT drives this: every [asset: <path>] token names a file that must
+# exist at PROJECT_DIR/public/<path> before render. If it's missing and
+# assets.auto_fetch is on (default), source a license-safe image automatically
+# using the bullet description as the search query (default Openverse —
+# CC/commercial-use), keep the top candidate, and record attribution to
+# CREDITS.md. A token that still can't be resolved is a hard error — we never
+# render a broken <Img>. Projects with no [asset:] refs incur zero network cost.
+print(f"[2.6] Asset resolution (auto-fetch missing [asset:] images)...")
+_ASSET_TOKEN_RE   = re.compile(r"\[asset:\s*([^\]\|]+?)\s*(?:\|[^\]]*)?\]", re.IGNORECASE)
+_assets_cfg       = config.get("assets") or {}
+_assets_autofetch = _assets_cfg.get("auto_fetch", True)
+_assets_source    = _assets_cfg.get("source", "openverse")
+PUBLIC_DIR        = PROJECT_DIR / "public"
+CREDITS_FILE      = PROJECT_DIR / "CREDITS.md"
+
+
+def _asset_query(headline: str, body: str) -> str:
+    """Build a concise web-search query from a bullet's description text."""
+    text = f"{headline} {body}".strip()
+    text = _ASSET_TOKEN_RE.sub("", text)        # drop the [asset:] token itself
+    text = re.sub(r"\[[^\]]*\]", "", text)      # drop any other [..] annotations
+    text = re.sub(r"[*_`>#]", "", text)         # strip markdown marks
+    text = re.sub(r"[\"“”'’]", "", text)        # strip quotes
+    text = re.sub(r"\s+", " ", text).strip(" .—–-")
+    return " ".join(text.split()[:10])          # cap length — short queries search better
+
+
+def _append_credit(meta: dict, asset_rel: str) -> None:
+    if not CREDITS_FILE.exists():
+        atomic_write_text(CREDITS_FILE, "# Image Credits\n\n")
+    lic    = meta.get("license") or "unknown"
+    credit = meta.get("attribution") or meta.get("creator") or "unknown"
+    src    = meta.get("source_url") or meta.get("image_url") or ""
+    with CREDITS_FILE.open("a", encoding="utf-8") as f:
+        f.write(f"- **{asset_rel}** — {credit} — {lic} — {src}\n")
+
+
+# Collect every [asset:] reference from the parsed script with its query + locus.
+_asset_refs: list[tuple[str, str, int, int]] = []
+for sc in scenes_raw:
+    for _bi, _b in enumerate(sc.animation):
+        for _m in _ASSET_TOKEN_RE.finditer(f"{_b.headline} {_b.body}"):
+            _rel = re.sub(r"^public/", "", _m.group(1).strip())  # token is path UNDER public/
+            _asset_refs.append((_rel, _asset_query(_b.headline, _b.body), sc.number, _bi + 1))
+
+_assets_present = _assets_fetched = 0
+for _rel, _query, _sc_no, _b_no in _asset_refs:
+    _dest = PUBLIC_DIR / _rel
+    if _dest.exists():
+        _assets_present += 1
+        continue
+    if not _assets_autofetch:
+        print(f"\n[2.6] MISSING asset {_rel!r} (S{_sc_no}B{_b_no}) and assets.auto_fetch is off — aborting.")
+        sys.exit(4)
+    print(f"      fetching {_rel}  (S{_sc_no}B{_b_no})  query={_query!r}  source={_assets_source}")
+    _meta = None
+    try:
+        _meta = fetch_image_one(_query, _dest, source=_assets_source)
+    except Exception as _e:
+        print(f"      [2.6] fetch error for {_rel}: {_e}")
+    if _meta is None or not _dest.exists():
+        _out_dir = PUBLIC_DIR / Path(_rel).parent
+        print(
+            f"\n[2.6] ASSET FAIL: could not source {_rel!r} for S{_sc_no}B{_b_no}.\n"
+            f"      Source one manually, inspect, and keep the best candidate:\n"
+            f"        python storyboard/fetch_images.py --query {_query!r} "
+            f"--out {_out_dir} --name {Path(_rel).stem} --source {_assets_source}\n"
+        )
+        sys.exit(4)
+    _append_credit(_meta, _rel)
+    _assets_fetched += 1
+print(f"      {_assets_present} present, {_assets_fetched} auto-fetched, {len(_asset_refs)} total [asset:] refs")
 
 
 # ─── 3. VISUAL DESIGN (LLM codegen per bullet) ───
@@ -439,7 +563,7 @@ full_ssml      = compile_narration(scenes_raw)
 # (Spec contract: cache by sha256(SSML) was incomplete — voice/rate/pitch were
 # silent invalidation holes that returned stale audio after the user "fixed"
 # config.yaml.)
-_tts_cache_input = f"{VOICE}|{RATE}|{PITCH}|{full_ssml}"
+_tts_cache_input = f"{ENGINE}|{VOICE}|{RATE}|{PITCH}|{LENGTH_SCALE}|{full_ssml}"
 text_hash      = hashlib.sha256(_tts_cache_input.encode()).hexdigest()[:16]
 full_audio     = AUDIO_DIR / FULL_AUDIO_NAME
 hash_marker    = AUDIO_DIR / f".{FULL_AUDIO_NAME}.{text_hash}.hash"
@@ -489,9 +613,9 @@ def _generate_silence_mp3(duration_ms: int, out_path: Path) -> None:
     duration_sec = duration_ms / 1000.0
     subprocess.run(
         ["ffmpeg", "-y", "-f", "lavfi",
-         "-i", "anullsrc=r=24000:cl=mono",
+         "-i", f"anullsrc=r={TTS_SR}:cl=mono",
          "-t", f"{duration_sec:.3f}",
-         "-c:a", "libmp3lame", "-b:a", "48k", "-ar", "24000", "-ac", "1",
+         "-c:a", "libmp3lame", "-b:a", TTS_BR, "-ar", str(TTS_SR), "-ac", "1",
          str(out_path)],
         capture_output=True, check=True,
         creationflags=_NOWIN,
@@ -515,6 +639,24 @@ def _concat_mp3s_lossless(input_paths: list[Path], out_path: Path) -> None:
         )
     finally:
         list_path.unlink(missing_ok=True)
+
+
+def _piper_render_chunk(voice, text, out_path):
+    """Synthesize one text chunk with Piper → mp3 (22050 mono 96k, matches the
+    silence format so lossless -c copy concat doesn't glitch)."""
+    import wave as _wave
+    wav_tmp = out_path.with_suffix(".wav")
+    with _wave.open(str(wav_tmp), "wb") as wf:
+        voice.synthesize_wav(text, wf, syn_config=SynthesisConfig(length_scale=LENGTH_SCALE))
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(wav_tmp),
+         "-c:a", "libmp3lame", "-b:a", "96k", "-ar", "22050", "-ac", "1",
+         str(out_path)],
+        capture_output=True, check=True, creationflags=_NOWIN,
+    )
+    wav_tmp.unlink(missing_ok=True)
+    if not out_path.exists() or out_path.stat().st_size == 0:
+        raise RuntimeError(f"Piper produced 0-byte chunk: {out_path.name}")
 
 
 async def gen_tts():
@@ -554,6 +696,16 @@ async def gen_tts():
     for stale_zero in work_dir.glob("*.mp3"):
         if stale_zero.stat().st_size == 0:
             stale_zero.unlink(missing_ok=True)
+
+    _PIPER_VOICE = None
+    if ENGINE == "piper":
+        if PiperVoice is None:
+            raise RuntimeError("audio.engine=piper but piper-tts not importable (pip install piper-tts)")
+        _mp = Path(PIPER_MODEL)
+        if not _mp.is_absolute() and not _mp.exists():
+            _mp = Path(__file__).resolve().parents[1] / PIPER_MODEL
+        _PIPER_VOICE = PiperVoice.load(str(_mp))
+        print(f"      Piper voice loaded: {_mp.name}")
 
     parts: list[Path] = []
     n_chunks_rendered = 0
@@ -609,6 +761,21 @@ async def gen_tts():
         os.replace(parts[0], full_audio)
     else:
         _concat_mp3s_lossless(parts, full_audio)
+
+    if ENGINE == "piper":
+        # Piper chunks (libmp3lame) + silence don't share byte-identical mp3
+        # frame params, so the -c copy concat above leaves inconsistent frames
+        # → faster_whisper raises "Frame does not match AudioFifo parameters".
+        # Re-encode once to a uniform CBR mono stream so every downstream
+        # consumer (Whisper, ffmpeg mux) reads it cleanly.
+        _norm = full_audio.with_name(full_audio.stem + ".norm.mp3")
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(full_audio),
+             "-c:a", "libmp3lame", "-b:a", "128k", "-ar", str(TTS_SR), "-ac", "1",
+             str(_norm)],
+            capture_output=True, check=True, creationflags=_NOWIN,
+        )
+        os.replace(_norm, full_audio)
 
     # 4. Cleanup work dir + roll hash marker.
     for f in work_dir.glob("*.mp3"):
@@ -670,13 +837,41 @@ print(f"[5/10] Whisper transcribe (cached by audio hash + model + compute_type).
 # quality, gets the lower one.
 _whisper_cache_input = (
     full_audio.read_bytes()
-    + f"|{args.whisper_model}|{WHISPER_COMPUTE_TYPE}".encode()
+    + f"|{args.whisper_model}|{WHISPER_COMPUTE_TYPE}|aligner={WHISPER_ALIGNER}".encode()
 )
 audio_hash = hashlib.sha256(_whisper_cache_input).hexdigest()[:16]
 cache_file = CACHE_DIR / f"transcript-{audio_hash}.json"
 if cache_file.exists():
     all_words = json.loads(cache_file.read_text(encoding="utf-8"))
     print(f"      cached transcript ({len(all_words)} words)")
+elif WHISPER_ALIGNER == "torchaudio":
+    # Forced alignment of the KNOWN narration → tighter word boundaries.
+    # Fallback-safe: any failure reverts to faster_whisper below.
+    all_words = None
+    try:
+        from forced_align import align as _force_align
+        _transcript = " ".join(sc.narration for sc in scenes_raw)
+        all_words = _force_align(str(full_audio), _transcript)
+        cache_file.write_text(json.dumps(all_words, indent=2), encoding="utf-8")
+        print(f"      forced-aligned (torchaudio MMS_FA): {len(all_words)} words")
+    except Exception as e:
+        print(f"      WARNING: torchaudio forced alignment failed ({type(e).__name__}: {e}); "
+              f"falling back to faster_whisper")
+        all_words = None
+    if all_words is None:
+        model = WhisperModel(args.whisper_model, compute_type=WHISPER_COMPUTE_TYPE)
+        segs, _ = model.transcribe(str(full_audio), word_timestamps=True)
+        all_words = []
+        for seg in segs:
+            if seg.words:
+                for w in seg.words:
+                    all_words.append({
+                        "word":  w.word.strip(),
+                        "start": round(w.start, 3),
+                        "end":   round(w.end, 3),
+                    })
+        cache_file.write_text(json.dumps(all_words, indent=2), encoding="utf-8")
+        print(f"      transcribed (whisper fallback): {len(all_words)} words")
 else:
     model = WhisperModel(args.whisper_model, compute_type=WHISPER_COMPUTE_TYPE)
     segs, _ = model.transcribe(str(full_audio), word_timestamps=True)
@@ -1052,13 +1247,51 @@ for i, sc in enumerate(scenes_raw):
     raw_anchors: list[int | None] = []
     anchor_hit_flags: list[bool] = []
     _anchor_search_from: int = 0
-    for vb in visual_blocks:
+    _n_bullets = len(visual_blocks)
+    _scene_word_count = len(scene_words)
+    for _bi, vb in enumerate(visual_blocks):
         f: int | None = None
         if vb.audio_anchor and vb.audio_anchor.strip():
             idx = find_phrase_fuzzy(scene_words, vb.audio_anchor, start_idx=_anchor_search_from)
             if idx >= 0:
-                f = round(scene_words[idx]["start"] * FPS)
-                _anchor_search_from = idx + 1
+                # Drift-plausibility guard (rule 10 Class N+12): tiers 3-4 of the
+                # fuzzy matcher scan the WHOLE rest of the scene by similarity only,
+                # so a loose match can land far from where this bullet belongs and
+                # produce a confident-but-wrong framesFrom (documented +3s drift).
+                # An EXACT match is trustworthy and never rejected. A fuzzy match is
+                # rejected (→ treated as a miss, filled by neighbor interpolation,
+                # which is more reliable than a bad match) only when its word index
+                # is implausibly far past where this bullet should sit.
+                is_exact = (find_phrase(scene_words, vb.audio_anchor, _anchor_search_from) == idx)
+                plausible = True
+                if not is_exact and _n_bullets > 1 and _scene_word_count > 0:
+                    # Expected position: bullets spread across the scene's words.
+                    # Allow a generous band (±50% of the scene span) so only
+                    # egregious outliers are rejected — never the normal case.
+                    expected_idx = (_bi / _n_bullets) * _scene_word_count
+                    band = 0.5 * _scene_word_count
+                    if idx > expected_idx + band:
+                        plausible = False
+                        print(f"      [scene {sc.number}] bullet {_bi+1}: rejected fuzzy anchor "
+                              f"{vb.audio_anchor!r} at word {idx} (expected ~{expected_idx:.0f}, "
+                              f"+{idx-expected_idx:.0f} past band) — interpolating instead "
+                              f"(rule 10 Class N+12)")
+                if plausible:
+                    # Sync-to-meaning: framesFrom depends on the bullet's anchor_mode
+                    # and the anchor word's start/end (rule: appear/through/land).
+                    mode = (getattr(vb, "anchor_mode", "appear") or "appear").lower()
+                    _target = _compress_written_numbers(
+                        [_norm(t) for t in normalize_for_match(vb.audio_anchor).split() if _norm(t)])
+                    _last = min(idx + max(1, len(_target)) - 1, len(scene_words) - 1)
+                    _start_f = round(scene_words[idx]["start"] * FPS)
+                    _end_f = round(scene_words[_last].get("end", scene_words[_last]["start"]) * FPS)
+                    if mode == "land":
+                        f = max(0, _end_f - SYNC_ENTRANCE_FRAMES)
+                    elif mode == "through":
+                        f = _start_f
+                    else:  # appear (default) — small visual lead
+                        f = max(0, _start_f - SYNC_LEAD_FRAMES)
+                    _anchor_search_from = idx + 1
         raw_anchors.append(f)
         anchor_hit_flags.append(f is not None)
 
@@ -1141,6 +1374,7 @@ for i, sc in enumerate(scenes_raw):
             "framesTo": framesTo,
             "code": vb.code,
             "audio_anchor": vb.audio_anchor,
+            "anchor_mode": getattr(vb, "anchor_mode", "appear"),
             "source_headline": vb.source_headline,
         }
         # Surface placeholder flag in scene JSON so validate_output.py can flag
@@ -1461,10 +1695,9 @@ if to_render:
         cwd=str(REMOTION_DIR), env=env,
         creationflags=_NOWIN | _CREATE_NEW_PROCESS_GROUP,
     )
-    try:
-        rc = proc.wait()
-    except KeyboardInterrupt:
-        print(f"\n      Ctrl+C — killing render tree (node + Chromium)...")
+
+    def _kill_render_tree():
+        """Force-kill node + every Chromium it spawned. /T = tree, /F = force."""
         if sys.platform == "win32":
             subprocess.run(
                 ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
@@ -1476,6 +1709,33 @@ if to_render:
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
             pass
+
+    # ── Parent-side render ceiling (rule 10 hang class) ──
+    # render_scenes.mjs has an internal 120s no-frame-progress watchdog, but if node
+    # deadlocks BETWEEN scenes, or the watchdog's cancel() leaves an orphaned Chromium
+    # holding the event loop, the bare proc.wait() would block this session FOREVER.
+    # A wall-clock ceiling guarantees a stuck render is force-killed instead of eating
+    # the whole session. Sized PER SCENE so a legitimately long batch never false-trips;
+    # override with config build.render_timeout_per_scene_s or env RENDER_TIMEOUT_PER_SCENE_S.
+    _per_scene_s = float(
+        os.environ.get("RENDER_TIMEOUT_PER_SCENE_S")
+        or _build_cfg.get("render_timeout_per_scene_s", 900)   # 15 min/scene default — very generous
+    )
+    _render_ceiling_s = max(900.0, _per_scene_s * len(to_render))
+    try:
+        rc = proc.wait(timeout=_render_ceiling_s)
+    except subprocess.TimeoutExpired:
+        print(f"\n      RENDER STUCK — no exit after {_render_ceiling_s/60:.0f} min "
+              f"({len(to_render)} scene(s) @ {_per_scene_s/60:.0f} min ceiling each). "
+              f"Killing render tree (node + Chromium)...")
+        _kill_render_tree()
+        print(f"      tree killed. Completed scenes are kept; re-run to resume the rest.")
+        print(f"      If renders are legitimately slower, raise build.render_timeout_per_scene_s "
+              f"or RENDER_TIMEOUT_PER_SCENE_S.")
+        sys.exit(124)   # convention: 124 = timed out
+    except KeyboardInterrupt:
+        print(f"\n      Ctrl+C — killing render tree (node + Chromium)...")
+        _kill_render_tree()
         print(f"      tree killed; re-run to resume from where it stopped.")
         sys.exit(130)   # POSIX convention: 128 + SIGINT(2) = 130
 
@@ -1704,11 +1964,22 @@ if not _stitch_done_via_master:
     _loudnorm = bool(_stitch_cfg.get("audio_loudnorm", False))
     audio_filter_args = ["-af", "loudnorm=I=-14:TP=-1:LRA=11"] if _loudnorm else []
 
+    # Video codec args: ABR hard-floor if final_bitrate set, else capped-CRF
+    # (quality-targeted with a peak ceiling) so easy content still clears the
+    # rule 23 T4 ≥8 Mbps gate instead of CRF dropping the bitrate too low.
+    if FINAL_BITRATE:
+        _vcodec_args = ["-c:v", "libx264", "-preset", FINAL_PRESET,
+                        "-b:v", str(FINAL_BITRATE),
+                        "-maxrate", FINAL_MAXRATE, "-bufsize", FINAL_BUFSIZE]
+    else:
+        _vcodec_args = ["-c:v", "libx264", "-preset", FINAL_PRESET, "-crf", FINAL_CRF,
+                        "-maxrate", FINAL_MAXRATE, "-bufsize", FINAL_BUFSIZE]
+
     r = subprocess.run(
         ["ffmpeg", "-y", *ffmpeg_inputs,
          "-filter_complex", concat_filter,
          "-map", f"[{out_video_label}]", "-map", f"{n_video}:a:0",
-         "-c:v", "libx264", "-preset", FINAL_PRESET, "-crf", FINAL_CRF,
+         *_vcodec_args,
          "-c:a", "aac", "-b:a", AUDIO_BITRATE, "-pix_fmt", "yuv420p",
          # +faststart moves the moov atom to the front so web players can start
          # playback before the full file is downloaded. Lossless metadata move.
@@ -1867,3 +2138,27 @@ except Exception as _e:
 # Issues are reported but do not fail the build — final mp4 is already produced.
 print()
 validate_output(PROJECT_DIR, extract_frames=False)
+
+# ─── 10.7 PRODUCTION TIME (how long the pipeline took to make the video) ───
+# Wall-clock time for the whole run (TTS + Whisper + align + render + stitch + QA),
+# NOT the video's playback length. Saved so you can track production cost per project
+# and per output minute. In single-scene mode the numbers cover only that scene.
+_build_elapsed_s = time.time() - _BUILD_START_T
+try:
+    _ratio = _build_elapsed_s / total_sec if total_sec else 0.0   # build seconds per output second
+except NameError:
+    _ratio = 0.0
+_h, _rem = divmod(int(_build_elapsed_s), 3600)
+_m, _s = divmod(_rem, 60)
+_hms = (f"{_h}:{_m:02d}:{_s:02d}" if _h else f"{_m}:{_s:02d}")
+print(f"\n-- PRODUCTION TIME: {_hms} ({_build_elapsed_s:.0f}s) to produce "
+      f"{total_sec:.0f}s of video  →  {_ratio:.1f}x realtime")
+atomic_write_text(PROJECT_DIR / "production_time.json", json.dumps({
+    "project":              PROJECT,
+    "build_started":        _BUILD_START_ISO,
+    "build_seconds":        round(_build_elapsed_s, 1),
+    "build_hms":            _hms,
+    "video_seconds":        round(total_sec, 1),
+    "build_per_video_ratio": round(_ratio, 2),
+    "single_scene":         args.scene is not None,
+}, indent=2))

@@ -48,7 +48,7 @@ def _bullet_cache_key(scene, bullet_idx: int, design_tokens: dict) -> str:
     means the cache file lands at a hash visual_designer.py won't look up,
     causing CacheMissError at build time (rule 04). Both functions hash the
     same fields in the same order with the same prompt-version constant
-    (b'prompt-v13-per-bullet'); the preflight test asserts this stays in sync."""
+    (b'prompt-v14-per-bullet'); the preflight test asserts this stays in sync."""
     h = hashlib.sha256()
     b = scene.animation[bullet_idx]
     h.update(scene.narration.encode("utf-8"))
@@ -80,7 +80,7 @@ def _load_script(script_path: Path):
 
 
 def seed_one(script, design_tokens: dict, scene_num: int, bullet_idx_1based: int,
-             code: str, anchor: str) -> Path:
+             code: str, anchor: str, anchor_mode: str = "appear") -> Path:
     """Write one cache file. Returns the path."""
     scene = next((s for s in script.scenes if s.number == scene_num), None)
     if scene is None:
@@ -98,9 +98,13 @@ def seed_one(script, design_tokens: dict, scene_num: int, bullet_idx_1based: int
     # Wipe any stale entries for this bullet (different hash from prior content)
     for old in CACHE_DIR.glob(f"bullet-s{scene_num}-b{bullet_idx + 1}-*.json"):
         old.unlink()
+    _mode = str(anchor_mode or "appear").strip().lower()
+    if _mode not in ("appear", "through", "land"):
+        raise ValueError(f"anchor_mode must be appear/through/land, got {anchor_mode!r}")
     payload = {
         "code": code,
         "audio_anchor": anchor,
+        "anchor_mode": _mode,
         "source_headline": bullet.headline,
     }
     cache_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -116,6 +120,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--scene", type=int, help="Scene number (1-based) — for single-bullet mode")
     ap.add_argument("--bullet", type=int, help="Bullet index (1-based) — for single-bullet mode")
     ap.add_argument("--anchor", help="audio_anchor phrase (2-4 verbatim words from narration)")
+    ap.add_argument("--anchor-mode", default="appear", choices=["appear", "through", "land"],
+                    help="sync-to-meaning mode: appear (word_start) | through (start→end) | land (word_end)")
     ap.add_argument("--code-file", help="Path to file containing the React.createElement code body")
     ap.add_argument("--json", help="Path to a JSON bundle of bullets (preferred for batch).")
     args = ap.parse_args(argv)
@@ -141,7 +147,8 @@ def main(argv: list[str] | None = None) -> int:
                     raise ValueError(f"bundle[{i}] missing key '{k}' (entry: {entry!r})")
             path = seed_one(script, design_tokens,
                             entry["scene"], entry["bullet"],
-                            entry["code"], entry["anchor"])
+                            entry["code"], entry["anchor"],
+                            entry.get("anchor_mode", "appear"))
             print(f"  ✓ scene {entry['scene']} bullet {entry['bullet']} → {path.name}")
         print(f"\nseeded {len(bundle)} bullet cache file(s) under {CACHE_DIR.relative_to(ROOT)}")
         return 0
@@ -153,7 +160,8 @@ def main(argv: list[str] | None = None) -> int:
     project_dir = ROOT / "projects" / Path(args.script_path).stem
     design_tokens = _load_design_tokens(project_dir)
     code = Path(args.code_file).read_text(encoding="utf-8")
-    path = seed_one(script, design_tokens, args.scene, args.bullet, code, args.anchor)
+    path = seed_one(script, design_tokens, args.scene, args.bullet, code, args.anchor,
+                    args.anchor_mode)
     print(f"seeded {path.relative_to(ROOT)}")
     return 0
 

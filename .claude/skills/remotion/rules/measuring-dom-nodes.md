@@ -2,7 +2,12 @@
 name: measuring-dom-nodes
 description: Measuring DOM element dimensions in Remotion
 metadata:
-  tags: measure, layout, dimensions, getBoundingClientRect, scale
+  tags:
+    - measure
+    - layout
+    - dimensions
+    - getBoundingClientRect
+    - scale
 ---
 
 # Measuring DOM nodes in Remotion

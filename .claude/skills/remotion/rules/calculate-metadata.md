@@ -2,7 +2,12 @@
 name: calculate-metadata
 description: Dynamically set composition duration, dimensions, and props
 metadata:
-  tags: calculateMetadata, duration, dimensions, props, dynamic
+  tags:
+    - calculateMetadata
+    - duration
+    - dimensions
+    - props
+    - dynamic
 ---
 
 # Using calculateMetadata

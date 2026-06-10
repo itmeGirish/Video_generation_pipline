@@ -2,7 +2,14 @@
 name: images
 description: Embedding images in Remotion using the <Img> component
 metadata:
-  tags: images, img, staticFile, png, jpg, svg, webp
+  tags:
+    - images
+    - img
+    - staticFile
+    - png
+    - jpg
+    - svg
+    - webp
 ---
 
 # Using images in Remotion

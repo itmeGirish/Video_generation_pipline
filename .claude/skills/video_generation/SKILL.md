@@ -1,8 +1,10 @@
 ---
-name: video_generation
-description: Complete pipeline for creating production YouTube explainer videos from a structured script. Per-bullet React code is authored in-session and seeded into cache; build does cache lookup → TTS → Whisper → render → stitch. Never spawns the claude CLI.
+name: video-builder
+description: "Complete pipeline for creating production YouTube explainer videos from a structured script. Per-bullet React code is authored in-session and seeded into cache; build does cache lookup to TTS to Whisper to render to stitch. Never spawns the claude CLI. Use this skill whenever: rendering a script, building a video, running the pipeline, generating the mp4, diagnosing pipeline failures, fixing broken bullets, seeding the bullet cache, running post-render QA, or any request like "render my script," "build the video," "run the pipeline," "make the video," "I have a script ready," "start video production," or "seed the cache.""
 when_to_use: Use when a structured script at projects/structured_scripts/<name>.txt is ready and you need to render it into a final mp4. Also use when diagnosing pipeline failures, fixing broken bullets, improving narration quality, or running post-render QA.
 ---
+
+# Video Generation Pipeline
 
 ## NO CLAUDE CLI SUBPROCESS — ARCHITECTURAL INVARIANT
 
@@ -23,11 +25,32 @@ authoring keeps context loaded once for the whole script.
 **Workflow when a script arrives:**
 1. Hand-convert raw → structured (rule 18)
 2. Build `config.yaml` from the structured comment blocks (rule 00 §2)
-3. **READ rule 21 (visual-map) BEFORE authoring any bullet code.** For each bullet:
+3. **READ rule 21 (visual-map) AND the `remotion` skill BEFORE authoring any bullet
+   code.** Bullet code is real Remotion — the `remotion` skill is the source of truth
+   for how every primitive must behave (read the rule for the primitive you pick:
+   `animations.md` + `timing.md` for any motion, `sequencing.md` for staggers,
+   `text-animations.md` for text effects, `transitions.md` for scene transitions,
+   `measuring-text.md` for overflow, `images.md` for `<Img>`). Authoring against it is
+   what prevents the rule-23 Layer 1/1.5 failures. For each bullet:
    - Answer Q1: what must the viewer understand?
    - Answer Q2: what is the simplest visual that proves it?
    - Pick the canonical pattern from rule 21's content-type map
-   - No brand names, no chaotic animations, citations for all stats
+   - Pick the matching `remotion` rule for that pattern's motion/text/image primitive
+   - **Decide: coded vector OR real image?** If a real photo / logo / screenshot
+     would land harder than drawn shapes (a *real* data center, *this* company's
+     logo), reference it as `[asset: img/<name>.jpg]` in the bullet body and author
+     the `<Img>` composite (frame + legibility overlay + **cinematic motion** —
+     Ken Burns zoom / push-in / logo pop, rule 17; static images fail the A4 freeze
+     gate). **The pipeline auto-sources missing `[asset:]` images** at build
+     **Step 2.6** from the bullet description (license-safe Openverse default,
+     records `CREDITS.md`) — so for generic concept photos you can just reference
+     and let the build fetch. For images where the *wrong* one is costly (a named
+     company logo, a specific screenshot/chart), pre-place it by hand FIRST via
+     **rule 17** (`storyboard/fetch_images.py` → inspect with the Read tool → keep
+     best in `projects/<name>/public/`); Step 2.6 leaves existing files untouched.
+     Real brand logos are fine in editorial context; never fake a brand mark in
+     vector code. Record attribution → `CREDITS.md`.
+   - No chaotic animations, citations for all stats
 4. Write a JSON bundle and call `python storyboard/seed_bullet_cache.py <script_path> --json bundle.json`
 5. Run `python storyboard/build_video.py <script_path>` — 100% cache hits expected; pipeline
    flows through TTS → Whisper → align → render → stitch with zero token cost
@@ -178,14 +201,47 @@ The rules exist because each one documents a real bug already hit in production.
 ## When to use
 
 Use this skill whenever:
-- A new source script + animations is given → **read `rules/00-when-script-received.md` FIRST**
+- A new source script + animations is given → **invoke the `vg-when-script-received` skill FIRST**
 - The pipeline breaks and you need to diagnose the step that failed
 - Narration quality needs improvement (flat/monotone)
 - A bullet's rendered output is wrong or empty
 
 ## How to use
 
-**When a script is given: always start with rule 00.**
+**When a script is given: always start by invoking `vg-when-script-received`.**
+
+### MANDATORY — invoke each phase's skill (never work from memory)
+
+This pipeline is a plugin: every phase is its own skill. **Before doing a phase, INVOKE its
+skill with the Skill tool** (active load, not a skim). Working from memory is exactly how the
+per-scene verify loop, the asset rules, and the known-bug defenses get skipped. The contract:
+
+| Phase | Invoke (Skill tool) |
+|---|---|
+| Script just arrived | `vg-when-script-received` (START HERE) |
+| Convert raw → canonical | `vg-rich-script-conversion` (+ `vg-script-conversion`) |
+| From the script-writer output | `vg-script-gen-integration` |
+| Parse / canonical format | `vg-source-script-format` |
+| Per-bullet authoring | `vg-visual-map` + `vg-visual-designer` + `vg-layout-quality-gate` (+ `vg-graphics-assets` for assets) + the `remotion` skill |
+| **Write the bullet CODE right the first time** (author-time code recipes) | **`vg-render-code`** → `vg-code-animations` · `vg-code-timing` · `vg-code-sequencing` · `vg-code-transitions` · `vg-code-text` · `vg-code-images` · `vg-code-tokens` · `vg-code-vchecks` — copy-paste code patterns per factor, READ BEFORE writing. The same 8 factors are checked after render by `vg-quality-*` via `vg-visual-quality`. |
+| SSML narration | `vg-ssml-narration` |
+| audio_anchor sync | `vg-narration-alignment` |
+| **Per-scene RENDER→VERIFY→FIX loop (MANDATORY)** | `vg-when-script-received` §Step 4 + `vg-verification-protocol` (broken?) → **`vg-visual-quality`** (production-grade? — runs the 8 `vg-quality-*` factor gates) → audio-sync check |
+| Production-quality scorecard (per scene) | **`vg-visual-quality`** → `vg-quality-animations` · `vg-quality-timing` · `vg-quality-sequencing` · `vg-quality-transitions` · `vg-quality-text-fit` · `vg-quality-images` · `vg-quality-tokens` · `vg-quality-vchecks` |
+| Visual QA (coverage) | `vg-output-validation` |
+| Stitch / transitions | `vg-scene-transitions` |
+| YouTube upload gate | `vg-verification-protocol` (Layer 3) + `vg-youtube-validation` |
+| About to edit `storyboard/*.py` | `vg-known-bugs` |
+| Debugging build/render failure | `vg-pipeline-internals` |
+| Validator flagged an error | `vg-rerun-after-correction` |
+| Output feels flat / generic | `vg-narration-clarity` |
+| Runtime / duration question | `vg-video-duration` |
+| Architecture overview | `vg-pipeline-architecture` |
+| Commands / config.yaml | `vg-build-and-run` |
+
+**Rule: if you reach a phase without having invoked its skill this session, STOP and invoke it
+first.** The per-scene verify loop (`vg-verification-protocol`) is the one most often skipped
+under time pressure — it is non-negotiable.
 
 ### Pipeline-step → which rule(s) to read
 
@@ -201,14 +257,17 @@ follows below.)
 | **Step 0.5** — auto-convert minor format drift | 14 | Regex normalizer (LLM fallback REMOVED — see rule 18 if regex fails) |
 | **Step 0.5** — convert rich script (frames, sub-scenes, preamble) | 18 | Mandatory hand-conversion checklist |
 | **Step 1** — parse | 01 | Canonical format the parser eats |
-| **Step 2** — per-bullet authoring (in-session, no subprocess) | 04 + 19 + (17 if assets) | Bindings, fidelity gates, layout discipline, asset references. Author here, seed via `seed_bullet_cache.py`. |
+| **Step 2** — per-bullet authoring (in-session, no subprocess) | 21 + 04 + 19 + **remotion skill (esp. `video-generation-conventions.md`)** + (17 if assets) | Pick the visual (21), author against the matching `remotion` rule + the project convention file (design tokens, layout discipline, motion/freeze prevention, reserved bindings, V-checks). Author here, seed via `seed_bullet_cache.py`. |
 | **Step 2** — bullet has video asset (`.mp4`, `.webm`) | 17 + remotion/can-decode | Run `canDecode` before authoring the bullet; H.264/mp4 safe, AV1/HEVC may fail silently |
+| **Step 2** — bullet needs a REAL image (photo, logo, screenshot) from the web | 17 | Fetch license-safe via `storyboard/fetch_images.py` → inspect → place in `public/` → `[asset:]`. Monetized = CC/PD/editorial only, record attribution. |
+| **Step 2.6** — missing `[asset:]` at build time (auto-fetch) | 17 | `build_video.py` auto-sources any missing `[asset:]` from the bullet description (Openverse default), records `CREDITS.md`, else HARD-FAILS with the manual command. Pre-place images where the wrong one is costly. Knobs: `assets.auto_fetch`, `assets.source`. |
 | **Step 3** — SSML compile | 05 | Prosody knobs, `<pause Xs>` markers |
 | **Step 7** — audio_anchor lookup | 08 | How visuals lock to spoken words |
+| **Step 4 — per-scene RENDER → VERIFY → FIX loop (MANDATORY)** | **00 (§Step 4) + 23** | **One scene at a time. NEVER render scene N+1 until scene N passes rule 23 all four layers. Hard-won discipline — short-circuit = wasted renders. See rule 00 Step 4 for full loop spec.** |
 | **Step 9.5** — visual QA | 12 | Coverage thresholds + post-render checks |
-| **Step 10** — stitch + within-block stagger | 09 | Backdrop fade, stitch mode, in-code cross-fade pattern |
+| **Step 10** — stitch + within-block stagger (ONLY after ALL scenes pass loop) | 09 | Backdrop fade, stitch mode, in-code cross-fade pattern |
 | **Step 10.5** — output validation | 12 | Same rule as 9.5 |
-| **Step 11** — YouTube upload standards | 22 | Resolution, codec, bitrate, audio, captions, thumbnail, chapters |
+| **Step 11** — YouTube upload standards | 23 (Layer 3); 22 for the "why" | T1–T12 technical gate lives in rule 23 Layer 3; rule 22 points there + lists YouTube's consequences for non-compliance |
 | **Cross-cutting** — verifying rendered scenes (visual, animation, audio, YouTube upload) | 23 | V1–V8 frame inspection, filmstrip A1–A8, freeze detection, PSNR, audio WPM/coverage, YouTube T1–T12 gate |
 | **Cross-cutting** — commands, flags, config | 06 | CLI + config.yaml |
 | **Cross-cutting** — full architecture | 02 | One-page overview |
@@ -216,30 +275,32 @@ follows below.)
 | **Cross-cutting** — debugging build/render failure | 11 | Bundle-once, mirror sync, cache invalidation |
 | **Cross-cutting** — validator flagged an error | 13 | Cookbook → which file, which flag |
 | **Cross-cutting** — output feels generic / flat | 15 | Quality bar levers |
+| **Cross-cutting** — how long is the video / runtime / will it hit target length | 25 | Exact from `build_timing.json` after build; estimate from word count @160 WPM before |
 
 Read rule files for each concern:
 
-- [rules/00-when-script-received.md](rules/00-when-script-received.md) — **START HERE** — exact 6-step flow when a script + animation is given
-- [rules/01-source-script-format.md](rules/01-source-script-format.md) — The exact `.txt` script format: SCENE headers, Narration, Animation bullets
-- [rules/02-pipeline-architecture.md](rules/02-pipeline-architecture.md) — End-to-end steps: parse → per-bullet codegen → SSML → TTS → Whisper → render → stitch
-- [rules/04-visual-designer.md](rules/04-visual-designer.md) — Per-bullet codegen: LLM emits React.createElement code that DynamicBlock compiles + invokes at runtime
-- [rules/05-ssml-narration.md](rules/05-ssml-narration.md) — How to write SSML for dramatic, non-flat narration
-- [rules/06-build-and-run.md](rules/06-build-and-run.md) — Commands to run the pipeline, config.yaml format (including optional build/stitch/whisper/narration sections), output locations
-- [rules/08-narration-alignment.md](rules/08-narration-alignment.md) — audio_anchor mechanism: how visuals lock to actual spoken words; uses round() not int() for s→frames
-- [rules/09-scene-transitions.md](rules/09-scene-transitions.md) — Backdrop fade, primitive sequencing, stitch mode (hard_cut vs crossfade)
-- [rules/10-known-bugs-and-prevention.md](rules/10-known-bugs-and-prevention.md) — Post-mortem of every bug class hit so far + the structural defenses that now prevent each one.
-- [rules/11-pipeline-internals.md](rules/11-pipeline-internals.md) — How JSONs reach renderer, how config propagates, bundle-once pattern, cache invalidation cheat sheet (now per-bullet). **Read when debugging build/render failures.**
-- [rules/12-output-validation.md](rules/12-output-validation.md) — Verify the rendered video actually contains every narration word and every animation bullet. Frame extraction for human / vision-model QA.
-- [rules/13-rerun-after-correction.md](rules/13-rerun-after-correction.md) — **Cookbook.** When a validator flags an error: which file to edit, which cache to invalidate, the exact re-run command. Decision tree included.
-- [rules/14-script-conversion.md](rules/14-script-conversion.md) — How any-format `projects/scripts/*.txt` is auto-converted to canonical `projects/structured_scripts/*.txt` before parsing. Two-stage: regex (fast, free) → LLM fallback (robust). The structured_scripts folder is the parser's single source of truth — never edit by hand.
-- [rules/15-narration-and-clarity.md](rules/15-narration-and-clarity.md) — **Quality bar.** Read when output feels flat or visuals feel generic. Four levers: TTS (edge-tts ignores SSML — use ElevenLabs/Azure for drama), designer prompt (CLARITY > CLEVERNESS), audio_anchor sync, and pacing (8-12 bullets per 60s scene).
-- [rules/16-script-writing-prompt.md](rules/16-script-writing-prompt.md) — **Copy-paste prompt** for writing a new `source.txt` script the pipeline can render with high fidelity. Use when starting a new video. Includes primitive list, format rules, and good/bad examples.
-- [rules/17-graphics-and-assets.md](rules/17-graphics-and-assets.md) — **Use your own graphics.** How to drop logos/screenshots/diagrams/SVGs into `projects/<name>/public/` and reference them from animation bullets via `[asset: filename.png]`. The per-bullet LLM emits `<Img src={staticFile('...')} />` directly — both bindings are wired into `DynamicBlock` (rule 04 bindings table).
-- [rules/18-rich-script-conversion.md](rules/18-rich-script-conversion.md) — **MANDATORY first step when a raw script is given.** Read raw `projects/scripts/<name>.txt` → apply the 9-step conversion checklist → write canonical output to `projects/structured_scripts/<name>.txt`. Covers everything `script_converter.py` does NOT handle (frame timing, `### VO:`, sub-scenes, design-token preambles, bespoke metaphors). Includes the bespoke-visual handling guidance and the bullet density target. Canonical store is `projects/structured_scripts/` — never write conversion output anywhere else.
-- [rules/19-layout-and-quality-gate.md](rules/19-layout-and-quality-gate.md) — Canvas-utilization minima, phase-timing idiom (`durationInFrames * 0.3/0.6/0.9`), spring-preset → intent map, proportional typography sizing, common LLM-emitted-code failure modes, and the pre-render checklist. Read when bullet visuals look small/empty, when elements clip, or before shipping a render.
-- [rules/20-script-generation-integration.md](rules/20-script-generation-integration.md) — How `.claude/script_generation/` (the YouTube script-writer skill) feeds the pipeline via `storyboard/script_gen_to_raw.py`. Two-step bridge — generate, then convert — with no changes to the existing parser/build code.
-- [rules/22-youtube-output-validation.md](rules/22-youtube-output-validation.md) — **Final YouTube upload standards check.** 10 checks via `ffprobe`: resolution (1920×1080), frame rate (30fps), video codec (H.264), video bitrate (≥8 Mbps), audio (AAC stereo 192kbps), duration consistency, no black frames, captions (SRT), thumbnail (1280×720), chapter timestamps. Run after rule 12 passes. FAIL = do not upload.
-- [rules/23-verification-protocol.md](rules/23-verification-protocol.md) — **4-layer YouTube production quality gate.** Layer 1: V1–V8 visual inspection (canvas utilization, typography, muted-viewer walkthrough). Layer 1.5: animation filmstrip A1–A8 (5-frame filmstrip, freeze detection, PSNR motion check, REPLACE transition check). Layer 2: audio quality (WPM, AAC specs, narration coverage, 4 quality levers). Layer 3: YouTube T1–T12 technical gate. Run after every render before advancing to next scene.
+- [../vg-when-script-received/SKILL.md](../vg-when-script-received/SKILL.md) — **START HERE** — exact 6-step flow when a script + animation is given
+- [../vg-source-script-format/SKILL.md](../vg-source-script-format/SKILL.md) — The exact `.txt` script format: SCENE headers, Narration, Animation bullets
+- [../vg-pipeline-architecture/SKILL.md](../vg-pipeline-architecture/SKILL.md) — End-to-end steps: parse → per-bullet codegen → SSML → TTS → Whisper → render → stitch
+- [../vg-visual-designer/SKILL.md](../vg-visual-designer/SKILL.md) — Per-bullet codegen: LLM emits React.createElement code that DynamicBlock compiles + invokes at runtime
+- [../vg-ssml-narration/SKILL.md](../vg-ssml-narration/SKILL.md) — How to write SSML for dramatic, non-flat narration
+- [../vg-build-and-run/SKILL.md](../vg-build-and-run/SKILL.md) — Commands to run the pipeline, config.yaml format (including optional build/stitch/whisper/narration sections), output locations
+- [../vg-narration-alignment/SKILL.md](../vg-narration-alignment/SKILL.md) — audio_anchor mechanism: how visuals lock to actual spoken words; uses round() not int() for s→frames
+- [../vg-scene-transitions/SKILL.md](../vg-scene-transitions/SKILL.md) — Backdrop fade, primitive sequencing, stitch mode (hard_cut vs crossfade)
+- [../vg-known-bugs/SKILL.md](../vg-known-bugs/SKILL.md) — Post-mortem of every bug class hit so far + the structural defenses that now prevent each one.
+- [../vg-pipeline-internals/SKILL.md](../vg-pipeline-internals/SKILL.md) — How JSONs reach renderer, how config propagates, bundle-once pattern, cache invalidation cheat sheet (now per-bullet). **Read when debugging build/render failures.**
+- [../vg-output-validation/SKILL.md](../vg-output-validation/SKILL.md) — Verify the rendered video actually contains every narration word and every animation bullet. Frame extraction for human / vision-model QA.
+- [../vg-rerun-after-correction/SKILL.md](../vg-rerun-after-correction/SKILL.md) — **Cookbook.** When a validator flags an error: which file to edit, which cache to invalidate, the exact re-run command. Decision tree included.
+- [../vg-script-conversion/SKILL.md](../vg-script-conversion/SKILL.md) — How any-format `projects/scripts/*.txt` is auto-converted to canonical `projects/structured_scripts/*.txt` before parsing. Two-stage: regex (fast, free) → LLM fallback (robust). The structured_scripts folder is the parser's single source of truth — never edit by hand.
+- [../vg-narration-clarity/SKILL.md](../vg-narration-clarity/SKILL.md) — **Quality bar.** Read when output feels flat or visuals feel generic. Four levers: TTS (edge-tts ignores SSML — use ElevenLabs/Azure for drama), designer prompt (CLARITY > CLEVERNESS), audio_anchor sync, and pacing (8-12 bullets per 60s scene).
+- [../vg-script-writing-prompt/SKILL.md](../vg-script-writing-prompt/SKILL.md) — **Copy-paste prompt** for writing a new `source.txt` script the pipeline can render with high fidelity. Use when starting a new video. Includes primitive list, format rules, and good/bad examples.
+- [../vg-graphics-assets/SKILL.md](../vg-graphics-assets/SKILL.md) — **Use your own graphics.** How to drop logos/screenshots/diagrams/SVGs into `projects/<name>/public/` and reference them from animation bullets via `[asset: filename.png]`. The per-bullet LLM emits `<Img src={staticFile('...')} />` directly — both bindings are wired into `DynamicBlock` (rule 04 bindings table).
+- [../vg-rich-script-conversion/SKILL.md](../vg-rich-script-conversion/SKILL.md) — **MANDATORY first step when a raw script is given.** Read raw `projects/scripts/<name>.txt` → apply the 9-step conversion checklist → write canonical output to `projects/structured_scripts/<name>.txt`. Covers everything `script_converter.py` does NOT handle (frame timing, `### VO:`, sub-scenes, design-token preambles, bespoke metaphors). Includes the bespoke-visual handling guidance and the bullet density target. Canonical store is `projects/structured_scripts/` — never write conversion output anywhere else.
+- [../vg-layout-quality-gate/SKILL.md](../vg-layout-quality-gate/SKILL.md) — Canvas-utilization minima, phase-timing idiom (`durationInFrames * 0.3/0.6/0.9`), spring-preset → intent map, proportional typography sizing, common LLM-emitted-code failure modes, and the pre-render checklist. Read when bullet visuals look small/empty, when elements clip, or before shipping a render.
+- [../vg-script-gen-integration/SKILL.md](../vg-script-gen-integration/SKILL.md) — How `.claude/script_generation/` (the YouTube script-writer skill) feeds the pipeline via `storyboard/script_gen_to_raw.py`. Two-step bridge — generate, then convert — with no changes to the existing parser/build code.
+- [../vg-youtube-validation/SKILL.md](../vg-youtube-validation/SKILL.md) — **Pointer to the YouTube technical gate** (which lives in rule 23 Layer 3, T1–T12) plus the consequence table for *why* each check matters (what YouTube does to non-compliant videos). Run the actual gate from rule 23 after rule 12 passes. FAIL = do not upload.
+- [../vg-verification-protocol/SKILL.md](../vg-verification-protocol/SKILL.md) — **4-layer YouTube production quality gate.** Layer 1: V1–V8 visual inspection (canvas utilization, typography, muted-viewer walkthrough). Layer 1.5: animation filmstrip A1–A8 (5-frame filmstrip, freeze detection, PSNR motion check, REPLACE transition check). Layer 2: audio quality (WPM, AAC specs, narration coverage, 4 quality levers). Layer 3: YouTube T1–T12 technical gate. Run after every render before advancing to next scene.
+- [../vg-video-duration/SKILL.md](../vg-video-duration/SKILL.md) — **How long is the final video.** Exact runtime from `projects/<name>/build_timing.json` (`total_sec`, `total_frames`, per-scene `durationFrames`) after a build; pre-build estimate from narration word count at ~160 WPM + `<pause Xs>` seconds (±10%, validated). Per-scene breakdown for length budgeting. Never quote the script's `(M:SS)` headers as final.
 
 ## Dependency on remotion skill
 
@@ -256,8 +317,10 @@ This skill depends on `.claude/skills/remotion/`. Read it in these situations:
 Rules NOT used by this pipeline (do not be misled by skill index):
 - `rules/audio.md` — audio is muxed externally via ffmpeg in `build_video.py`,
   never inside primitives. No primitive uses Remotion's audio components.
-- `rules/display-captions.md` — captions come from our own `VideoCaptions`
-  component reading Whisper word timestamps; not Remotion's `@remotion/captions`.
+- `rules/display-captions.md` — burned-in captions are disabled for this
+  pipeline; the final mp4 ships with a separate `.srt` sidecar for YouTube to
+  serve as toggleable subtitles. Whisper word timestamps are still used, but
+  only for `audio_anchor` → frame alignment, never for visual rendering.
 - `rules/extract-frames.md` — uses Mediabunny browser canvas API for runtime
   frame extraction. Our `visual_qa.py` and `validate_output.py` extract from
   finished mp4 in Python via ffmpeg. ffmpeg is correct; do NOT migrate.
@@ -289,7 +352,7 @@ every script. But when Claude writes a `.tsx` file, it MUST read the remotion sk
      `claude` CLI from anywhere in `storyboard/`.
    - Authored code + `audio_anchor` is written to `storyboard/.cache/designs/bullet-sN-bM-<hash>.json`
      via `python storyboard/seed_bullet_cache.py <script_path> --json bundle.json`.
-   - Cache key = `sha256(narration + bullet_idx + headline + body + design_tokens + 'prompt-v13-per-bullet')[:16]`.
+   - Cache key = `sha256(narration + bullet_idx + headline + body + design_tokens + 'prompt-v14-per-bullet')[:16]`.
      `seed_bullet_cache.py` and `visual_designer._bullet_cache_key` use the SAME constant —
      drift between them = cache miss. Preflight test asserts the version tag matches.
    - Cache miss = hard error pointing at the bullet body and the seed command. No placeholder
@@ -418,9 +481,9 @@ python -m storyboard.test_pipeline_fixes
 python -m pytest storyboard/test_audit_fixes.py -v
 ```
 
-Expected: `PASS: N    FAIL: 0` for the first command; `41 passed` for the
-second. Any failure means a fix in rule 10 has regressed — read the matching
-test for the exact assertion and `rules/10-known-bugs-and-prevention.md` for
+Expected: `PASS: N    FAIL: 0` for the first command; `43 passed` for the
+second (40 audit + V12 text-only + A4 freeze regression tests). Any failure means a fix in rule 10 has regressed — read the matching
+test for the exact assertion and `../vg-known-bugs/SKILL.md` for
 the bug class behind it.
 
 **Single-command run (both suites under pytest):**

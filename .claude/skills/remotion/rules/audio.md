@@ -2,7 +2,17 @@
 name: audio
 description: Using audio and sound in Remotion - importing, trimming, volume, speed, pitch
 metadata:
-  tags: audio, media, trim, volume, speed, loop, pitch, mute, sound, sfx
+  tags:
+    - audio
+    - media
+    - trim
+    - volume
+    - speed
+    - loop
+    - pitch
+    - mute
+    - sound
+    - sfx
 ---
 
 # Using audio in Remotion

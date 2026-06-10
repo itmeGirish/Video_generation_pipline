@@ -2,7 +2,12 @@
 name: assets
 description: Importing images, videos, audio, and fonts into Remotion
 metadata:
-  tags: assets, staticFile, images, fonts, public
+  tags:
+    - assets
+    - staticFile
+    - images
+    - fonts
+    - public
 ---
 
 # Importing assets in Remotion

@@ -2,7 +2,13 @@
 name: measuring-text
 description: Measuring text dimensions, fitting text to containers, and checking overflow
 metadata:
-  tags: measure, text, layout, dimensions, fitText, fillTextBox
+  tags:
+    - measure
+    - text
+    - layout
+    - dimensions
+    - fitText
+    - fillTextBox
 ---
 
 # Measuring text in Remotion

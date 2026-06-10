@@ -2,7 +2,12 @@
 name: transitions
 description: Fullscreen scene transitions for Remotion.
 metadata:
-  tags: transitions, fade, slide, wipe, scenes
+  tags:
+    - transitions
+    - fade
+    - slide
+    - wipe
+    - scenes
 ---
 
 ## Fullscreen transitions

@@ -17,6 +17,34 @@ with cinematic narration and animation bullets, ready for `build_video.py` to re
 
 ---
 
+## MANDATORY — load each step's skill (never work from memory)
+
+This is a plugin: every step below is its own skill. **Before doing a step's work, INVOKE
+that step's skill with the Skill tool** — that loads its full rules as an active skill, not
+just a file you skimmed. Working from memory is exactly how rules get skipped (hook, retention,
+human-review, and critique passes are the ones most often dropped). The contract:
+
+| Step | Invoke this skill (Skill tool) |
+|---|---|
+| 3 — Pre-production strategy | `script-youtube-strategy` |
+| 4 — Research | `script-research` |
+| 5 — Scene structure | `script-scene-structure` |
+| 5.5 — Story layer | `script-storytelling` |
+| 6 — Narration | `script-narration` |
+| 6 — Animation bullets | `script-animation-bullets` |
+| 7a — Animation validator (broken?) | `script-animation-validator` |
+| 7a2 — Narration-visual sync (good?) | `script-narration-visual-sync` |
+| 7b — Technical validator | `script-validator` (and `script-format-validation`) |
+| 7c — Retention engineering | `script-retention-engineering` |
+| 7d — Human review | `script-human-review` |
+| 7e — Content quality gate | `script-content-quality` |
+| 7f — Critique / rebuild | `script-critique-improve` |
+
+**Rule: if you arrive at a step without having invoked its skill this session, STOP and invoke
+it first.** Do not paraphrase a step's rules from memory — load the skill and follow it.
+
+---
+
 ## Workflow
 
 ### Step 1 — Check preferences
@@ -53,7 +81,7 @@ python3 .claude/skills/script_generation/scripts/script_db.py save_preferences '
 
 ---
 
-### Step 3 — Pre-production strategy (read rules/07-youtube-strategy.md)
+### Step 3 — Pre-production strategy → first **invoke the `script-youtube-strategy` skill**
 
 Before researching or writing, establish the 5 strategic foundations:
 
@@ -67,7 +95,7 @@ Do not proceed until all 5 are written out. A weak strategy = weak video regardl
 
 ---
 
-### Step 4 — Research the topic
+### Step 4 — Research the topic → first **invoke the `script-research` skill**
 
 **Before writing a single word of script**, use WebSearch to find:
 
@@ -93,7 +121,7 @@ Contrast: [before vs after or entity A vs entity B]
 
 ---
 
-### Step 5 — Design the scene structure
+### Step 5 — Design the scene structure → first **invoke the `script-scene-structure` skill**
 
 Map the video into scenes. Write the scene list, then proceed directly to Step 6 — no confirmation needed.
 
@@ -119,7 +147,7 @@ One idea per scene. If a scene title needs "and" — split it into two scenes.
 
 ---
 
-### Step 5.5 — Layer the story (read rules/01b-storytelling.md)
+### Step 5.5 — Layer the story → first **invoke the `script-storytelling` skill**
 
 Before writing narration, turn the scene list from a list of facts into a STORY. Apply a
 narrative spine (hook/build/payoff or the story spine), connect scenes with "because of
@@ -128,53 +156,58 @@ with the viewer as the hero. A story is far more memorable and watchable than a 
 
 ---
 
-### Step 6 — Write each scene
+### Step 6 — Write each scene (PAIR-BLOCK: narration + visual coupled per beat)
 
-For each scene, write in this order: **narration first, then animation bullets.**
+Author each scene in **pair-block format** — every beat couples its narration sentence(s)
+with the visual that depicts them and the anchor that fires it, all in one bullet. This is
+the preferred format: it **eliminates narration↔animation sync drift**, because the anchor
+must come from the bullet's OWN narration (no second block to keep in sync). The parser
+auto-detects it (a scene with no `### Animation` header) and reassembles the full narration
+by concatenating each bullet's `>` lines in order — TTS/Whisper/render run identically.
 
-#### 5a — Narration (apply user's tone and style preferences)
-
-Write narration that matches the user's style preference AND follows pipeline sync rules:
-
-**Narration format:**
+**Pair-block format (preferred):**
 ```
-### Narration
-> First sentence. <pause 0.3s>
-> Second sentence with the hero word. <pause 0.5s>
-> Third sentence.
+## SCENE N — "Title" (M:SS – M:SS)
+- **M:SS – M:SS — [REPLACE if applicable] Headline.**
+  > The narration sentence(s) for THIS beat. <pause 0.3s>
+  Visual / animation description (motion, color tokens, position).
+  audio_anchor: a 2–4 word verbatim phrase from this bullet's own `>` line
+- **M:SS – M:SS — Next headline.**
+  > Next narration sentence(s). <pause 0.5s>
+  Visual description...
+  audio_anchor: phrase from THIS bullet's narration
 ```
+Rule: the `audio_anchor` MUST be a verbatim substring of the same bullet's `>` narration.
+That co-location is the whole point — it makes the anchor check and the sentence test
+trivial and drift impossible. (Legacy two-block `### Narration` / `### Animation` still
+parses, but author new scripts pair-block.)
+
+For each beat, write the narration and the visual together:
+
+#### 6a — The narration line → **invoke the `script-narration` skill**
+
+Write each beat's `>` narration to the user's style AND the pipeline sync rules. Crucially,
+the **concatenated** narration (all `>` lines in order) must still read as continuous,
+natural speech — don't fragment the prose just because beats are separate.
 
 **Pipeline sync rules (non-negotiable regardless of style):**
 - `<pause Xs>` after every hero number or key reveal
 - Numbers spoken as words: `"thirty-six percent"`, not `"36%"`
-- 1-4 clear trigger phrases per scene (these become audio_anchors)
+- Each beat's narration contains the phrase its `audio_anchor` will use
 - Short clauses before dramatic reveals, longer sentences for explanation
 
-**Style application:**
-- Dramatic tone → short punchy sentences, longer pauses, declarative reveals
-- Educational tone → building sentences, explain-then-reveal pattern
-- Casual tone → conversational openers, personal anecdotes, shorter pauses
-- Story-driven → scene-setting opening, character/entity named early
+**Style application:** Dramatic → short punchy + longer pauses; Educational → explain-then-
+reveal; Casual → conversational openers; Story-driven → entity named early.
+Apply the user's hook style to Scene 1's first beat (bold statement / contradiction /
+question / number reveal).
 
-Apply the user's hook style to Scene 1:
-- Bold statement: opens with the shocking fact directly
-- Contradiction: opens with two true things that seem to contradict
-- Question: opens with the question the video answers
-- Number reveal: opens with the number, then explains what it means
+#### 6b — The visual + anchor → **invoke the `script-animation-bullets` skill**
 
-#### 5b — Animation bullets (apply cinematic rules)
-
-For every bullet, follow `rules/03-animation-bullets.md`: clarity first (the motion must
-MEAN something — pass the muted test), motion not bare fades, show-don't-tell (no text
-slides), rich/choreographed, and answer the full 10-point checklist before writing the
-body. Every beat must be one Remotion can build. (Validated in Step 7a by rule 03b.)
-
-**Bullet format:**
-```
-### Animation
-- **M:SS – M:SS — [REPLACE if applicable] Headline.** Body.
-  Continuation body text.
-```
+For each beat's visual, follow it: clarity first (the motion must MEAN something — pass the
+muted test), motion not bare fades, show-don't-tell (no text slides), rich/choreographed,
+answer the 10-point checklist. Every beat must be one Remotion can build, and its
+`audio_anchor` must be verbatim from the beat's own `>` line. (Validated in Step 7a by 03b
++ the Check-E catalog, and scored in 7a2.)
 
 **6 techniques — every bullet must apply all that are relevant:**
 
@@ -244,35 +277,44 @@ gate the content → critique and (if weak) rebuild.
 
 ---
 
-#### 7a — Animation validator (rules/03b-animation-validator.md)
+#### 7a — Animation validator → **invoke `script-animation-validator`**
 
 Per scene, per bullet: does the animation MAKE SENSE, FIT the scene, read as MOTION (not
-a text slide), and can Remotion actually BUILD it? Plus the "can Remotion build it" gate
-and the no-full-text-scenes rule. Fix failing beats in rule 03, re-run.
+a text slide), and can Remotion actually BUILD it? Plus the "can Remotion build it" gate,
+the no-full-text-scenes rule, and the Check E known-render-failure catalog. Fix failing
+beats in rule 03, re-run. (03b = is it BROKEN.)
 
-#### 7b — Technical validator (rules/05-validator.md)
+#### 7a2 — Narration-visual sync scorecard → **invoke `script-narration-visual-sync`**
+
+Quality gate, runs right after 7a. 03b cleared "broken"; this scores "is it GOOD?" — a
+10-factor /100 scorecard (narration-visual sync, muted test, cause-effect, cognitive load,
+transformation, motion purpose, memorability, emotional impact) grounded in multimedia-
+learning research. Any scene under **70 = NOT READY** (target ≥80); the usual fix is
+**consequence visualization** (show the cost, don't state it). Fix in rule 03, re-score.
+
+#### 7b — Technical validator → **invoke `script-validator`** (and `script-format-validation`)
 
 Format, research, narration, bullets, anchors, density, canvas, arc. Fix every FAIL
 (pipeline aborts on any FAIL) and any scene with 3+ WARNs. Re-run the fixed scenes.
 
-#### 7c — Retention engineering (rules/05a-retention-engineering.md)
+#### 7c — Retention engineering → **invoke `script-retention-engineering`**
 
 Engineer the curve: 30-second hook, pattern interrupts, re-hooks, no front-loaded payoff,
 strong ending. Fix the slow points before judging it as a viewer.
 
-#### 7d — Human script review (rules/05b-human-script-review.md)
+#### 7d — Human script review → **invoke `script-human-review`**
 
 Watch it as a viewer — all 9 questions: robotic+tone, generic, understand, keep-watching,
 examples, why-watch/value, think/feel, makes-sense, and continuity (flow across cuts).
 Any FAIL or 2+ WEAKs on a scene → send back to the owning rule, revise, re-run.
 
-#### 7e — Content quality gate (rules/06-content-quality.md)
+#### 7e — Content quality gate → **invoke `script-content-quality`**
 
 All 12 tests: hook, unique angle, value, evidence, tension-resolution, "so what",
 freshness, human-not-AI, not-generic, not-over-polished, the critique pass, and viewer
 psychology. Verdict must be STRONG or ACCEPTABLE — fix FAIL/WEAK and re-run.
 
-#### 7f — Critique and improve / rebuild (rules/06b-critique-and-improve.md)
+#### 7f — Critique and improve / rebuild → **invoke `script-critique-improve`**
 
 Final senior pass: critique the script as a world-class YouTube writer from every angle,
 fact-check every claim (hard gate), score the quality factor, then PATCH if strong or
@@ -390,19 +432,21 @@ They do not conflict — they operate on different parts of the script.
 ## Cross-references
 
 - `docs/script.md` — complete format reference with 5 worked examples
-- `rules/00-research.md` — finding real facts before writing
-- `rules/01-scene-structure.md` — scene arc and count rules
-- `rules/01b-storytelling.md` — narrative layer: hook/build/payoff, story spine, cause-and-effect, stakes, transformation
-- `rules/02-narration.md` — pause placement, trigger phrases, hero numbers
-- `rules/03-animation-bullets.md` — clarity→motion→show-don't-tell→rich; 10-point checklist; Remotion-buildable
-- `rules/03b-animation-validator.md` — does each beat make sense, fit the scene, read as motion, and can Remotion build it
-- `rules/04-format-validation.md` — parser format rules
-- `rules/05-validator.md` — technical quality gate (format, anchors, bullets, density)
-- `rules/05a-retention-engineering.md` — keeping viewers: 30s hook, pattern interrupts, mid-video surprise, strong ending (runs after validator, before human review)
-- `rules/05b-human-script-review.md` — watch it as a viewer: robotic/tone, generic, understand, why-watch, value, psychology
-- `rules/06-content-quality.md` — content quality gate (hook, unique angle, viewer benefit, evidence, freshness, human-not-AI, critique, psychology)
-- `rules/06b-critique-and-improve.md` — world-class critique + fact-check, score, patch or rebuild
-- `rules/07-youtube-strategy.md` — pre-production: title, thesis, thumbnail, open loops, shareable insight
+- `../script-research/SKILL.md` — finding real facts before writing
+- `../script-scene-structure/SKILL.md` — scene arc and count rules
+- `../script-storytelling/SKILL.md` — narrative layer: hook/build/payoff, story spine, cause-and-effect, stakes, transformation
+- `../script-narration/SKILL.md` — pause placement, trigger phrases, hero numbers
+- `../script-animation-bullets/SKILL.md` — clarity→motion→show-don't-tell→rich; 10-point checklist; Remotion-buildable
+- `../script-animation-validator/SKILL.md` — does each beat make sense, fit the scene, read as motion, and can Remotion build it (is it BROKEN)
+- `../script-narration-visual-sync/SKILL.md` — animation QUALITY scorecard (/100): narration-visual sync, cognitive load, cause-effect, transformation, consequence visualization (is it GOOD)
+- `references/animation_sentence_test.md` — worked good/bad pairs for the sentence test (visual explanation vs visual noise)
+- `../script-format-validation/SKILL.md` — parser format rules
+- `../script-validator/SKILL.md` — technical quality gate (format, anchors, bullets, density)
+- `../script-retention-engineering/SKILL.md` — keeping viewers: 30s hook, pattern interrupts, mid-video surprise, strong ending (runs after validator, before human review)
+- `../script-human-review/SKILL.md` — watch it as a viewer: robotic/tone, generic, understand, why-watch, value, psychology
+- `../script-content-quality/SKILL.md` — content quality gate (hook, unique angle, viewer benefit, evidence, freshness, human-not-AI, critique, psychology)
+- `../script-critique-improve/SKILL.md` — world-class critique + fact-check, score, patch or rebuild
+- `../script-youtube-strategy/SKILL.md` — pre-production: title, thesis, thumbnail, open loops, shareable insight
 
 ---
 

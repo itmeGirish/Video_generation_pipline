@@ -2,7 +2,11 @@
 name: timing
 description: Interpolation curves in Remotion - linear, easing, spring animations
 metadata:
-  tags: spring, bounce, easing, interpolation
+  tags:
+    - spring
+    - bounce
+    - easing
+    - interpolation
 ---
 
 A simple linear interpolation is done using the `interpolate` function.
