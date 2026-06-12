@@ -48,6 +48,23 @@ or process, never "like a machine."
 Most compelling videos show a clear before and after, or two things competing.
 Find the evidence for it with real numbers on both sides.
 
+### 6. The REAL interface — MANDATORY when the topic depicts real software
+If any scene's **REALITY ANCHOR** is real software (Claude Code, VS Code, a terminal, a
+dashboard, a website), **research what it ACTUALLY looks like before designing a single beat.**
+Find real screenshots / docs and note the concrete, recognizable details:
+- the real prompt / input (e.g. Claude Code's rounded prompt box and `✻` mark — NOT a VS Code
+  file sidebar)
+- the real tool-call / output format (`⏺ Read(file)`, `⎿ result` — not invented log lines)
+- how status / usage / limits are ACTUALLY surfaced (`/status`, a context-left indicator) —
+  do **not** fabricate a UI element (e.g. a top "usage bar") the product doesn't have
+- the distinctive marks, colors, and layout a real user would instantly recognise
+
+**Never invent or assume an interface.** A viewer who uses the tool spots a fake instantly and
+rejects the scene as inaccurate (caught on `claude_code_limits` S1 2026-06-12 — a plausible-but-
+fake "Claude Code terminal" was rejected). This is the accuracy half of the dense-realistic
+standard: the visual must be dense AND *correct*. If you can't verify the real look, ASK or
+research — do not ship an assumed UI. Record the real details so the visual designer matches them.
+
 ---
 
 ## Hard rule: no invented numbers

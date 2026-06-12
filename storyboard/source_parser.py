@@ -239,14 +239,17 @@ def _extract_narration(body: str) -> str:
     raw = _extract_section(body, "Narration")
     if not raw:
         return ""
-    # Strip leading '> ' markers, join lines
-    lines = []
-    for line in raw.splitlines():
-        line = line.strip()
-        if line.startswith(">"):
-            line = line[1:].strip()
-        if line:
-            lines.append(line)
+    # ONLY `>`-prefixed lines are narration. Any other text inside the section —
+    # blueprint footer fields placed after the narration (EXIT TRANSITION /
+    # NEXT SCENE HOOK / ON-SCREEN TEXT) or trailing build-notes — is design
+    # scaffolding and must NOT be spoken. The old version appended EVERY non-empty
+    # line, which leaked the template footer straight into the TTS audio (the
+    # voice read "exit transition, battery docks to the corner…"), shifting every
+    # anchor. All legacy scripts use `>`-prefixed narration, so this is behavior-
+    # preserving for them and a correctness fix for the blueprint template.
+    lines = [line.strip()[1:].strip()
+             for line in raw.splitlines()
+             if line.strip().startswith(">")]
     return _strip_markdown(" ".join(lines))
 
 

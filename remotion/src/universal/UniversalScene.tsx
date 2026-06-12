@@ -2,7 +2,7 @@ import React from 'react';
 import { Sequence, useVideoConfig } from 'remotion';
 import { Backdrop } from './Backdrop';
 import { DynamicBlock } from './DynamicBlock';
-import type { WordTimestamp } from '../components/VideoCaptions';
+import type { WordTimestamp } from '../types';
 
 // Visual block from the structured script via visual_designer.
 // Each block is an LLM-emitted React.createElement function body that the

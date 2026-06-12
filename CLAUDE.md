@@ -160,13 +160,33 @@ breath-rate scale shift.
 
 Final 2-3s of a scene's last bullet can be static (final-hold exception).
 
-### 8. Primary visual prominence ≥ 50% of canvas (V13)
+### 8. Primary visual must EXPLAIN — dense by AREA, causal, action-not-noun (V13 + scorecard)
 
-The PRIMARY element a viewer must see can't be tiny in a sea of black.
-Stamp 32% wide on black background → V13 FAIL.
+The PRIMARY element can't be tiny in a sea of empty canvas — and "tiny" means **by AREA, not
+width**. A `w*0.50`-wide × `h*0.045`-tall bar is 50% wide but ~2% of the canvas — a sliver, not
+a primary.
 
-✅ FIX: primary element width ≥ `Math.round(w*0.50)`, or fill 60%+ of
-canvas with the storytelling visual.
+❌ FAIL (hit on claude_code_limits S1, 2026-06-10): a thin usage bar + a command on empty
+off-white. Rendered "clean," passed V13 by the old width-only rule, user rejected it — *"it
+explains nothing."* Three things were wrong, and all three are now hard rules:
+- **Sparse:** primary occupied ~2% area; ≥half the canvas empty.
+- **Animated a NOUN:** a "meter" sitting there, not the VERB (the command *consuming* the budget).
+- **No causality + invisible-not-shown:** command and bar disconnected; token consumption (the
+  real invisible thing) never made visible.
+
+✅ FIX — the beat must EXPLAIN, not display:
+- **Dense by area:** the primary fills a real area (a grid of units, a tank with ticks, a
+  segmented bar) ≥ `w*0.45 × h*0.40`; never a lone thin element on empty field.
+- **Action over labels:** animate the VERB — the input visibly *consuming / draining / producing*
+  the thing — not a static noun.
+- **Cause→effect + invisible→visible:** the cause visibly feeds the effect on screen; show the
+  invisible system as units/parts, not an abstract bar.
+- **Mute test:** muted, the frame must say WHAT it is and what POINT it makes.
+
+Full framework: `script_generation/references/explainer_animation_principles.md` (20 principles +
+scorecard); render-gate teeth in `vg-quality-animations` §"CLEAN ≠ GOOD"; paper-gate in
+`script-animation-validator` E4/E9/E10 + Check F. **Inspecting a frame and seeing it's "clean" is
+NOT a pass — clean ≠ good. Score density, causality, and the mute test, or send it back.**
 
 ### 9. Text in elements (no empty bordered boxes)
 
@@ -346,6 +366,44 @@ literally; runtime JS sees `'The jobs aren\'t gone.'` and parses the
 `\'` as an escaped apostrophe. Hit on S4 v4 in 3 places (B1/B4/B6).
 **Better alternative**: use a curly apostrophe `'` (U+2019) directly
 — Unicode, no escape needed in any quote style.
+
+---
+
+## HARD RULE — SCRIPT GENERATION: INVOKE EVERY STEP'S SKILL + PASS EVERY GATE
+
+When generating a script (the `script_generation` skill), you MUST invoke each step's
+sub-skill with the Skill tool AND run every Step-7 gate to a PASS **before** saving to
+`projects/structured_scripts/` or presenting the script. This is non-negotiable and is the
+exact discipline that lapsed on `claude_code_limits` (2026-06-09): under "give me the full
+script now" pressure, the script was written and a self-made mechanical check substituted
+for the real gates — Steps 5.5 and 7a–7f were skipped. **"Give it now" / "auto" / "continue"
+does NOT waive this** (see [[feedback_preflight_rules]]).
+
+The full chain — none skippable, in order:
+
+```
+3   script-youtube-strategy        (title/thesis/thumbnail/loops)
+4   script-research                (real sourced facts — INVOKE it, don't just websearch inline)
+5   script-scene-structure         (scene list + anchor visual per scene)
+5.5 script-storytelling            (story spine — the most-skipped step)
+6a  script-narration               (narration to sync rules)
+6b  script-animation-bullets       ("what happens" director beats)
+6.5 cut pass (≥10% removed)
+7a  script-animation-validator     (per-bullet: sense/fit/motion/buildable/Check-E)
+7a2 script-narration-visual-sync   (/100 scorecard; <70 = NOT READY)
+7b  script-validator + script-format-validation
+7c  script-retention-engineering
+7d  script-human-review            (9 questions)
+7e  script-content-quality         (12 tests)
+7f  script-critique-improve        (fact-check gate + patch/rebuild)
+8   save + present for approval
+```
+
+**The trap to avoid:** producing the visible artifact (the `.txt`) is NOT the finish line —
+it is the *input* to Steps 6.5–7. A clean parse / anchor check is NOT a substitute for the
+gates. If you have written a script but not run 7a–7f, you are NOT done; STOP and run them.
+Never report "script ready" or save the DB record while any gate is unrun or failing. The
+duration target is a requirement too — verify est. length matches the ask before presenting.
 
 ---
 

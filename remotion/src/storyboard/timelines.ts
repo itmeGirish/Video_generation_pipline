@@ -21,144 +21,180 @@ export type SceneTimeline = {
 };
 
 export const TIMELINES: Record<string, SceneTimeline> = {
-  "ai-thinking-levels-s01": {
-    "id": "ai-thinking-levels-s01",
-    "durationFrames": 2243,
-    "durationSeconds": 74.767,
+  "claude-code-limits-s01": {
+    "id": "claude-code-limits-s01",
+    "durationFrames": 830,
+    "durationSeconds": 27.667,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2243,
+        "toFrame": 830,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "ai-thinking-levels-s02": {
-    "id": "ai-thinking-levels-s02",
-    "durationFrames": 2088,
-    "durationSeconds": 69.6,
+  "claude-code-limits-s02": {
+    "id": "claude-code-limits-s02",
+    "durationFrames": 1477,
+    "durationSeconds": 49.233,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2088,
+        "toFrame": 1477,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "ai-thinking-levels-s03": {
-    "id": "ai-thinking-levels-s03",
-    "durationFrames": 2264,
-    "durationSeconds": 75.467,
+  "claude-code-limits-s03": {
+    "id": "claude-code-limits-s03",
+    "durationFrames": 2108,
+    "durationSeconds": 70.267,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2264,
+        "toFrame": 2108,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "ai-thinking-levels-s04": {
-    "id": "ai-thinking-levels-s04",
-    "durationFrames": 2589,
-    "durationSeconds": 86.3,
+  "claude-code-limits-s04": {
+    "id": "claude-code-limits-s04",
+    "durationFrames": 2414,
+    "durationSeconds": 80.467,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2589,
+        "toFrame": 2414,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "ai-thinking-levels-s05": {
-    "id": "ai-thinking-levels-s05",
-    "durationFrames": 2131,
-    "durationSeconds": 71.033,
+  "claude-code-limits-s05": {
+    "id": "claude-code-limits-s05",
+    "durationFrames": 2482,
+    "durationSeconds": 82.733,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2131,
+        "toFrame": 2482,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "ai-thinking-levels-s06": {
-    "id": "ai-thinking-levels-s06",
-    "durationFrames": 2068,
-    "durationSeconds": 68.933,
+  "claude-code-limits-s06": {
+    "id": "claude-code-limits-s06",
+    "durationFrames": 2597,
+    "durationSeconds": 86.567,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2068,
+        "toFrame": 2597,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "ai-thinking-levels-s07": {
-    "id": "ai-thinking-levels-s07",
-    "durationFrames": 1187,
-    "durationSeconds": 39.567,
+  "claude-code-limits-s07": {
+    "id": "claude-code-limits-s07",
+    "durationFrames": 2808,
+    "durationSeconds": 93.6,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1187,
+        "toFrame": 2808,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "ai-thinking-levels-s08": {
-    "id": "ai-thinking-levels-s08",
-    "durationFrames": 2391,
-    "durationSeconds": 79.7,
+  "claude-code-limits-s08": {
+    "id": "claude-code-limits-s08",
+    "durationFrames": 3312,
+    "durationSeconds": 110.4,
     "fps": 30,
-    "audioFile": "vo-ai_thinking_levels-full.mp3",
+    "audioFile": "vo-claude_code_limits-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2391,
+        "toFrame": 3312,
+        "enterFrames": 0,
+        "exitFrames": 0,
+        "transitionIn": "hard_cut"
+      }
+    ]
+  },
+  "claude-code-limits-s09": {
+    "id": "claude-code-limits-s09",
+    "durationFrames": 2230,
+    "durationSeconds": 74.333,
+    "fps": 30,
+    "audioFile": "vo-claude_code_limits-full.mp3",
+    "anchors": {},
+    "phases": [
+      {
+        "id": "scene",
+        "fromFrame": 0,
+        "toFrame": 2230,
+        "enterFrames": 0,
+        "exitFrames": 0,
+        "transitionIn": "hard_cut"
+      }
+    ]
+  },
+  "claude-code-limits-s10": {
+    "id": "claude-code-limits-s10",
+    "durationFrames": 1749,
+    "durationSeconds": 58.3,
+    "fps": 30,
+    "audioFile": "vo-claude_code_limits-full.mp3",
+    "anchors": {},
+    "phases": [
+      {
+        "id": "scene",
+        "fromFrame": 0,
+        "toFrame": 1749,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"

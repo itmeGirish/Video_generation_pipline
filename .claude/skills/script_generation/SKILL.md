@@ -123,7 +123,13 @@ Contrast: [before vs after or entity A vs entity B]
 
 ### Step 5 — Design the scene structure → first **invoke the `script-scene-structure` skill**
 
-Map the video into scenes. Write the scene list, then proceed directly to Step 6 — no confirmation needed.
+Map the video into scenes. Write the scene list, then fill the **per-scene BLUEPRINT** for
+each scene (Learning Goal · Location · Reality Anchor · Visual Metaphor · Environment ·
+Objects · Primary Focus · Entry/Exit · Initial/Final State · Attention Flow · per-beat
+Purpose/Visual Action/State Change/Text · Next Scene Hook) — the spatial/cinematic design
+that makes a scene look like the real software and explain something, not a slideshow. The
+blueprint's fields map onto the parseable pair-block beats (see the skill's "Blueprint →
+the parseable scene" table). Then proceed directly to Step 6 — no confirmation needed.
 
 **Scene arc (required):**
 
@@ -153,6 +159,14 @@ Before writing narration, turn the scene list from a list of facts into a STORY.
 narrative spine (hook/build/payoff or the story spine), connect scenes with "because of
 that" not "and then", and make sure the script has stakes, conflict, and a transformation
 with the viewer as the hero. A story is far more memorable and watchable than a list.
+
+**STORY IS PRIMARY — animation is LAST** (`references/storytelling_principles.md`). Order:
+Storytelling → Information Design → Visual Design → Animation. Score every scene on the 15-point
+**Storytelling Scorecard** (curiosity gap · open loops · stakes · cause-effect · momentum ·
+escalation · specificity · relatability · mental model · progressive understanding · emotional
+progression · contrast · payoff density every 20–40s · no explanation loops · one purpose). The
+story must score HIGH on the page before Step 6 designs any beat — don't optimize animation before
+story.
 
 ---
 
@@ -203,11 +217,19 @@ question / number reveal).
 
 #### 6b — The visual + anchor → **invoke the `script-animation-bullets` skill**
 
+**FIRST read `references/explainer_animation_principles.md`** — the 20 universal explainer-animation
+principles + the 4-level model (Story / Information / Visual Design / Motion) + the per-shot
+Production Checklist. Every beat is designed against it. The four NON-NEGOTIABLES (a beat that
+fails any is "displays but explains nothing" — the claude_code_limits S1 reject):
+**(1) animate the VERB not the noun** (the input *consuming/producing* the thing, not a static
+object) · **(2) cause→effect visible** (the cause feeds the effect on screen) · **(3)
+invisible→visible** (show the real system as units/parts, not an abstract bar) · **(4) mute test**.
+
 For each beat's visual, follow it: clarity first (the motion must MEAN something — pass the
 muted test), motion not bare fades, show-don't-tell (no text slides), rich/choreographed,
-answer the 10-point checklist. Every beat must be one Remotion can build, and its
-`audio_anchor` must be verbatim from the beat's own `>` line. (Validated in Step 7a by 03b
-+ the Check-E catalog, and scored in 7a2.)
+dense by AREA (not a thin element on empty canvas), answer the per-shot checklist. Every beat must
+be one Remotion can build, and its `audio_anchor` must be verbatim from the beat's own `>` line.
+(Validated in Step 7a by 03b + the Check-E catalog + the Universal Scorecard Check F, scored in 7a2.)
 
 **6 techniques — every bullet must apply all that are relevant:**
 
@@ -439,6 +461,9 @@ They do not conflict — they operate on different parts of the script.
 - `../script-animation-bullets/SKILL.md` — clarity→motion→show-don't-tell→rich; 10-point checklist; Remotion-buildable
 - `../script-animation-validator/SKILL.md` — does each beat make sense, fit the scene, read as motion, and can Remotion build it (is it BROKEN)
 - `../script-narration-visual-sync/SKILL.md` — animation QUALITY scorecard (/100): narration-visual sync, cognitive load, cause-effect, transformation, consequence visualization (is it GOOD)
+- `references/storytelling_principles.md` — **STORY FIRST (the primary priority): the 15 storytelling parameters + Storytelling Scorecard + the order Storytelling→Information→Visual→Animation.** Read/apply BEFORE animation — most videos fail by optimizing animation before story.
+- `references/explainer_animation_principles.md` — **the 20 universal explainer-animation principles + 4-level model (Story/Information/Visual/Motion) + Universal Scorecard + per-shot Production Checklist.** Read before designing any scene's beats. The non-negotiables: action-over-noun, cause→effect, invisible→visible, mute test.
+- `references/animation_principles.md` — motion-physics layer (12 principles), scene-level build, director/animator split, purpose & restraint
 - `references/animation_sentence_test.md` — worked good/bad pairs for the sentence test (visual explanation vs visual noise)
 - `../script-format-validation/SKILL.md` — parser format rules
 - `../script-validator/SKILL.md` — technical quality gate (format, anchors, bullets, density)

@@ -208,14 +208,102 @@ working; new scripts (`layoffs_2026.txt`) use pair-block.
 Only `audio_anchor` / `anchor_mode` are PARSED from a bullet; the rest of the body is the
 free-form brief the code author reads. A good bullet names every production factor so the
 render code isn't guessed — written by `script-animation-bullets` as labeled lines:
-`what happens:` (a plain **numbered beat sequence** of what the viewer sees — *the animation
-described as story*; this is the core) · `text:` (on-screen labels) · `image:` (`[asset:]`/`none`) ·
+`location:` + `visible:` (on the scene's FIRST bullet — the WHERE and the named on-screen objects
+that establish the setting, so the render author orients the viewer; see `script-animation-bullets`
+§scene-setting) · `what happens:` (a plain **numbered beat sequence** of what the viewer sees — *the
+animation described as story*; this is the core) · `text:` (on-screen labels) · `image:` (`[asset:]`/`none`) ·
 `transition:` (`[REPLACE]`/ADD in the headline) · `audio_anchor` + `anchor_mode` · optional `hint:`
 (one word if a specific build matters). The body is the **director layer (what + when)** — NOT
 springs/easing/arcs/principle-names; the render (`vg-code-*` / `Kit`) supplies the motion physics. These map 1:1 to
 the `vg-code-*` author recipes (via `vg-render-code`). A bullet missing factors → the author
 guesses → flat/inconsistent output. The parser ignores the extra labeled lines, so they cost
 nothing mechanically and everything in brief quality.
+
+## Scene-blueprint template format (the standard authoring template)
+
+The current standard template (used by `claude_code_limits.txt`) wraps the **legacy**
+`### Narration` / `### Animation` blocks inside a rich, human-readable **scene blueprint** —
+the spatial/cinematic design of each scene. It parses on the LEGACY path (it has
+`### Narration` + `### Animation`, so `source_parser.py` does NOT treat it as pair-block).
+Everything outside those two sections is design metadata the parser ignores.
+
+### Layout of one scene
+
+```
+## SCENE N — "Title" (M:SS – M:SS)
+
+──────────────  LEARNING GOAL  ──────────────
+<the one thing the viewer should learn>
+──────────────  LOCATION  ──────────────
+<where we are — the real surface>
+... (REALITY ANCHOR · VISUAL METAPHOR · ENVIRONMENT · OBJECTS · PRIMARY FOCUS ·
+     ENTRY TRANSITION · INITIAL STATE · FINAL STATE · ATTENTION FLOW — each with a divider)
+
+### Animation
+
+──────────────  BEAT 1  ──────────────
+- **M:SS – M:SS — Headline.**
+  Purpose: <why this beat exists>
+  Visual Action: <the motion event — the setup>
+  State Change: <what is different on screen after the beat>
+  Text: <≤3 words OR one number, or none>
+  audio_anchor: <verbatim phrase from the scene narration>
+  anchor_mode: appear | through | land
+──────────────  BEAT 1 → BEAT 2 TRANSITION  ──────────────
+<how attention moves>
+──────────────  BEAT 2  ──────────────
+- **M:SS – M:SS — Headline.**
+  ...
+
+### Narration
+> the scene voice-over, one or more `>` lines, with <pause Xs> tags
+
+──────────────  EXIT TRANSITION  ──────────────
+<how the scene leaves>
+──────────────  NEXT SCENE HOOK  ──────────────
+<the visual element that connects to the next scene>
+──────────────  ON-SCREEN TEXT  ──────────────
+<max 3 words OR 1 number per beat>
+```
+
+### How the parser reads it (exact behavior — verified)
+
+| File region | What `source_parser.py` does |
+|---|---|
+| Blueprint header fields (LEARNING GOAL … ATTENTION FLOW), between `## SCENE` and `### Animation` | **Ignored.** Not a `### section`, no `>`, no `- **M:SS` bullet — invisible to the parser. |
+| `### Animation` | `_extract_animation` finds each `- **M:SS – M:SS — Headline**` bullet. **This count is the FIDELITY GATE** (= rendered blocks). |
+| BEAT dividers + "BEAT n → n+1 TRANSITION" text between bullets | **Absorbed into the previous bullet's body** (a bullet's body runs to the next `- **`). Harmless free-form text. |
+| `Purpose:` / `Visual Action:` / `State Change:` / `Text:` lines | Part of the bullet **body** (the free-form brief). Only `audio_anchor` / `anchor_mode` are extracted downstream. |
+| `### Narration` | `_extract_narration` reads the `>` lines = the scene voice-over (assembled, in order). |
+| EXIT TRANSITION / NEXT SCENE HOOK / ON-SCREEN TEXT (after `### Narration`, no `>`) | Inside the Narration section but **not `>` lines → ignored** by narration extraction. |
+
+So: **only `### Animation` bullets and `### Narration` `>` lines drive the pipeline.** All
+dividers and blueprint fields are design scaffolding — they cost nothing mechanically and
+everything in brief quality.
+
+### Anchor rule on this format (IMPORTANT — it's scene-scoped, not beat-scoped)
+
+Because narration is one scene-level block (legacy path), an `audio_anchor` must be a
+verbatim phrase **somewhere in the scene's `### Narration`** — not necessarily near its own
+BEAT. Pair-block's per-beat drift-proofing is traded away for the template, so:
+- Keep each anchor a **unique** phrase within the scene (so it can't match the wrong beat's moment).
+- Keep anchors in the **same order** as the beats (narration is spoken top-to-bottom).
+- Avoid digit/decimal anchors Whisper mis-transcribes (see rule 23 / SHIFT-LEFT #2).
+
+### How the bullet-code author USES the blueprint
+
+When authoring a beat's `React.createElement` code, read the scene blueprint first — it is
+the design contract:
+- **REALITY ANCHOR** → make the frame look like the real software (the actual Claude Code
+  terminal / VS Code), not abstract shapes.
+- **VISUAL METAPHOR / OBJECTS** → reuse the persistent objects (battery, paper stack, scan
+  beam, CLAUDE orb) — do not invent a new object per scene.
+- **BEAT Visual Action + State Change** → exactly what to animate and the end state.
+- **BEAT Text / ON-SCREEN TEXT** → ≤3 words or one number; never put the narration on screen.
+- **ATTENTION FLOW / PRIMARY FOCUS** → the eye path; keep the frame from clogging.
+
+Authoring the blueprint itself is `script-scene-structure` §"Per-scene BLUEPRINT"; the beat
+fields map 1:1 from `script-animation-bullets`.
 
 ## Optional blocks
 
@@ -263,3 +351,4 @@ videos.)
 - DO NOT write animation bullets without concrete content values — the LLM needs specifics
 - DO NOT put more than ~8 animation bullets per scene — each bullet is one visual block
 - DO NOT pick an `audio_anchor` whose verbatim phrase falls in another bullet's narration window — the visual will fire at the wrong time. Pair-block format makes this impossible by construction.
+- BLUEPRINT TEMPLATE format: it parses on the LEGACY path (`### Animation` + `### Narration` present). The divider/header fields and BEAT-transition blocks are ignored — only `### Animation` bullets and `### Narration` `>` lines drive the pipeline. DO NOT delete `### Animation` / `### Narration` thinking the blueprint replaces them. Anchors are scene-scoped here — keep each one unique and in beat order.

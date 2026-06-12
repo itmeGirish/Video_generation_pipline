@@ -37,6 +37,41 @@ just confuses the viewer. Clarity first, then richness on top.
 
 ---
 
+## READ FIRST — the 20 universal explainer-animation principles
+
+Before writing any beat, design against `references/explainer_animation_principles.md` (works
+for ANY topic).
+
+**Establish the SCENE first (WHERE / WHAT objects / WHAT moves / WHAT changes — see the
+reference §Scene-description).** The #1 cause of "abstract / doesn't make sense" visuals is no
+established place. So the FIRST bullet of every scene carries two extra labelled lines naming the
+setting (parser ignores them — free-form brief, exactly like `text:`):
+```
+location: <VS Code workspace · Claude Code terminal · context-window viz · split-screen …>
+visible:  <named on-screen objects — e.g. login.ts editor · Claude Code terminal · usage gauge>
+```
+Then each beat's `what happens` is the ACTION (what moves) + STATE CHANGE (before→after) inside
+that place. A viewer must always be able to answer: WHERE am I? WHAT objects exist? WHAT moves?
+WHAT changes?
+
+The four non-negotiables — a beat that fails any of these is a "displays but
+explains nothing" beat (the claude_code_limits S1 failure):
+
+1. **Action over labels** — animate the VERB, never the noun. Not "a usage meter" (a noun that
+   sits there) → the command *consuming / draining* the budget (the verb). If your beat names a
+   static object, rewrite it as that object DOING something.
+2. **Cause → effect visible** — if there's an input and a result, the input must visibly
+   produce the result on screen (feed / trigger / drain), not sit in a separate corner.
+3. **Invisible → visible** — make the invisible system the picture (token units, packets, steps),
+   not an abstract bar. Show the thing itself.
+4. **Mute test** — muted, the beat must read. "A command and a bar going down" is not enough.
+
+Plus: state-change every shot, one idea, comparison, accumulation/reduction shown, physical
+metaphor, progressive reveal, visual hierarchy, ≤1–2 things tracked, motion that teaches, a
+felt emotion. Run the **Universal Animation Review Scorecard** (in the reference) on every scene.
+
+---
+
 ## Write WHAT the viewer sees, not HOW the motion behaves (you're the director, not the animator)
 
 **The governing rule for writing bullets.** The script describes **what the audience sees and
@@ -472,6 +507,15 @@ are parsed; the rest is the free-form brief.
 - *(optional)* **hint** — one word IF a specific build matters (`value-growth`, `pipeline`,
   `evolve`, `tiers`…); otherwise the render picks the `Kit` component from "what happens." Never
   itemize springs/easing.
+
+**Each bullet IS one BEAT from the scene blueprint** (`script-scene-structure` §"Per-scene
+BLUEPRINT"). Collapse the blueprint's three beat fields into `what happens` + `text`:
+- BEAT **PURPOSE** → why the beat exists (drives which moment you show; not written on screen)
+- BEAT **VISUAL ACTION** → the numbered `what happens:` sequence (ONE motion event per beat)
+- BEAT **STATE CHANGE** → the last line of `what happens:` (what's different after)
+- BEAT **TEXT** → the `text:` field (≤3 words OR one number — never a sentence)
+Carry the scene's LOCATION / REALITY ANCHOR / VISUAL METAPHOR through every beat so the
+frame keeps looking like the real software and reuses the same metaphor objects.
 
 Example — the beat sequence IS the animation (plain language; works for any topic):
 ```

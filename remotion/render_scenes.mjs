@@ -89,7 +89,7 @@ async function main() {
   const serveUrl = await bundle({
     entryPoint: path.resolve('./src/index.ts'),
     webpackOverride,
-    publicDir: projectDir,  // matches remotion.config.ts: Config.setPublicDir(projectDir)
+    publicDir: path.resolve(projectDir, 'public'),  // assets live in projects/<name>/public/ (rule 17); staticFile('img/x.jpg') resolves there with NO 'public/' prefix
   });
   console.log(`✓ bundled in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
@@ -148,6 +148,11 @@ async function main() {
   const STALL_TIMEOUT_MS = 120000;   // 2 minutes with no frame progress = stuck
   const failed = [];
   let scenesRendered = 0;
+  // Per-scene render journal — time, attempts, size, status, error. Written to
+  // out/render_journal.json so the production record (how long each scene took,
+  // what errored, how many attempts to get a clean render) is reviewable later
+  // instead of scrolling past in the console. Feeds the human verification.md.
+  const journal = [];
 
   for (const sceneId of todo) {
     const out = path.join(OUT_DIR, `${sceneId}.mp4`);
@@ -213,7 +218,10 @@ async function main() {
           // openBrowser time (above). Documented in render-media.md.
           puppeteerInstance: browser,
           // Stability knobs that ARE honored even with shared browser:
-          concurrency: 1,
+          // concurrency: MUST default to 1 — concurrency>1 with a shared
+          // puppeteerInstance DEADLOCKS (0 CPU idle-hang, verified on s03 2026-06-04).
+          // Long scenes are handled by raising RENDER_TIMEOUT_PER_SCENE_S instead.
+          concurrency: Number(process.env.RENDER_CONCURRENCY) || 1,
           disallowParallelEncoding: true,
           timeoutInMilliseconds: 300000,
           offthreadVideoCacheSizeInBytes: 256 * 1024 * 1024,
@@ -244,6 +252,14 @@ async function main() {
         );
         lastErr = null;
         scenesRendered++;
+        journal.push({
+          sceneId,
+          status: 'ok',
+          seconds: +((Date.now() - tScene) / 1000).toFixed(1),
+          attempts: attempt,
+          sizeMB: +(fs.statSync(out).size / 1024 / 1024).toFixed(1),
+          error: null,
+        });
         break;
       } catch (err) {
         lastErr = err;
@@ -280,6 +296,14 @@ async function main() {
     }
     if (lastErr) {
       failed.push({ sceneId, error: lastErr.message || String(lastErr) });
+      journal.push({
+        sceneId,
+        status: 'failed',
+        seconds: null,
+        attempts: MAX_ATTEMPTS,
+        sizeMB: null,
+        error: (lastErr.message || String(lastErr)).split('\n')[0],
+      });
     }
 
     // Periodic browser restart to bound memory accumulation across many
@@ -293,6 +317,32 @@ async function main() {
   }
 
   await closeSharedBrowser();
+
+  // ── Write the per-scene render journal (always, even on partial failure) ──
+  try {
+    const okScenes = journal.filter((j) => j.status === 'ok');
+    const totalRenderSec = +okScenes.reduce((s, j) => s + (j.seconds || 0), 0).toFixed(1);
+    const retried = okScenes.filter((j) => j.attempts > 1).length;
+    fs.writeFileSync(
+      path.join(OUT_DIR, 'render_journal.json'),
+      JSON.stringify({
+        project: PROJECT,
+        rendered_at: new Date().toISOString(),
+        scenes_total: journal.length,
+        scenes_ok: okScenes.length,
+        scenes_failed: failed.length,
+        scenes_retried: retried,            // succeeded but needed >1 attempt
+        total_render_seconds: totalRenderSec,
+        slowest_scene: okScenes.length
+          ? okScenes.reduce((a, b) => (b.seconds > a.seconds ? b : a)).sceneId
+          : null,
+        scenes: journal,                    // per-scene: seconds, attempts, sizeMB, status, error
+      }, null, 2),
+    );
+    console.log(`  [journal] wrote out/render_journal.json (${journal.length} scenes, ${totalRenderSec}s render, ${retried} retried, ${failed.length} failed)`);
+  } catch (e) {
+    console.error(`  [journal] could not write render_journal.json: ${e.message}`);
+  }
 
   if (failed.length) {
     console.error(`\n✗ ${failed.length} scene(s) failed after ${MAX_ATTEMPTS} attempts:`);

@@ -475,3 +475,64 @@ def test_modules_still_importable():
     import storyboard.validate_output  # noqa: F401
     import storyboard.bullet_linter  # noqa: F401
     import storyboard.source_parser  # noqa: F401
+
+
+# ─────────────────────────────────────────────────────────────────
+# Rule 23 V12 — text-only frame heuristic in validate_output.py.
+# A full-screen text slide passes V1/V5/V8 (fills canvas, "animates"),
+# so it slipped through QA. _is_text_only_bullet flags it statically
+# from the authored code. These cases pin the behavior.
+# ─────────────────────────────────────────────────────────────────
+def test_v12_flags_text_only_slide():
+    from storyboard.validate_output import _is_text_only_bullet
+    text_slide = (
+        "const bd=React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg}});"
+        "const t1=React.createElement('div',{style:{color:D.cyan}},'The jobs are not gone.');"
+        "const t2=React.createElement('div',{style:{color:D.text_dim}},'They changed shape.');"
+        "const t3=React.createElement('div',{style:{color:D.amber}},'Here is the catch.');"
+    )
+    is_text_only, *_ = _is_text_only_bullet(text_slide)
+    assert is_text_only, "a backdrop + 3 prose lines with no shapes must flag as text-only"
+
+
+def test_v12_passes_real_visual_bullets():
+    from storyboard.validate_output import _is_text_only_bullet
+    bar_chart = (
+        "const bd=React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg}});"
+        "const bar1=React.createElement('div',{style:{width:w*0.4,height:h*0.1,backgroundColor:D.cyan,borderRadius:8}});"
+        "const bar2=React.createElement('div',{style:{width:w*0.6,height:h*0.1,backgroundColor:D.violet,borderRadius:8}});"
+        "const lbl=React.createElement('div',{style:{fontSize:30}},'82%');"
+    )
+    hero_number = (
+        "const glow=React.createElement('div',{style:{width:w*0.5,height:w*0.5,borderRadius:'50%',boxShadow:'0 0 80px'}});"
+        "const num=React.createElement('div',{style:{fontSize:200}},'56%');"
+    )
+    assert not _is_text_only_bullet(bar_chart)[0], "a bar chart must NOT flag as text-only"
+    assert not _is_text_only_bullet(hero_number)[0], "a hero number with a sized glow must NOT flag"
+    assert not _is_text_only_bullet("")[0], "empty code must not flag (no false positive)"
+
+
+# ─────────────────────────────────────────────────────────────────
+# Rule 23 A4/A5 — automated freeze/motion check in validate_output.py.
+# A bullet that enters then holds static passes V1/V8 (non-black, differs from
+# frame 0) but isn't visual motion. _segment_freeze_duration detects the hold
+# via ffmpeg freezedetect. Tested on synthetic static vs moving clips so it
+# does not depend on a checked-in render.
+# ─────────────────────────────────────────────────────────────────
+def test_a4_freeze_probe_detects_static_vs_moving(tmp_path: Path):
+    import shutil, subprocess
+    from storyboard.validate_output import _segment_freeze_duration
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg not available")
+    static_mp4 = tmp_path / "static.mp4"
+    moving_mp4 = tmp_path / "moving.mp4"
+    subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "color=c=blue:s=320x180:d=5:r=30",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(static_mp4)],
+                   capture_output=True, check=True)
+    subprocess.run(["ffmpeg", "-y", "-f", "lavfi", "-i", "testsrc=s=320x180:d=5:r=30",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", str(moving_mp4)],
+                   capture_output=True, check=True)
+    frozen = _segment_freeze_duration(static_mp4, 0.0, 5.0)
+    moving = _segment_freeze_duration(moving_mp4, 0.0, 5.0)
+    assert frozen > 3.0, f"a fully static clip must report a long freeze (got {frozen})"
+    assert moving == 0.0, f"a continuously moving clip must report no freeze (got {moving})"

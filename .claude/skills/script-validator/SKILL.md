@@ -108,6 +108,15 @@ topic; substituted a sourced contrast"). Silence ≠ acceptable. Either quote, o
 
 ## Check 4 — ANIMATION BULLET QUALITY (FAIL if any fail)
 
+> **Director/animator split (read first).** New scripts use the `what happens` beat-sequence
+> format: the script is the DIRECTOR (what the viewer sees), the render is the ANIMATOR (how it
+> moves). So in the current format, **4a (named object) and the `what happens` beats are the
+> script's job and ARE checked; but 4c (exact pixel counts) and 4d (spring-intent words) are the
+> RENDER's job (`Kit` / `vg-code-timing`) and must NOT appear in the script.** For a `what happens`
+> script, 4c/4d are **N/A — do not FAIL a bullet for omitting spring words or pixel counts.** The
+> authoritative script-level lint is **4f** (`what happens` + `audio_anchor` core). 4c/4d below
+> apply only to legacy physics-in-script bullets.
+
 ### 4a — Named metaphor (per scene)
 Every scene's first bullet must name a specific physical or visual object.
 

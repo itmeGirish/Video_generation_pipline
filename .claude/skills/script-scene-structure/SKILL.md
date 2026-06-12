@@ -215,6 +215,12 @@ scene list, not in the narration polish.
 
 ## One idea per scene — strict rule
 
+> **Level 1 (Story) of the animation framework** (`script_generation/references/explainer_animation_principles.md`):
+> every scene must (a) answer exactly **ONE question**, (b) carry **tension** (the viewer wonders
+> what/why/how), and (c) deliver a **transformation** (viewer goes from "doesn't know" to "knows",
+> and the visual state changes start→end). A scene answering 5 questions is confusing; a scene with
+> no transformation is inert. Design the scene's question + transformation here, before the beats.
+
 Every scene header title must complete this sentence:
 > "This scene explains ___________."
 
@@ -314,6 +320,103 @@ Total target: <length>
 
 Write this scene list, confirm it covers the right payoffs and the loop chain holds,
 then proceed to Step 4 — narration.
+
+---
+
+## Per-scene BLUEPRINT — design each scene before you write its beats (REQUIRED)
+
+The scene list (above) is the retention plan. The **blueprint** is the *spatial /
+cinematic* design of one scene: WHERE we are, WHAT real system it depicts, the metaphor,
+the objects, where the eye goes, and beat-by-beat what changes. Fill the blueprint FIRST —
+it is what makes a scene feel like a designed shot instead of a slideshow. It is the
+single biggest lever on "does this look like the real software and explain something."
+
+Fill every field. If you can't answer a field, the scene isn't designed yet.
+
+```
+## SCENE X — [TITLE]
+
+LEARNING GOAL:    the ONE thing the viewer should learn (one sentence)
+LOCATION:         where we are — e.g. Claude Code terminal / VS Code / Usage dashboard
+REALITY ANCHOR:   the real software/system this is based on (Claude Code, VS Code, Terminal…)
+VISUAL METAPHOR:  how the concept is shown — e.g. context → stack of paper, tokens → battery,
+                  search → scan beam, queue → conveyor
+ENVIRONMENT:      everything visible in the frame (the set)
+OBJECTS:          the things that MOVE (the actors)
+PRIMARY FOCUS:    where the eye lands FIRST
+ENTRY TRANSITION: how we enter — match cut / morph / camera push / follow motion / slide
+INITIAL STATE:    how the scene begins (the set at rest)
+FINAL STATE:      how the scene ends (what changed)
+ATTENTION FLOW:   1 → 2 → 3 → 4   (the path the eye takes across the scene)
+
+BEAT 1
+  PURPOSE:        why this beat exists (what it teaches/advances)
+  VISUAL ACTION:  the motion event (one event — never two ideas at once)
+  STATE CHANGE:   what is different on screen after this beat
+  TEXT:           ≤ 3 words OR one number   (or none)
+BEAT 1 → 2:       how attention moves to the next beat
+BEAT 2 … (repeat) …
+
+NARRATION:        the voice-over for the scene (becomes the per-beat `>` lines, see below)
+EXIT TRANSITION:  how the scene leaves — camera follows object / morph into next / wipe / match cut
+NEXT SCENE HOOK:  the visual element that connects to the next scene (the match-cut handle)
+ON-SCREEN TEXT:   max 3 words OR 1 number per beat. NO paragraphs. NO explanatory labels.
+```
+
+### Hard rules this blueprint enforces
+
+- **REALITY ANCHOR is mandatory.** Every scene must look like the real thing it's about
+  (the actual Claude Code terminal, a real VS Code window) — not abstract shapes on empty
+  canvas. A viewer should recognise the software.
+- **One VISUAL METAPHOR, reused.** Pick the metaphor in the first body scene and keep it
+  consistent (the v2 system: battery = budget, paper stack = context, scan beam = reading).
+  Don't invent a new object every scene.
+- **ATTENTION FLOW is the antidote to clutter.** If you can't write a clean 1→2→3 eye path,
+  the frame has too much in it.
+- **ON-SCREEN TEXT ≤ 3 words / 1 number per beat.** Never put the narration paragraph on
+  screen. 70–90% of understanding comes from the visual; text only LABELS what motion can't
+  say. (This is the visual-first rule — see `script-animation-bullets`.)
+- **One VISUAL ACTION per beat.** Two ideas animating at once = split into two beats.
+
+### Blueprint → the parseable scene (what you actually save)
+
+The blueprint is the DESIGN. The pipeline parser
+([source_parser.py](../../../storyboard/source_parser.py)) reads the **pair-block** beat
+format — so each BEAT becomes a timecoded bullet that carries its own narration + anchor.
+The mapping:
+
+| Blueprint field | Where it goes in the saved `.txt` |
+|---|---|
+| `## SCENE X — TITLE` | the scene header `## SCENE N — "Title" (M:SS – M:SS)` |
+| LEARNING GOAL / REALITY ANCHOR / VISUAL METAPHOR / ATTENTION FLOW / ENTRY+EXIT / NEXT HOOK | a scene design block (parser ignores unknown lines — keep them; they guide the bullet coder) |
+| BEAT n PURPOSE + VISUAL ACTION + STATE CHANGE | the beat's `what happens:` lines |
+| BEAT n TEXT | the beat's `text:` line (≤3 words / 1 number) |
+| LOCATION / ENVIRONMENT / OBJECTS | the beat's `location:` and `visible:` lines |
+| NARRATION (split per beat) | each beat's `> …` line |
+| (chosen trigger word) | the beat's `audio_anchor:` (verbatim from that beat's `>` line) + `anchor_mode:` |
+
+Resulting saved form (one beat shown — full format in `script-animation-bullets`):
+
+```
+## SCENE 1 — "One Message, Gone" (0:00 – 0:35)
+  <!-- LEARNING GOAL: four words can cost a third of the budget
+       REALITY ANCHOR: Claude Code terminal · METAPHOR: budget → battery
+       ATTENTION FLOW: typed command → battery → red third → "?"
+       ENTRY: cold open on black · EXIT: battery docks to corner → Scene 2 -->
+- **0:00 – 0:08 — Four words.**
+  > You typed four words. <pause 0.3s> "Fix the login bug."
+  what happens: terminal cursor blinks → command types itself, one word per beat;
+                BATTERY fades in top-right, full green, idle
+  location: Claude Code terminal
+  visible: terminal line, BATTERY
+  text: none
+  audio_anchor: four words
+  anchor_mode: through
+```
+
+Keep narration **per-beat** (`>` lines) — that is what makes the audio anchor drift-proof.
+Do NOT collapse it into one scene-level NARRATION block (that forces the legacy
+`### Narration` / `### Animation` format and reintroduces sync drift).
 
 ---
 

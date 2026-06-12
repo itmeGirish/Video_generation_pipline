@@ -1,0 +1,42 @@
+[
+  {
+    "framesFrom": 0,
+    "framesTo": 473,
+    "code": "const NARRATION_TEXT = \"So back to where we started. <pause 0.3s> Four words drained a third of your window \\u2014 not because Claude is stingy, but because every turn re-read a pile that never got smaller. The one habit that beats all the others? <pause 0.5s> Start fresh, and stay scoped. A clean chat for each task, pointed at the files that actually matter. <pause 0.3s> That single move shrinks the pile Claude re-reads more than every other tweak combined. So put a number on it. <pause 0.3s> The gap between a bloated workflow and a clean one isn't ten percent. It's often two to five times more work out of the exact same plan. <pause 0.6s> Most people blame the limits. They never blame the thing that's actually draining them \\u2014 the context they never reset. One clean chat. <pause 0.3s> One clear scope. That's the whole secret. <pause 0.5s> Now go check what's sitting in your context window \\u2014 you might be surprised what you've been re-reading all day.\";\nconst w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nreturn React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:D.font_display}},React.createElement(Kit.DotGrid,{}),React.createElement(Kit.Battery,{rem:0.6}),React.createElement('div',{style:{fontSize:R(w*0.02),color:D.text_dim,fontFamily:mono}},'—'));",
+    "audio_anchor": "where we started",
+    "anchor_mode": "appear",
+    "source_headline": "Back to the start."
+  },
+  {
+    "framesFrom": 473,
+    "framesTo": 602,
+    "code": "const NARRATION_TEXT = \"So back to where we started. <pause 0.3s> Four words drained a third of your window \\u2014 not because Claude is stingy, but because every turn re-read a pile that never got smaller. The one habit that beats all the others? <pause 0.5s> Start fresh, and stay scoped. A clean chat for each task, pointed at the files that actually matter. <pause 0.3s> That single move shrinks the pile Claude re-reads more than every other tweak combined. So put a number on it. <pause 0.3s> The gap between a bloated workflow and a clean one isn't ten percent. It's often two to five times more work out of the exact same plan. <pause 0.6s> Most people blame the limits. They never blame the thing that's actually draining them \\u2014 the context they never reset. One clean chat. <pause 0.3s> One clear scope. That's the whole secret. <pause 0.5s> Now go check what's sitting in your context window \\u2014 you might be surprised what you've been re-reading all day.\";\nconst w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nreturn React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:D.font_display}},React.createElement(Kit.DotGrid,{}),React.createElement(Kit.Battery,{rem:0.6}),React.createElement('div',{style:{fontSize:R(w*0.02),color:D.text_dim,fontFamily:mono}},'—'));",
+    "audio_anchor": "stay scoped",
+    "anchor_mode": "land",
+    "source_headline": "The one habit."
+  },
+  {
+    "framesFrom": 602,
+    "framesTo": 1050,
+    "code": "const NARRATION_TEXT = \"So back to where we started. <pause 0.3s> Four words drained a third of your window \\u2014 not because Claude is stingy, but because every turn re-read a pile that never got smaller. The one habit that beats all the others? <pause 0.5s> Start fresh, and stay scoped. A clean chat for each task, pointed at the files that actually matter. <pause 0.3s> That single move shrinks the pile Claude re-reads more than every other tweak combined. So put a number on it. <pause 0.3s> The gap between a bloated workflow and a clean one isn't ten percent. It's often two to five times more work out of the exact same plan. <pause 0.6s> Most people blame the limits. They never blame the thing that's actually draining them \\u2014 the context they never reset. One clean chat. <pause 0.3s> One clear scope. That's the whole secret. <pause 0.5s> Now go check what's sitting in your context window \\u2014 you might be surprised what you've been re-reading all day.\";\nconst w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nreturn React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:D.font_display}},React.createElement(Kit.DotGrid,{}),React.createElement(Kit.Battery,{rem:0.6}),React.createElement('div',{style:{fontSize:R(w*0.02),color:D.text_dim,fontFamily:mono}},'—'));",
+    "audio_anchor": "actually matter",
+    "anchor_mode": "through",
+    "source_headline": "The biggest win."
+  },
+  {
+    "framesFrom": 1050,
+    "framesTo": 1522,
+    "code": "const NARRATION_TEXT = \"So back to where we started. <pause 0.3s> Four words drained a third of your window \\u2014 not because Claude is stingy, but because every turn re-read a pile that never got smaller. The one habit that beats all the others? <pause 0.5s> Start fresh, and stay scoped. A clean chat for each task, pointed at the files that actually matter. <pause 0.3s> That single move shrinks the pile Claude re-reads more than every other tweak combined. So put a number on it. <pause 0.3s> The gap between a bloated workflow and a clean one isn't ten percent. It's often two to five times more work out of the exact same plan. <pause 0.6s> Most people blame the limits. They never blame the thing that's actually draining them \\u2014 the context they never reset. One clean chat. <pause 0.3s> One clear scope. That's the whole secret. <pause 0.5s> Now go check what's sitting in your context window \\u2014 you might be surprised what you've been re-reading all day.\";\nconst w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nreturn React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:D.font_display}},React.createElement(Kit.DotGrid,{}),React.createElement(Kit.Battery,{rem:0.6}),React.createElement('div',{style:{fontSize:R(w*0.02),color:D.text_dim,fontFamily:mono}},'—'));",
+    "audio_anchor": "two to five times",
+    "anchor_mode": "land",
+    "source_headline": "Two to five times."
+  },
+  {
+    "framesFrom": 1522,
+    "framesTo": 1749,
+    "code": "const NARRATION_TEXT = \"So back to where we started. <pause 0.3s> Four words drained a third of your window \\u2014 not because Claude is stingy, but because every turn re-read a pile that never got smaller. The one habit that beats all the others? <pause 0.5s> Start fresh, and stay scoped. A clean chat for each task, pointed at the files that actually matter. <pause 0.3s> That single move shrinks the pile Claude re-reads more than every other tweak combined. So put a number on it. <pause 0.3s> The gap between a bloated workflow and a clean one isn't ten percent. It's often two to five times more work out of the exact same plan. <pause 0.6s> Most people blame the limits. They never blame the thing that's actually draining them \\u2014 the context they never reset. One clean chat. <pause 0.3s> One clear scope. That's the whole secret. <pause 0.5s> Now go check what's sitting in your context window \\u2014 you might be surprised what you've been re-reading all day.\";\nconst w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nreturn React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:D.font_display}},React.createElement(Kit.DotGrid,{}),React.createElement(Kit.Battery,{rem:0.6}),React.createElement('div',{style:{fontSize:R(w*0.02),color:D.text_dim,fontFamily:mono}},'—'));",
+    "audio_anchor": "the whole secret",
+    "anchor_mode": "land",
+    "source_headline": "Start fresh. Stay scoped."
+  }
+]

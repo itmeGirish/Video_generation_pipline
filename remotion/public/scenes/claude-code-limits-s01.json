@@ -1,0 +1,34 @@
+[
+  {
+    "framesFrom": 0,
+    "framesTo": 110,
+    "code": "const w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nvar c='fix the login bug';var n=Math.max(0,Math.floor(interpolate(frame,[8,dur*0.72],[0,c.length],CLAMP)));return React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg}},React.createElement(Kit.Terminal,{cwd:'~/login-app',lines:[{text:'Welcome back. What should I work on?',kind:'think'}],contextLeft:1,prompt:c.slice(0,n)}));",
+    "audio_anchor": "four words",
+    "anchor_mode": "through",
+    "source_headline": "Four words."
+  },
+  {
+    "framesFrom": 110,
+    "framesTo": 316,
+    "code": "const w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nvar cl=interpolate(frame,[6,dur*0.95],[1.0,0.82],CLAMP);var lines=[{text:'fix the login bug',kind:'user'},{text:'Read(login.ts)',kind:'tool'},{text:'Read 45 lines',kind:'result'},{text:'Read(auth.ts), Read(middleware.ts)',kind:'tool'},{text:'Read 120 lines',kind:'result'},{text:'Update(login.ts)',kind:'tool'},{text:'12 additions, 4 removals',kind:'result'},{text:'Bash(npm test)',kind:'tool'},{text:'3,000 lines  ·  2 failed',kind:'result'}];var bx=R(w*0.78),by=R(h*0.15);var cup=React.createElement('div',{style:{position:'absolute',left:bx,top:by,width:R(w*0.04),height:R(h*0.055),borderRadius:'0 0 '+R(w*0.008)+'px '+R(w*0.008)+'px',backgroundColor:D.surface,border:'2px solid '+D.text_dim}});var handle=React.createElement('div',{style:{position:'absolute',left:bx+R(w*0.04),top:by+R(h*0.012),width:R(w*0.014),height:R(h*0.028),borderRadius:'0 '+R(w*0.014)+'px '+R(w*0.014)+'px 0',border:'2px solid '+D.text_dim,borderLeft:'none'}});var steam=[0,1,2].map(function(i){var sy=((frame*1.5+i*16)%36);var so=interpolate(sy,[0,10,36],[0,0.5,0],CLAMP);return React.createElement('div',{key:i,style:{position:'absolute',left:bx+R(w*0.008)+i*R(w*0.012),top:by-R(h*0.012)-sy,width:R(w*0.003),height:R(h*0.014),borderRadius:R(w*0.0015),backgroundColor:D.text_dim,opacity:so}});});var lbl=React.createElement('div',{style:{position:'absolute',left:bx-R(w*0.004),top:by+R(h*0.062),fontFamily:mono,fontSize:R(w*0.015),color:D.text_dim}},'2 min');return React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg}},React.createElement(Kit.Terminal,{cwd:'~/login-app',lines:lines,spinner:true,contextLeft:cl}),cup,handle,React.createElement('div',{},steam),lbl);",
+    "audio_anchor": "hit enter",
+    "anchor_mode": "through",
+    "source_headline": "Coffee break."
+  },
+  {
+    "framesFrom": 316,
+    "framesTo": 436,
+    "code": "const w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nvar cl=interpolate(frame,[2,16],[0.82,0.67],CLAMP);var lines=[{text:'fix the login bug',kind:'user'},{text:'Read(login.ts), Read(auth.ts), Read(middleware.ts)',kind:'tool'},{text:'Read 210 lines',kind:'result'},{text:'Update(login.ts)',kind:'tool'},{text:'12 additions, 4 removals',kind:'result'},{text:'Bash(npm test)',kind:'tool'},{text:'3,000 lines  ·  passed',kind:'result'},{text:'Done — login bug fixed.',kind:'think'}];var pu=spring({frame:frame-R(dur*0.30),fps,config:{damping:12,stiffness:140}});var sc=interpolate(pu,[0,1],[1.5,1]);var op=interpolate(frame,[R(dur*0.30),R(dur*0.30)+4],[0,1],CLAMP);var stamp=React.createElement('div',{style:{position:'absolute',left:R(w*0.62),top:R(h*0.34),opacity:op,transform:'scale('+sc+')',transformOrigin:'left center'}},React.createElement('div',{style:{fontFamily:D.font_display,fontWeight:700,fontSize:R(w*0.11),color:D.red,lineHeight:1}},'−33%'),React.createElement('div',{style:{fontFamily:mono,fontSize:R(w*0.018),color:D.text_dim,marginTop:R(h*0.01)}},'context · 1 message'));return React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg}},React.createElement(Kit.Terminal,{cwd:'~/login-app',lines:lines,contextLeft:cl}),stamp);",
+    "audio_anchor": "by a third",
+    "anchor_mode": "land",
+    "source_headline": "A third, gone."
+  },
+  {
+    "framesFrom": 436,
+    "framesTo": 830,
+    "code": "const w=width,h=height;const R=Math.round;const mono=D.font_mono;const CLAMP={extrapolateLeft:'clamp',extrapolateRight:'clamp'};const dur=durationInFrames;\nvar t=interpolate(frame,[4,R(dur*0.45)],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp',easing:Easing.out(Easing.cubic)});var q=spring({frame:frame-R(dur*0.55),fps,config:{damping:12,stiffness:120}});var cy=R(h*0.44);var lchip=React.createElement('div',{style:{position:'absolute',left:R(w*0.12),top:cy-R(h*0.05),width:R(w*0.17),height:R(h*0.10),borderRadius:R(w*0.008),border:'2px solid '+D.cyan,backgroundColor:D.surface,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',opacity:t,transform:'scale('+t+')'}},React.createElement('div',{style:{fontFamily:D.font_display,fontWeight:700,fontSize:R(w*0.024),color:D.cyan,lineHeight:1}},'4 words'),React.createElement('div',{style:{fontFamily:mono,fontSize:R(w*0.0115),color:D.text_dim,marginTop:R(h*0.006)}},'fix the login bug'));var rblk=React.createElement('div',{style:{position:'absolute',left:R(w*0.49),top:cy-R(h*0.21),width:R(w*0.40),height:R(h*0.42),borderRadius:R(w*0.014),backgroundColor:D.red,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',opacity:t,transform:'scale('+t+')'}},React.createElement('div',{style:{fontFamily:D.font_display,fontWeight:700,fontSize:R(w*0.12),color:D.bg,lineHeight:1}},'−33%'),React.createElement('div',{style:{fontFamily:mono,fontSize:R(w*0.017),color:D.bg,marginTop:R(h*0.012),opacity:0.8}},'of your window'));var brk=React.createElement('div',{style:{position:'absolute',left:R(w*0.29),top:cy-2,width:R(w*0.20),height:3,backgroundColor:D.text_dim,opacity:t*0.5}});var qm=React.createElement('div',{style:{position:'absolute',left:0,right:0,top:R(h*0.82),textAlign:'center',fontFamily:D.font_display,fontWeight:700,fontSize:R(w*0.06),color:D.red,opacity:q}},'?');return React.createElement(AbsoluteFill,{style:{backgroundColor:D.bg}},React.createElement(Kit.Terminal,{cwd:'~/login-app',lines:[],contextLeft:0.67,dim:0.1}),brk,lchip,rblk,qm);",
+    "audio_anchor": "doesn't add up",
+    "anchor_mode": "through",
+    "source_headline": "The math doesn't add up."
+  }
+]

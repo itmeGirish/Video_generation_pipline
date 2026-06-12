@@ -10,6 +10,15 @@ more memorable and far more watchable than a list of points. After the scene str
 exists (rule 01), layer a narrative over it so the video feels like a story being told,
 not a topic being covered.
 
+> **STORY IS PRIMARY — animation is LAST.** The priority order is
+> **Storytelling → Information Design → Visual Design → Animation.** Most videos fail because
+> they optimize animation before story. **Full framework + the 15 parameters + the Storytelling
+> Scorecard: `references/storytelling_principles.md` — read and apply it FIRST.** Get the story
+> scoring high on the page before any beat is designed; if the story is weak, no animation saves
+> it. The biggest technical-explainer mistakes: too much explanation / not enough curiosity; too
+> many facts / not enough stakes; too many concepts / not enough narrative progression — fix those
+> here, before `script-animation-bullets`.
+
 This is a LAYER, not a replacement: the scene arc and loop chain from rule 01 still hold.
 Storytelling gives those scenes a spine, stakes, and an emotional arc.
 
@@ -146,6 +155,14 @@ it wrong.)
 
 ## Applying story to a non-fiction explainer
 
+> This is **Levels 1–2 (Story + Information)** of the animation framework
+> (`script_generation/references/explainer_animation_principles.md`). The story you find here must
+> become VISIBLE in the animation: show **cause→effect** (the chain, not the conclusion), show
+> **process not outcome** (the build-up, not "it became huge"), and turn abstractions **physical**
+> via a **consistent metaphor** (context=backpack, debt=weight, memory=notebook — and keep that one
+> metaphor for the whole video, never swap backpack→bar→meter for the same concept). The story
+> isn't just narration — it's what the picture does.
+
 You're not inventing fiction — you're finding the story that's already in the facts:
 
 1. **Find the conflict in the topic** — the tension, the surprising contradiction, the
@@ -181,6 +198,25 @@ If it's just the fact, add the zoom-out — the sentence a viewer would quote a 
 This is the home of the **one shareable insight** (rule 07 / rule 06 Test 12): plant it,
 then end on it. (Don't force a grand claim the script didn't earn — the bigger idea must
 follow honestly from what you showed.)
+
+### The ending's stakes must MATCH OR EXCEED the hook's — never deflate
+
+A correct-but-small ending is a real failure: if the hook promised a big, visceral stake and the
+payoff lands on a calm instruction, the video deflates and the last impression is flat (real
+review finding, 2026-06-10: hook = "you lost a third of your usage from one message"; ending =
+"start fresh, stay scoped" — accurate, but emotionally smaller than the hook, so it landed soft).
+
+Rule: the final beat must hit at the hook's emotional level or higher. A quiet how-to line
+("do X and Y") is the *mechanism* — wrap it in the stake that mirrors the hook.
+
+| ❌ Deflated ending (smaller than hook) | ✅ Stake-matched ending |
+|---|---|
+| "Start fresh and stay scoped." | "The difference isn't ten percent. It's two to five times more work from the same plan." |
+| "So compact your context." | "Most people blame the limits. The real problem is they never reset." |
+
+**The test:** read the hook line and the final line back to back. If the ending feels *smaller*,
+restate it as a consequence at the hook's scale (the number, the 2×–5×, the reframe) — keep the
+how-to, but end on the stake, not the instruction.
 
 ---
 

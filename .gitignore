@@ -86,3 +86,8 @@ storyboard/.stitch_work/
 storyboard/.cache/
 remotion/out/
 remotion/public/vo-*.mp3
+
+# Heavy local assets (not for git)
+models/piper/*.onnx
+documents/*.mp4
+remotion/out/*.mp4

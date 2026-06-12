@@ -147,6 +147,18 @@ ANIMATION QUALITY — <name>, Scene N
 scene. Report the per-factor scores, not just the total, so the weakest factor is obvious.
 Lowest factor ≤ 4 on any scene = fix it even if the total clears 70.
 
+**Hard caps from the universal framework** (`script_generation/references/explainer_animation_principles.md`)
+— a scene that fails any of these is capped regardless of its other factors:
+- **Animates a NOUN, not a verb** (a static object sitting there vs the input consuming/producing it) → cap ≤5.
+- **Cause and effect not visually connected** (two related elements in separate corners) → cap ≤5.
+- **The invisible system isn't shown** (an abstract bar instead of the real units/parts) → cap ≤5.
+- **Sparse / thin primary on empty canvas** (dense-by-AREA failure) → cap ≤4.
+- **Fails the mute test** (muted, you can't tell what it is / what point it makes) → cap ≤4.
+
+Also apply the **screenshot test** (pause any frame — does it communicate alone?) and the
+**memory test** (in 24h the viewer remembers metaphors/comparisons/transformations, not labels).
+A scene whose only takeaway is a label will not survive the day — strengthen it.
+
 ---
 
 ## The #1 lever — consequence visualization

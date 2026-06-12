@@ -177,14 +177,61 @@ EVERY bullet against all of them. (Render-only versions are re-checked by layer 
 | E1 | **Floating fragment** — an ADD bullet draws only a delta and relies on a prior bullet's elements still being on screen; under slot-based rendering the canvas blanks between bullets, so it renders as a lone fragment | bullet is ADDITIVE and its body references/depends on an element introduced in an earlier bullet ("the box from before", "beside the previous bar", "the meter keeps…") without redrawing it. → FAIL: make it self-contained (redraw prior context) or `[REPLACE]` |
 | E2 | **Context-free visual** — bare shapes/numbers with no title/labels; a deaf viewer can't tell WHAT it is ("4.5 4.6 4.7 4.8" with no axis) | no short TITLE naming the visual + no entity labels + no payoff tag. → FAIL: add a context header + labels |
 | E3 | **Caption-zone / off-canvas** — element placed in the reserved bottom 12% or off-frame | body specifies `top > h*0.88`, `bottom < h*0.10`, a footer at `h*0.9x`, or any coordinate outside 0–1×canvas. → FAIL: cap overlays at `top: h*0.82` |
-| E4 | **Tiny primary** — the element the viewer must see is small on a black field | the hero/primary element has width/footprint < ~50% canvas, or no size given on a centered element. → FAIL: primary ≥ `w*0.50` / fills ≥60% |
+| E4 | **Tiny primary (by AREA, not width)** — the element the viewer must see is small on the canvas. A *wide thin bar* fails this too: `w*0.50` wide × `h*0.045` tall ≈ 2% of the canvas area — that is NOT a prominent primary | the hero element's FOOTPRINT (width×height) < ~25% of canvas, OR it's a thin bar/line (height < `h*0.10`) used as the scene's main visual, OR no size on a centered element. → FAIL: the primary must occupy a real AREA (a panel/grid/tank ≥ `w*0.45 × h*0.40`), not a sliver |
 | E5 | **A4 freeze** — a static frame held >3s mid-bullet (not the final hold) | bullet duration >3s with no always-alive motion named (pulse / counter / drift / scan). → FAIL: add subtle continuous motion |
 | E6 | **Emoji hang** — astral-plane emoji glyph hangs the headless render | any emoji in the body (⏰🔍🐛🏁🔓🛡 etc.). → FAIL: replace with an SVG primitive. (BMP marks ✓ ✗ ★ ▶ → ↑ ↓ ⚠ · — are safe) |
 | E7 | **Flex-shrink bar** — a bar with explicit height inside a height-constrained flex column with sibling labels gets squashed | a bar/column described with siblings in one flex container and no dedicated height-area / `flexShrink:0`. → FAIL: give the bar its own height-area, labels outside |
 | E8 | **REPLACE leak / no backdrop** — scene/topic change without a full-canvas backdrop, so prior bullets bleed through | a `[REPLACE]` with no `AbsoluteFill` D.bg backdrop line, OR a scene change with no `[REPLACE]`. → FAIL: add the full-canvas backdrop |
+| E9 | **Sparse / empty canvas (THE #1 silent failure)** — the beat is one small/thin element + a couple of words on a mostly-empty field. It renders "clean" (so frame-inspection rubber-stamps it) but reads as *unfinished / explains nothing*. (Real failure, claude_code_limits S1 2026-06-10: a thin meter bar + a command on empty off-white — passed V13 by mistake, the user rejected it.) | the `what happens` describes a single thin/small primary with no scaffold, no dense sub-elements (grid/units/segments/axis), and ≥ ~half the canvas would be empty. → FAIL: make the primary a DENSE, canvas-filling visual (a grid of units, a tank with measurement ticks, a segmented bar) — the picture must fill the space and carry information, not float in a void |
+| E10 | **Disconnected cause & effect** — the beat shows a cause and its effect as two separate elements with no visual link, so the viewer can't tell one produced the other ("a command up here, a meter down there") | the beat names a cause and an effect (input→cost, action→result, X→Y) but describes them in separate regions with no connecting motion/arrow/flow/containment. → FAIL: show the causality — the cause visibly FEEDS / TRIGGERS / DRAINS the effect (an arrow, a flow, the input entering the thing it changes), so the link is on screen |
 
 Any E-row hit = FAIL the bullet, fix in rule 03, re-run. These mirror CLAUDE.md SHIFT-LEFT —
 if it's listed there, it's listed here as a check.
+
+**The deaf-viewer EXPLANATION test (apply to every beat, hardest gate):** freeze the beat's
+midpoint in your mind. With no audio and no prior context, can a viewer say (a) WHAT this is,
+and (b) what POINT it's making? If the answer is "a command and a bar… I guess usage went down?"
+— it FAILS. A beat must *explain*, not just *display*. Sparse + disconnected beats fail this by
+construction; that is exactly why E9/E10 exist.
+
+---
+
+## Check F — Universal Animation Scorecard (per scene)
+
+Run the 10-box scorecard from `script_generation/references/explainer_animation_principles.md`
+on every scene. The **four bold boxes are non-negotiable** — any one unchecked = scene FAILS.
+
+```
+□ Does something TRANSFORM (start ≠ end)?
+■ Is CAUSE/EFFECT visible (not just stated)?            ← non-negotiable
+■ Is ACTION shown, not labels (verbs, not static nouns)?← non-negotiable
+□ Is there ONE clear focus?
+□ Is there a COMPARISON (before/after, vs)?
+□ Is GROWTH / REDUCTION shown (if a quantity changes)?
+■ Is an INVISIBLE system made visible?                  ← non-negotiable
+■ Can it be understood MUTED?                           ← non-negotiable
+□ Is the motion MEANINGFUL (teaches, not decoration)?
+□ Does the viewer FEEL something?
+```
+
+**Gate:** any non-negotiable unchecked → scene NOT READY (redesign). < 6 / 10 total → REVISE.
+The classic failure this catches: a beat that animates a NOUN (a "meter", a "card") sitting on a
+near-empty canvas — it fails ACTION-over-labels, INVISIBLE→visible, and the MUTE test at once.
+Fix = animate the verb (the input consuming/producing the thing), show the invisible units, fill
+the canvas with the dense primary.
+
+**Deeper standard (premium tier):** the reference also carries the **4-level model** (Story /
+Information / Visual Design / Motion — most beginners only do Level 4, "moves but doesn't feel
+great") and the **per-shot Production Checklist** (15 questions per beat). Apply both for any beat
+aiming at Fireship/Johnny-Harris/Veritasium quality. Two extra tests worth running explicitly:
+- **Screenshot test** — pause ANY frame; can a viewer understand *that frozen frame alone*? (a
+  weak beat reads fine in motion but says nothing frozen). This is the per-frame form of the gate.
+- **Child test** — could a smart 12-year-old read the visual? If no → too abstract, add the
+  physical metaphor / concrete units.
+- **Memory test** — in 24h the viewer remembers metaphors / comparisons / transformations, never
+  labels. If the beat's only takeaway is a label, it won't survive the day → strengthen it.
+Sharpest premium levers beginners miss: animate **relationships** (A depends-on B) and
+**decisions** (watch the choosing), and show **consequences physically**.
 
 ---
 

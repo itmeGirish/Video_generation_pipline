@@ -1,0 +1,67 @@
+Create an engaging 8–10 minute YouTube script explaining why Claude Code usage limits get exhausted so quickly and how users can reduce consumption.
+
+Requirements:
+
+* Audience: Developers and Claude Code users, from beginners to intermediate.
+* Tone: Conversational, practical, and investigative. Avoid sounding like a documentation page.
+* Start with a strong hook that captures the frustration of hitting usage limits unexpectedly.
+* Focus on real-world Claude Code usage, not AI engineering, APIs, tokenization internals, RAG, agent architectures, or enterprise systems.
+* Explain concepts using relatable examples and scenarios.
+* Show both the user's perspective and what Claude Code is likely doing behind the scenes.
+
+Cover these topics naturally throughout the script:
+
+1. Why users hit Claude Code limits faster than expected.
+2. How Claude Code consumes context while reading files, codebases, logs, terminal output, and conversation history.
+3. The biggest hidden usage killers:
+
+   * Large codebases
+   * Long-running chats
+   * Repeated retries
+   * Large pasted files
+   * Broad, unfocused requests
+4. Real examples comparing inefficient vs efficient workflows.
+5. Practical techniques to reduce usage:
+
+   * Starting fresh chats when appropriate
+   * Limiting scope to specific files or modules
+   * Sharing only relevant code
+   * Planning before implementation
+   * Combining related requests
+6. Common misconceptions about how usage is calculated.
+7. Actionable habits viewers can adopt immediately.
+
+Script requirements:
+
+* Prioritize storytelling over definitions.
+* Use concrete examples instead of abstract explanations.
+* Avoid robotic transitions such as "Firstly", "Secondly", or "In conclusion".
+* Maintain curiosity and momentum throughout the video.
+* Include natural open loops that encourage viewers to keep watching.
+* Every explanation should answer "Why should the viewer care?"
+* Do not repeat the same point in different words.
+* End with a memorable takeaway summarizing the highest-impact changes users should make.
+
+For every scene include:
+
+Narration:
+
+* What is spoken.
+
+Visual:
+
+* What appears on screen.
+
+Motion:
+
+* Animation only when it improves understanding.
+
+Animation Guidelines:
+
+* Apply Staging, Timing, Anticipation, Slow In/Slow Out, Secondary Action, and Appeal only when they improve clarity, storytelling, or viewer engagement.
+* Do not force animation principles into every scene.
+* Every animation must help explain the concept being discussed.
+* If an animation does not improve understanding, omit it.
+* Viewers should always know where to look.
+* Key visual moments should align with narration.
+* Maintain clear visual hierarchy and strong visual metaphors.

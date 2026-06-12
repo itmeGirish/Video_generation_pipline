@@ -1,5 +1,0 @@
-{
-  "code": "const w=width,h=height;\nconst sp=spring({frame,fps,config:{damping:15,stiffness:80,mass:2}});\nconst stamp=React.createElement('div',{style:{position:'absolute',left:0,top:0,width:w,height:h,display:'flex',alignItems:'center',justifyContent:'center',opacity:sp,transform:'scale('+sp+')'}},\n  React.createElement('div',{style:{border:'5px solid '+D.red,borderRadius:8,padding:Math.round(h*0.040)+' '+Math.round(w*0.06),backgroundColor:D.bg+'ee',textAlign:'center',display:'flex',flexDirection:'column',gap:Math.round(h*0.02)}},\n    React.createElement('div',{style:{color:D.red,fontFamily:D.font_mono,fontSize:Math.round(w*0.028),fontWeight:'900',letterSpacing:'0.12em'}},'WORSE RESULTS.'),\n    React.createElement('div',{style:{color:D.red,fontFamily:D.font_mono,fontSize:Math.round(w*0.028),fontWeight:'900',letterSpacing:'0.12em'}},'HIGHER COST.')\n  )\n);\nreturn [stamp];",
-  "audio_anchor": "at scale",
-  "source_headline": "WORSE RESULTS HIGHER COST stamp."
-}

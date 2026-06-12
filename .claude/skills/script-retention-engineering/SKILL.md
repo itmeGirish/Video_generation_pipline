@@ -121,9 +121,12 @@ instead of sentence 1.)
 **Test:** at the midpoint, is there a new question, a new visual, or a new stake? If the
 middle is just "more information," it will sag.
 
----
-
-## Drop 3 — The pre-ending skip (85–90%)
+**REQUIRED — a midpoint "wait, WHAT?" beat.** The mid-video drop is not fixed by more
+explanation; it's fixed by a genuine *surprise*. Every explainer must place one counterintuitive
+reveal around the 40–60% mark — not a restatement of the core idea, a NEW twist (real review
+finding, 2026-06-10: minute 5–7 went purely educational with no surprise, a predicted retention
+dip). Pattern that works: "the biggest cost isn't the obvious thing — it's the thing you forgot
+was still there." If the midpoint only teaches, it sags; give it a jolt.
 
 **Cause:** the viewer senses the video is wrapping up and leaves before the payoff/CTA.
 

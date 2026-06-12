@@ -208,6 +208,16 @@ if __name__ == "__main__":
         print(json.dumps(get_scripts(), indent=2))
     elif command == "stats":
         print(json.dumps(get_stats(), indent=2))
+    elif command == "add_script":
+        if len(sys.argv) < 3:
+            print("Usage: script_db.py add_script '<json>'")
+            sys.exit(1)
+        print(add_script(json.loads(sys.argv[2])))
+    elif command == "save_preferences":
+        if len(sys.argv) < 3:
+            print("Usage: script_db.py save_preferences '<json>'")
+            sys.exit(1)
+        print(save_preferences(json.loads(sys.argv[2])))
     else:
         print(f"Unknown command: {command}")
         sys.exit(1)

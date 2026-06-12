@@ -54,3 +54,29 @@ The target is the middle: *as much motion as serves understanding, and no more.*
 **Gate:** < 7 → REVISE the beat. A frozen/decorative-only beat caps at ≤4. Report the weakest
 beat + the one change that raises it most (add a purposeful counter/scaffold/label if thin;
 remove purposeless motion if busy).
+
+---
+
+## CLEAN ≠ GOOD — the rubber-stamp trap (read before scoring a frame)
+
+The #1 way a bad scene ships is inspecting the rendered frame, seeing it's *clean and readable*,
+and scoring it PASS. **Clean is not the bar. Dense + explanatory + causal is the bar.** (Real
+failure, claude_code_limits S1 2026-06-10: a thin meter bar + a command on empty off-white
+rendered perfectly clean and was scored PASS — the user rejected it as explaining nothing.)
+
+Apply these MEASURABLE tests to every frame, not a vibe:
+
+1. **Canvas-fill (hard):** does the primary visual occupy a real AREA — roughly **≥25–30% of the
+   frame** — and is **less than half the frame empty background**? A wide *thin* bar fails: it can
+   be 50% wide but ~2% area. If the frame is mostly empty field with a sliver + a few words →
+   **cap ≤4** (this is `script-animation-validator` E9 at render time).
+2. **Causality (hard):** if the beat has a cause and an effect, are they **visually connected** on
+   the frame (arrow / flow / the input entering the thing it changes)? Two related elements in
+   separate corners with no link → **cap ≤5** (E10).
+3. **Deaf-viewer explanation (hard):** with audio off, does the frame say WHAT it is and what
+   POINT it makes? If the honest read is "a command and a bar, usage went down I guess" → it does
+   not explain → **cap ≤5**.
+
+If you cannot point to the dense primary, the causal link, and the explained point in the actual
+pixels, do NOT score it ≥7 — send it back to re-author. Never report "frames are clean" as the
+verdict; report whether the frame is dense, causal, and self-explaining.

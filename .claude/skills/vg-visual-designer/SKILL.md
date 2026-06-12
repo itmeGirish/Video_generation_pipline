@@ -36,7 +36,55 @@ preflight suite.
 
 The script is the **director layer**: each bullet's `what happens` is a plain beat sequence (WHAT
 the viewer sees) + an `audio_anchor`/`anchor_mode`. Your job is **translation, not invention** —
-turn each beat into a `Kit` composition; the physics is applied automatically. Per bullet:
+turn each beat into a `Kit` composition; the physics is applied automatically.
+
+0. **Establish the SCENE first — read the scene BLUEPRINT, then `location:` + `visible:`.** If the
+   scene has a blueprint header (LEARNING GOAL / LOCATION / REALITY ANCHOR / VISUAL METAPHOR /
+   ENVIRONMENT / OBJECTS / PRIMARY FOCUS / ATTENTION FLOW — see `vg-source-script-format`
+   §"Scene-blueprint template"), it IS the design contract: **REALITY ANCHOR** says which real
+   software to make the frame look like — and you must build the ACTUAL interface, not an assumed
+   one. Research the real look first (real prompt box, real tool-call format, how usage/limits are
+   actually shown); never fabricate UI the product doesn't have (e.g. a top "usage bar" Claude Code
+   has no such thing). A viewer who uses the tool spots a fake instantly (see
+   `script-research` §"The REAL interface"). **VISUAL METAPHOR / OBJECTS** name the persistent objects
+   to reuse (don't invent a new one per scene); **PRIMARY FOCUS / ATTENTION FLOW** set the eye path.
+   Then read the WHERE (location) and the named objects (visible) and build that setting as
+   the scene's persistent frame — e.g. a Claude Code terminal, a usage gauge, a split-screen. Hold
+   those objects at FIXED positions across all the scene's beats (continuity); the beats only change
+   their state (each beat's `Visual Action` + `State Change`). This orients the viewer ("where am
+   I?") — the #1 fix for "abstract" visuals.
+
+   **CONSISTENT SCENE-DESIGN DNA = the 5 PRINCIPLES (carry these across every scene — do NOT copy
+   scene 1's literal layout).** What's constant is the PRINCIPLES, not the picture. Each scene gets
+   its OWN scene-appropriate recognizable interface — S1 = a code editor + Claude Code terminal,
+   S2 = a usage/status dashboard, S3 = a conversation/context view, S7 = a split-screen, etc. — and
+   ALL of them obey these five (the reference is how scene 1 did it):
+   1. **Real recognizable interface** — a dark panel with a title bar + 3 traffic dots, answering
+      "where am I?" (follows `location:`). Not floating title-text + shapes on empty bg.
+   2. **Dense, frame-filling** — the panel + living object fill the frame; never ≥half empty beige.
+   3. **Living object** — the usage tank / context pile / terminal, same form + position each scene.
+   4. **Action + cause→effect** — something HAPPENS in the panel that visibly drives the living object.
+   5. **Color identity** — green=remaining · red=consumed · amber=draining · cyan=input · violet=context.
+   Concretely, every scene shares:
+   - light `D.bg` + `Kit.DotGrid`, and a **dark rounded interface PANEL** (`D.text`, `borderRadius`,
+     a title bar = 3 traffic dots + a `<context> — my-app` mono label) as the primary container —
+     the recognizable "app/interface" chrome. NOT floating title-text + shapes on empty background.
+   - the recurring **living objects** (usage fuel-tank, Claude Code terminal, context pile/backpack)
+     drawn the SAME way every scene, at consistent positions (tank ≈ right third; terminal/panel ≈
+     left).
+   - **DENSE, frame-filling** — the panel + living object fill the frame; never leave ≥half the
+     canvas as empty beige (that's the scene-2-sparse failure; fails E9). If a scene has only a
+     little content, the interface chrome + readout rows + the tank fill the space.
+   - color identity held: green=remaining · red=consumed/waste · amber=draining · cyan=your input ·
+     violet=context/time.
+   A scene that renders as a title + a couple of floating shapes on empty bg = INCONSISTENT → rebuild
+   it to the panel+living-object DNA before advancing.
+
+   Also honor the beat's framework parameters (the script writes these explicitly):
+   **Cause→Effect→Cost** (render the actor doing the thing → the visible result → the **VISIBLE COST**
+   — token stamps like `+400`, `+6,000`, `−47%` are part of the explanation, render them, not
+   decoration) and **living objects** (the usage gauge / context pile recur across scenes — same form,
+   same colors). Then per bullet:
 
 1. **Timing (mechanical, already done):** the build set `framesFrom` from the bullet's
    `audio_anchor` (+ appear/through/land). Sequence the beats across `[0, durationInFrames]` —

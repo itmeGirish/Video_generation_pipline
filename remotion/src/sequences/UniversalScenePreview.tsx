@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill } from 'remotion';
 import { TIMELINES } from '../storyboard/timelines';
-import { VideoCaptions, WordTimestamp } from '../components/VideoCaptions';
+import type { WordTimestamp } from '../types';
 import { UniversalScene, VisualBlock } from '../universal/UniversalScene';
 import { D } from '../universal/design';
 
@@ -42,9 +42,7 @@ export const makeUniversalScenePreview = (sceneId: string): React.FC => {
   const Preview: React.FC = () => (
     <AbsoluteFill style={{ backgroundColor: D.bg, overflow: 'hidden' }}>
       <UniversalScene blocks={blocks} captions={words} />
-      {words.length > 0 && (
-        <VideoCaptions wordTimestamps={words} wordsPerGroup={4} accentColor={D.cyan} />
-      )}
+      {/* Burned-in captions disabled — separate SRT used for YouTube upload */}
     </AbsoluteFill>
   );
   Preview.displayName = `universal_${sceneId}`;

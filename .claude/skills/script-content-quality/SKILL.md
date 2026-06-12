@@ -293,6 +293,51 @@ high-arousal beat from research (rule 00), and plant one share-worthy line (rule
 
 ---
 
+## Test 13 — Redundancy: one metaphor per concept, no re-explaining a landed idea
+
+The most common "too long" failure is NOT extra topics — it's the **same idea re-explained
+through several metaphors**. Once the viewer gets a concept, repeating it with a new image is
+not reinforcement, it's filler that tanks retention (real review finding, 2026-06-10: the
+re-read concept was taught via notebook + backpack + "growing pile" + "long chat" — four images
+for one idea; a reviewer flagged ~14 min of runtime for ~8–10 min of content).
+
+Check:
+- **One metaphor per concept.** Pick the single best image for each core idea and cut the rest.
+  A second metaphor for an idea the viewer already has = cut it or replace it with NEW information.
+- **Don't re-teach a landed idea.** After the concept lands (usually by the scene that reveals
+  it), later scenes must ADD (a consequence, a number, a concrete case) — never restate it in
+  new words. Scan: if scene N's narration could be summarized as "remember, X" where X was
+  already taught, it's redundant.
+- **Replace, don't just cut.** When you remove repeated explanation, fill the space with a
+  CONCRETE worked example (Test 14) or a new surprise — keep the runtime, raise the density.
+- **Phrase-repeat scan.** Grep the narration for stock frames reused across scenes ("the real
+  problem…", "the truth is…", "here's the…"). Any frame used 2+ times → vary it.
+
+**PASS:** each core idea has exactly one metaphor; every scene after the reveal adds new
+information; no stock phrase repeats. **FAIL:** the same idea is re-imaged or restated — cut to
+the single best version and backfill with a concrete example or a new beat.
+
+---
+
+## Test 14 — The concrete worked example (show the real thing, don't just explain it)
+
+A how-it-works explainer needs **at least one concrete, specific walkthrough** — the real thing
+happening with real names and numbers — not only conceptual metaphors. Concepts explain; a worked
+example makes a claim *feel real* and is the single biggest credibility + memorability lift (real
+review finding: a "10×–100× tokens" claim stayed abstract because no actual session was ever shown).
+
+For any "why is X expensive / slow / hard" video, include one beat that shows the actual sequence:
+```
+real input → the real steps it triggers → the real artifacts (files, log lines, outputs) → the cost
+```
+e.g. `User: "fix login bug" → reads login.ts, auth.ts, middleware.ts → runs npm test → 3,000 lines
+of output back into context → re-reads → re-runs` — concrete files, a concrete line count.
+
+**PASS:** ≥1 scene shows a specific, named, realistic walkthrough that grounds the central claim.
+**FAIL:** the whole video is metaphors and concepts with no concrete instance — add the walkthrough.
+
+---
+
 ## A note on animation / visual quality
 
 This gate judges the **written content**. Whether the animation makes sense, looks good,

@@ -68,11 +68,46 @@ FOR each scene N (1 ascending):
           span into evolving sub-beats (script-animation-bullets §Rhythm). Judge by
           meaning vs visual change, not a fixed duration. (Real failure: a hook visual
           held static through three spoken ideas — 8s of one label.)
+       h. CROSS-BEAT CONSISTENCY (continuity — the evolve test): a scene is ONE evolving
+          visual, not 4 slides. Every PERSISTENT element — the anchor visual (grid/chart/
+          diagram), the command/title card, the corner status indicator, the labels — must
+          hold the SAME position and size across all beats; only its CONTENT may change.
+          Compare the same element across the beat frames: if the status indicator (e.g.
+          "100%" → "−33%" → "?") JUMPS position or size between beats, or the anchor shifts/
+          resizes, it reads as a slideshow → FAIL. Fix: anchor each persistent element to ONE
+          fixed position across all beats; evolve only the content/color. (Real failure,
+          claude_code_limits S1 2026-06-10: the top-right status used three different
+          mechanisms — Kit.Tag, then the Pool metric, then a custom div — in three different
+          spots, so it jumped around between beats. Also color identity must hold: an entity
+          keeps its token every beat.)
+       i. VIEWER-SENSE TEST (does the animation MAKE SENSE? — the hardest, most-skipped gate):
+          for each verified frame, do NOT ask "is it clean / does it render?" Ask: **"a viewer
+          who hits this frame cold, audio off — what do they THINK they're looking at, and does
+          it explain the concept?"** Answer out loud, in the viewer's words, per frame:
+          - Can they name WHAT each element IS? Abstract coloured bars/blocks/shapes labelled with
+            one tiny word ("you", "claude", "ctx") FAIL — a viewer sees "blue and purple bars," not
+            "a conversation being re-read." The visual must LOOK like the real thing (a chat with
+            message text, a file with a name + lines, a terminal with output) — not a bare rectangle.
+          - Can they see the POINT / the cause→effect? If a number on the right ("+9,000") is not
+            visibly PRODUCED by something on screen (a sweep over the pile, a flow into the meter),
+            the viewer can't connect them → FAIL.
+          - Is the motion CLEAN and legible — one clear thing happening, readable, not jittery or
+            ambiguous? "Renders without error" is NOT "makes sense."
+          If you cannot state, in a viewer's own words, what the frame means and what point it makes,
+          the beat FAILS the viewer-sense test → redesign so the picture reads as the real thing.
+          (Real failure, claude_code_limits S3: "you"/"claude" coloured bars — rendered fine, but a
+          viewer can't tell it's a conversation; abstract, made no sense.)
 
   ⚠ FRAME SAMPLING: extract verify frames at each bullet's MIDPOINT
     (`framesFrom + (framesTo−framesFrom)/2`), NOT at fixed wall-clock intervals.
     Fixed intervals land on bullet STARTS where entrance springs read ~0, so elements
     look "missing" — a false alarm. Always sample mid-beat.
+  ⚠ FULL RESOLUTION ONLY: read each verify frame at FULL 1920×1080 (`-q:v 2`), ONE frame
+    per Read. NEVER judge overlap/alignment from a downscaled filmstrip/contact-sheet
+    (tile=NxM, scale=480) — small tiles HIDE element overlaps and misalignment (real miss,
+    claude_code_limits S1 2026-06-10: a status tag overlapping the command card was invisible
+    in 480px tiles, caught only at full res). Use a filmstrip ONLY to confirm motion-over-time;
+    use full-res single frames to judge layout, overlap, and consistency.
   3. IF FAIL:
        - identify failing bullet(s) / factor(s)
        - for AUDIO SYNC failure: update framesFrom = round(word_start*fps)

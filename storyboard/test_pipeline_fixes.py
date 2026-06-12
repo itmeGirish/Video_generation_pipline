@@ -244,12 +244,17 @@ def test_find_phrase_handles_decimals_hyphens_pauses() -> None:
     ns: dict = {"re": re}
     # Constants referenced by find_phrase_fuzzy
     ns["FUZZY_MATCH_MIN_RATIO"] = 0.6
-    # DIGIT_WORDS table used by _norm
-    m = re.search(r'DIGIT_WORDS\s*=\s*\{.*?\n\}', src, re.DOTALL)
-    assert m, "DIGIT_WORDS not found"
-    exec(m.group(0), ns)
+    # DIGIT_WORDS table used by _norm; _WRITTEN_* tables used by _compress_written_numbers
+    for const_re in (
+        r'DIGIT_WORDS\s*=\s*\{.*?\n\}',
+        r'_WRITTEN_TENS[^=]*=\s*\{.*?\n\}',
+        r'_WRITTEN_ONES_COMPOUND[^=]*=\s*\{.*?\n\}',
+    ):
+        m = re.search(const_re, src, re.DOTALL)
+        assert m, f"constant matching {const_re!r} not found"
+        exec(m.group(0), ns)
     for fn in ["expand_decimals", "normalize_for_match", "_norm",
-               "find_phrase", "find_phrase_fuzzy"]:
+               "_compress_written_numbers", "find_phrase", "find_phrase_fuzzy"]:
         exec(_slice_fn(src, fn), ns)
 
     find_phrase = ns["find_phrase"]
@@ -321,13 +326,13 @@ def test_coverage_uses_anchor_hit_flags() -> None:
     check("anchor_hit_flags list is built in Step 1 alongside raw_anchors",
           "anchor_hit_flags: list[bool] = []" in src)
     check("anchor_hit_flags populated using find_phrase_fuzzy result",
-          "anchor_hit_flags.append(hit)" in src)
+          re.search(r"anchor_hit_flags\.append\(", src) is not None)
     check("coverage counter reads anchor_hit_flags[j], NOT a re-run of find_phrase",
           "is_anchor = anchor_hit_flags[j]" in src)
     # Make sure the OLD anti-pattern (re-running find_phrase exact in coverage) is gone:
-    # there should be no `find_phrase(scene_words, vb.audio_anchor)` outside Step 1.
-    fuzzy_calls = src.count("find_phrase_fuzzy(scene_words, vb.audio_anchor)")
-    check("find_phrase_fuzzy(scene_words, vb.audio_anchor) called exactly once (Step 1)",
+    # there should be exactly one fuzzy lookup against (scene_words, vb.audio_anchor) — Step 1.
+    fuzzy_calls = len(re.findall(r"find_phrase_fuzzy\(\s*scene_words\s*,\s*vb\.audio_anchor\b", src))
+    check("find_phrase_fuzzy(scene_words, vb.audio_anchor, ...) called exactly once (Step 1)",
           fuzzy_calls == 1, f"got {fuzzy_calls}")
 
 
@@ -340,6 +345,27 @@ def test_robust_script_total() -> None:
           "_s.window_to_sec" in src and "_s.window_from_sec" in src)
     check("guards division by zero (script_total > 0 branch)",
           "if script_total > 0:" in src)
+
+
+def test_anchor_drift_plausibility_guard() -> None:
+    print("\n[13b] Fuzzy anchor drift-plausibility guard (rule 10 Class N+12)")
+    src = (ROOT / "storyboard" / "build_video.py").read_text(encoding="utf-8")
+    check("guard distinguishes exact vs fuzzy hit (exact never rejected)",
+          "is_exact" in src and "find_phrase(scene_words, vb.audio_anchor" in src)
+    check("guard computes an expected position + band",
+          "expected_idx" in src and "band" in src)
+    check("guard rejects implausible fuzzy hit by treating it as a miss (interpolated)",
+          "rejected fuzzy anchor" in src and "Class N+12" in src)
+    # Behavioral check: replicate the guard math — normal in-order hits pass,
+    # an end-of-scene hit for bullet 1 is rejected.
+    def plausible(bi, n_bullets, idx, nwords):
+        expected = (bi / n_bullets) * nwords
+        return idx <= expected + 0.5 * nwords
+    nwords = 190
+    normal_ok = all(plausible(bi, 6, int((bi + 0.5) / 6 * nwords), nwords) for bi in range(6))
+    bug_rejected = not plausible(0, 6, int(0.9 * nwords), nwords)
+    check("normal in-order anchors are all plausible (no false reject)", normal_ok)
+    check("bullet-1 anchor matching near scene end is rejected (the +3s drift case)", bug_rejected)
 
 
 def test_no_zero_multiplication_bug() -> None:
@@ -507,6 +533,16 @@ def test_render_browser_reuse_and_watchdog() -> None:
     check("build_video.py reports tree-kill clearly + exits 130",
           "killing render tree" in bv and "sys.exit(130)" in bv)
 
+    # --- parent-side render ceiling (Class N+13: render hangs forever) ---
+    check("build_video.py bounds proc.wait() with a timeout (no bare wait on render)",
+          "proc.wait(timeout=" in bv,
+          "a bare proc.wait() blocks the session FOREVER if node/Chromium deadlocks")
+    check("render ceiling is configurable (config + env)",
+          "render_timeout_per_scene_s" in bv and "RENDER_TIMEOUT_PER_SCENE_S" in bv)
+    check("on render TimeoutExpired → tree-kill + exit 124",
+          "subprocess.TimeoutExpired" in bv and "RENDER STUCK" in bv
+          and "_kill_render_tree()" in bv and "sys.exit(124)" in bv)
+
 
 def test_strict_anchors_quality_gate() -> None:
     """--strict-anchors flag turns the soft Step 7 warning into a hard fail."""
@@ -551,12 +587,14 @@ def test_pause_duration_honored_via_split_render_concat() -> None:
           "def _ms_from_break_match" in src and "* 1000" in src,
           "without ms<->s conversion, <pause 1s> becomes 1ms of silence (inaudible)")
 
-    # 3. Silence generator uses edge-tts's exact format (24kHz mono 48kbps libmp3lame)
-    check("silence generator uses anullsrc at 24000Hz mono",
-          "anullsrc=r=24000:cl=mono" in src,
-          "format MUST match edge-tts (24kHz mono 48kbps mp3) for -c copy concat to work lossless")
-    check("silence encoded with libmp3lame at 48kbps",
-          "libmp3lame" in src and '"-b:a", "48k"' in src,
+    # 3. Silence generator uses the TTS engine's exact format for lossless -c copy concat.
+    #    Code is engine-aware: TTS_SR/TTS_BR = (24000,"48k") for edge-tts, (22050,"96k") for piper.
+    #    Match the parameterized form, not the old hardcoded literals.
+    check("silence generator uses anullsrc at the engine sample rate (mono)",
+          "anullsrc=r={TTS_SR}:cl=mono" in src or "anullsrc=r=24000:cl=mono" in src,
+          "format MUST match the TTS engine output (edge-tts: 24kHz mono 48kbps mp3) for -c copy concat lossless")
+    check("silence encoded with libmp3lame at the engine bitrate",
+          "libmp3lame" in src and ('"-b:a", TTS_BR' in src or '"-b:a", "48k"' in src),
           "edge-tts default output format is audio-24khz-48kbitrate-mono-mp3")
 
     # 4. Concat uses demuxer with -c copy (lossless, sample-accurate)
@@ -775,6 +813,7 @@ def main() -> int:
     test_min_block_frames_clamp_for_short_scene()
     test_coverage_uses_anchor_hit_flags()
     test_robust_script_total()
+    test_anchor_drift_plausibility_guard()
     test_no_zero_multiplication_bug()
     test_pause_duration_honored_via_split_render_concat()
     test_remotion_version_floor()

@@ -14,13 +14,20 @@ const VIDEO_HEIGHT = Number(process.env.VIDEO_HEIGHT) || 1080;
 // call (rule 19) returns measurements based on the wrong glyphs — text either
 // clips or shrinks unnecessarily. delayRender pauses every Composition until
 // continueRender fires, so this gates ALL scenes uniformly.
+// Load ONLY the weights/subsets actually used. The default loadFont() pulls every
+// weight + every subset → 48–96 Google-Fonts network requests per font, and any single
+// failed request used to abort the whole render with "NetworkError: A network error
+// occurred." Restricting to latin + the 3 weights we use drops that to a handful.
+const FONT_OPTS = { weights: ["400", "600", "700"] as ("400" | "600" | "700")[], subsets: ["latin"] as "latin"[], ignoreTooManyRequestsWarning: true };
 const fontHandle = delayRender("Loading display + mono fonts");
 Promise.all([
-  loadInter().waitUntilDone(),
-  loadJetBrainsMono().waitUntilDone(),
+  loadInter("normal", FONT_OPTS).waitUntilDone(),
+  loadJetBrainsMono("normal", FONT_OPTS).waitUntilDone(),
 ])
   .then(() => continueRender(fontHandle))
-  .catch((err) => cancelRender(err));
+  // A transient font-CDN hiccup must NOT abort the render — continue with whatever
+  // loaded (fallback for a frame is far better than a failed scene). Was cancelRender.
+  .catch(() => continueRender(fontHandle));
 
 // Auto-discovered from TIMELINES at module load. timelines.ts is patched by
 // build_video.py step 8 with one entry per scene of the active project.
