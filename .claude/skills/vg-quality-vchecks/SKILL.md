@@ -15,7 +15,8 @@ scene clears them FROM THE EXTRACTED FRAMES (a midpoint frame per bullet).
 | V1 not black | ≥40% non-bg pixels at the midpoint frame |
 | V2 no bullet overlap | prior bullet gone before next; REPLACE = full AbsoluteFill |
 | V3 tokens only | zero hex/font/px literals |
-| V4 readable text | body ≥ w*0.009, headline ≥ w*0.022 |
+| V4 readable text | body ≥ w*0.009, headline ≥ w*0.022 **AND adequate CONTRAST** — see V4b |
+| **V4b CONTRAST** | **a label that carries MEANING must be readable, not dimmed to near-invisible.** `D.text_dim` (a low-luminance grey) at low opacity on the dark `D.bg` = unreadable. Any **meaningful** label (axis/scale label, data label, entity name, the point) must be `D.text`/`D.cyan`/`D.amber`/`D.white` at opacity ≥ ~0.8. `D.text_dim` + low opacity is ONLY for truly decorative chrome (scene number, faint citation). |
 | V5 canvas ≥60% | the main visual fills the majority of the frame |
 | V7 no clipping | every element inside `[0..w] × [0..h]` |
 | V8 animation visible | midpoint frame ≠ frame 0 |
@@ -34,6 +35,13 @@ visual (not text) carrying the point.
 ## Failure signals (low)
 - Any check fails, OR several pass only *barely* (canvas ~42%, primary ~50%, text at the floor).
 - A black/near-empty frame, a text-only frame, a frozen midpoint, a clipped/overlapping element.
+- **A MEANINGFUL label rendered near-invisible** (`D.text_dim` + low opacity on dark bg) — it's
+  "present" so V4-by-size passes, but a viewer can't READ it → V4b FAIL. Squint at the actual frame:
+  if a label you must read is barely visible, it fails, no matter that the text exists. (Real miss,
+  fable_5_power S2 2026-06-14: the horizon-scale labels "a day / a week / a month" — the scene's THESIS
+  axis — were `D.text_dim` @0.5 and verification wrongly passed them.)
+- **A moving element with no nameable meaning** (a sweeping beam/bar added to beat the freeze gate) —
+  reads as noise; the viewer asks "what is that?" Apply the purpose test to every moving thing.
 
 ## The fix
 Send the failing check back to its owner: V5/V13 → enlarge the primary (≥50% height, fill
@@ -49,3 +57,36 @@ REPLACE + reflow; V7/V10 → fit/clip (see vg-quality-text-fit); V3 → tokens (
 
 **Gate:** any V-check FAIL = scene NOT READY (caps at ≤4); fix and re-render. Margin passes
 target ≥8. Report which checks fail or only barely pass + the owner fix.
+
+## ⛔ V9 OVERLAP MUST BE JUDGED AT THE SETTLED FRAME, NOT THE MIDPOINT (real miss, fable_5_power S2, 2026-06-14)
+Element-overlap (V9) almost never shows at the bullet MIDPOINT — at the midpoint, moving elements
+haven't reached their final positions and late text is still near-zero opacity, so two things that
+WILL collide still look clear. The collision appears only once everything **settles** (a runner stops
+at its end x, a red tag fades to full opacity ON it). **So for V9/V9b you MUST inspect a LATE frame
+(~p85–p95 of the bullet) where every element is at full opacity AND final position** — the midpoint
+frame is a false "no-overlap." (Real miss: B2 "LOST THE THREAD" red text sat ON the violet sprinter
+once it stalled at 0.34 + the text reached full opacity; the midpoint frame (sprinter mid-burst at
+0.30, text ~0 opacity) showed no overlap, so it wrongly passed.)
+- Extract BOTH `mid` and `p90` per bullet. Judge V1/V5/V8/V13 from `mid`; judge **V9/V9b/V7/V10
+  (overlap, clipping, fit) from `p90`** (settled). A label that lands ON a figure/bar/another label at
+  settled = FAIL.
+- When placing any text label near a moving element, ask: where is that element at its FINAL position,
+  and does the label's box (left..left+width × top..top+height) intersect it THERE? Put labels in the
+  region the element vacates or never occupies (e.g. the inter-lane gap, well to the side).
+
+### ✅ MANDATORY — run the PROGRAMMATIC overlap gate (general, every scene; don't eyeball it)
+Eyeballing one midpoint frame misses overlaps. Run the bounds-based validator — it evaluates each
+bullet's code at the SETTLED frame, computes every label/figure box, and reports text-on-element
+collisions across the WHOLE scene:
+```bash
+python -m storyboard.layout_validator <project>          # report
+python -m storyboard.layout_validator <project> --strict # exit 1 on any violation
+```
+- **Any `text_overlap` violation = V9 FAIL** — caps factor 8 at ≤4 until fixed. It prints the exact
+  label text + both boxes + the bullet. Move the label clear (it tells you which element it hit).
+- `out_of_bounds` / `inner_absolute_positioning` are also real — fix them.
+- `cross_bullet_overlap` on a REPLACE-per-bullet scene is auto-suppressed; if some remain on a genuinely
+  additive scene, check they're real.
+- The validator binds `Kit` + estimates text/container boxes, so it runs on ANY scene (Kit terminals,
+  bespoke divs). Re-run it after every fix until it prints `text_overlap: 0`. This is the general fix —
+  never hand-hunt overlaps scene by scene. (Built 2026-06-14 after repeated label-on-figure misses.)

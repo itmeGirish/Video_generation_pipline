@@ -281,6 +281,45 @@ So: **only `### Animation` bullets and `### Narration` `>` lines drive the pipel
 dividers and blueprint fields are design scaffolding — they cost nothing mechanically and
 everything in brief quality.
 
+### CURRENT convention — PAIR-BLOCK with comment-blueprint blocks (preferred; e.g. `fable_5_harness.txt`)
+
+New scripts carry the blueprint in **HTML comment blocks** and use **pair-block** beats (narration
+coupled into each bullet, no `### Narration` / `### Animation` headers). A scene looks like:
+
+```
+<!-- GLOBAL VISUAL STYLE (ONCE at the top of the file — the art direction every scene inherits)
+     LOOK · RENDER STYLE · TEXTURE · SHAPE LANGUAGE · TYPE · PALETTE (token hex) · LIGHTING -->
+<!-- REFERENCE ASSETS    (ONCE at the top — real screenshots to place in public/img/ for real-UI scenes) -->
+...
+## SCENE N — "Title" (M:SS – M:SS)
+<!-- SCENE DESCRIPTION   (prose director's brief — the LARGEST block, the SOURCE of the animation)
+     Environment: …  Situation: …  Viewer Realization: …  Emotional Journey: X → Y → Z
+     Visual Transformation: …  Final Image: … -->
+<!-- SCENE DESIGN        (the structured field block, derived from the description)
+     SCENE PURPOSE · PACE · LEARNING GOAL · LOCATION · REALITY ANCHOR · REFERENCE · CINEMATIC ·
+     LAYOUT (spatial map) · SHOT/FRAMING · VISUAL METAPHOR · ENVIRONMENT (spatial) · OBJECTS ·
+     PRIMARY FOCUS (ranked) · ENTRY/INITIAL · ATTENTION FLOW · FINAL/EXIT · NEXT HOOK -->
+- **M:SS – M:SS — [REPLACE] Headline.**
+  > narration for THIS beat <pause Xs>
+  what happens: 1. … 2. … 3. …
+  text: <labels / a number>
+  image: none | [asset: img/<name>.png]
+  audio_anchor: <verbatim from THIS beat's `>` line>
+  anchor_mode: appear | through | land
+- … more beats …
+```
+
+**Parser behavior (verified — exit 0):** the `<!-- … -->` blocks are HTML comments, so
+`source_parser.py` IGNORES them entirely (zero mechanical effect). With no `### Animation` /
+`### Narration` headers, the parser auto-detects **pair-block** and assembles the narration from each
+bullet's `>` lines in order. Therefore **both blueprint blocks are valid, free design scaffolding that
+parses cleanly** — and the new fields (SCENE DESCRIPTION, SCENE PURPOSE, PACE, REFERENCE, CINEMATIC,
+spatial ENVIRONMENT) are all inside comments, so they NEVER break the parse. They exist to drive the
+per-bullet code author (`vg-visual-designer` step 0). Full field spec: **`script-scene-design`**
+(§"GLOBAL VISUAL STYLE" · §"SCENE DESCRIPTION" · §"SCENE DESIGN field block"); the scene LIST/arc lives
+in `script-scene-structure`. Anchor rule for pair-block: each `audio_anchor` is a
+verbatim phrase from its OWN bullet's `>` line (drift-proof by construction).
+
 ### Anchor rule on this format (IMPORTANT — it's scene-scoped, not beat-scoped)
 
 Because narration is one scene-level block (legacy path), an `audio_anchor` must be a

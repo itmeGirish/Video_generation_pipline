@@ -47,6 +47,19 @@ is usually the script.
 
 For each scene, internally answer:
 
+0. **Director's-brief check (read it FIRST).** The script (produced by `script-scene-design`) carries
+   ONE `<!-- GLOBAL VISUAL STYLE -->` + `<!-- REFERENCE ASSETS -->` at the top, and each scene opens with
+   `<!-- SCENE DESCRIPTION -->` (a prose brief: Environment · Situation · Viewer Realization · Emotional
+   Journey · Visual Transformation · Final Image) and `<!-- SCENE DESIGN -->` (fields: Scene Purpose ·
+   Pace · Location · Reality Anchor · REFERENCE assets · CINEMATIC intent · LAYOUT · SHOT · ranked Primary
+   Focus · spatial Environment · Attention Flow · beat Transitions · …). **These are the SOURCE the
+   animation is derived from** — read them before the bullets. Confirm: a GLOBAL VISUAL STYLE block exists
+   (the whole-video art direction), the description is real prose (not a task list), REFERENCE names a
+   concrete `[asset: img/x.png]` for any real software (file present or noted to source), CINEMATIC names
+   camera/depth/light/color, LAYOUT is a spatial map, SHOT is named, and beats have transitions. A scene
+   missing the brief, or whose REFERENCE names real UI with no asset, is incomplete — surface it (the
+   bullet author will otherwise improvise generic UI / a random art style). Then the per-bullet author
+   (`vg-visual-designer` step 0) realizes the brief in code, in the global style.
 1. **Narration check** — does the prose tell ONE clear story? Are the hero words
    (numbers, product names, real people) concrete and quotable? Are sentences
    short enough that the TTS can pace them naturally? (See rule 16.)

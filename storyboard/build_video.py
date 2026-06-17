@@ -320,6 +320,19 @@ FULL_AUDIO_NAME  = config["audio"]["full_audio_filename"]
 ENGINE           = str(config["audio"].get("engine", "edge_tts")).lower()
 PIPER_MODEL      = config["audio"].get("model", "models/piper/en_US-ryan-high.onnx")
 LENGTH_SCALE     = float(config["audio"].get("length_scale", 1.0))
+# Loudness normalization to YouTube's −14 LUFS target, baked into the narration
+# mp3 INSIDE gen_tts (once per hash) so BOTH stitch paths benefit. The active
+# remotion_master path feeds full_audio to Remotion directly and never reaches
+# the ffmpeg-stitch loudnorm at the final mux — so without this, master renders
+# ship un-normalized (the level-jump fatigue rule in CLAUDE.md). Default on; set
+# audio.loudnorm: false to ship raw TTS levels.
+LOUDNORM         = bool(config["audio"].get("loudnorm", True))
+# Light voice denoise, applied before loudnorm in the gen_tts master encode.
+# highpass kills sub-60Hz DC/rumble; afftdn does a conservative spectral noise
+# cut (nr=12dB). Piper output is already clean, so this is gentle insurance, not
+# heavy gating (heavy denoise warbles synthetic speech). Set audio.denoise:false
+# to disable.
+DENOISE          = bool(config["audio"].get("denoise", True))
 TTS_SR, TTS_BR   = (22050, "96k") if ENGINE == "piper" else (24000, "48k")
 OUTPUT_NAME      = config["output"]
 PROJECT_PREFIX   = re.sub(r"[^a-z0-9]", "-", PROJECT.lower()).strip("-")
@@ -563,7 +576,7 @@ full_ssml      = compile_narration(scenes_raw)
 # (Spec contract: cache by sha256(SSML) was incomplete — voice/rate/pitch were
 # silent invalidation holes that returned stale audio after the user "fixed"
 # config.yaml.)
-_tts_cache_input = f"{ENGINE}|{VOICE}|{RATE}|{PITCH}|{LENGTH_SCALE}|{full_ssml}"
+_tts_cache_input = f"{ENGINE}|{VOICE}|{RATE}|{PITCH}|{LENGTH_SCALE}|{LOUDNORM}|{DENOISE}|{full_ssml}"
 text_hash      = hashlib.sha256(_tts_cache_input.encode()).hexdigest()[:16]
 full_audio     = AUDIO_DIR / FULL_AUDIO_NAME
 hash_marker    = AUDIO_DIR / f".{FULL_AUDIO_NAME}.{text_hash}.hash"
@@ -721,6 +734,13 @@ async def gen_tts():
             chunk_path = work_dir / f"chunk_{i:04d}.mp3"
             if chunk_path.exists() and chunk_path.stat().st_size > 0:
                 n_chunks_skipped += 1
+            elif ENGINE == "piper":
+                # Piper is synchronous + fully local (no websocket / retry loop):
+                # synthesize the chunk directly. Without this branch engine=piper
+                # silently fell through to edge_tts below — the half-wired bug
+                # that made layoffs_2026's engine:piper a no-op.
+                _piper_render_chunk(_PIPER_VOICE, text, chunk_path)
+                n_chunks_rendered += 1
             else:
                 for _attempt in range(6):
                     if _attempt > 0:
@@ -762,15 +782,32 @@ async def gen_tts():
     else:
         _concat_mp3s_lossless(parts, full_audio)
 
-    if ENGINE == "piper":
-        # Piper chunks (libmp3lame) + silence don't share byte-identical mp3
-        # frame params, so the -c copy concat above leaves inconsistent frames
-        # → faster_whisper raises "Frame does not match AudioFifo parameters".
-        # Re-encode once to a uniform CBR mono stream so every downstream
-        # consumer (Whisper, ffmpeg mux) reads it cleanly.
+    if ENGINE == "piper" or LOUDNORM or DENOISE:
+        # Final master encode of the narration mp3 — two jobs in one pass:
+        #   (a) Uniform CBR mono stream. Piper chunks (libmp3lame) + silence
+        #       don't share byte-identical mp3 frame params, so the -c copy
+        #       concat above leaves inconsistent frames → faster_whisper raises
+        #       "Frame does not match AudioFifo parameters". Re-encoding once
+        #       gives every downstream consumer (Whisper, ffmpeg mux, the
+        #       Remotion master) a clean stream.
+        #   (b) Bake YouTube's −14 LUFS loudness target so narration ships at a
+        #       consistent, non-fatiguing level. The remotion_master stitch feeds
+        #       this file to Remotion directly and never hits the final-mux
+        #       loudnorm — so this is the only place master audio gets normalized.
+        # Single-pass loudnorm preserves duration, so the frame math below (the
+        # ffprobe at ~line 810) is unaffected.
+        _filters = []
+        if DENOISE:
+            # highpass first (remove rumble), then a gentle FFT denoise. Order
+            # matters: clean the spectrum BEFORE loudnorm measures/normalizes it.
+            _filters += ["highpass=f=60", "afftdn=nr=12:nf=-35"]
+        if LOUDNORM:
+            _filters += ["loudnorm=I=-14:TP=-1.5:LRA=11"]
+        _af = ["-af", ",".join(_filters)] if _filters else []
         _norm = full_audio.with_name(full_audio.stem + ".norm.mp3")
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(full_audio),
+             *_af,
              "-c:a", "libmp3lame", "-b:a", "128k", "-ar", str(TTS_SR), "-ac", "1",
              str(_norm)],
             capture_output=True, check=True, creationflags=_NOWIN,

@@ -497,8 +497,8 @@ export const NumberStamp: React.FC<{
 export const Terminal: React.FC<{
   cwd?: string; lines?: { text: string; kind?: 'tool' | 'result' | 'think' | 'user' | 'plain'; color?: string }[];
   prompt?: string; contextLeft?: number; contextText?: string; model?: string;
-  spinner?: boolean; lineDelay?: number; dim?: number;
-}> = ({ cwd = '~/login-app', lines = [], prompt, contextLeft = 1, contextText, model = 'claude-opus-4', spinner = false, lineDelay = 4, dim = 1 }) => {
+  spinner?: boolean; lineDelay?: number; dim?: number; reread?: number | null; rereadLabel?: string;
+}> = ({ cwd = '~/login-app', lines = [], prompt, contextLeft = 1, contextText, model = 'claude-opus-4', spinner = false, lineDelay = 4, dim = 1, reread = null, rereadLabel }) => {
   const frame = useCurrentFrame();
   const { width: w, height: h, fps } = useVideoConfig();
   const X = Math.round(w * 0.05), Y = Math.round(h * 0.05), W = Math.round(w * 0.9), H = Math.round(h * 0.9);
@@ -538,9 +538,18 @@ export const Terminal: React.FC<{
       React.createElement('div', { style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: `${cl * 100}%`, backgroundColor: clColor } })),
     React.createElement('span', { style: { color: clColor, fontWeight: 700, fontFamily: D.font_display } }, contextText || `${Math.round(cl * 100)}%`),
     React.createElement('span', { style: { marginLeft: 'auto' } }, '? for shortcuts'));
+  // re-read sweep: a cyan band sweeping the transcript top→bottom (Claude re-reading the
+  // whole chat). reread 0..1 = how far down; a faint wash above marks "already re-read".
+  const rr = (reread === null || reread === undefined) ? null : (() => {
+    const p = Math.max(0, Math.min(1, reread as number));
+    const band = Math.round(h * 0.035);
+    return React.createElement('div', { style: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, pointerEvents: 'none' } },
+      React.createElement('div', { style: { position: 'absolute', left: 0, right: 0, top: 0, height: `${p * 100}%`, background: `linear-gradient(to bottom, ${D.cyan}00, ${D.cyan}1f)` } }),
+      React.createElement('div', { style: { position: 'absolute', left: 0, right: 0, top: `calc(${p * 100}% - ${band / 2}px)`, height: band, backgroundColor: `${D.cyan}22`, borderTop: `2px solid ${D.cyan}` } }));
+  })();
   return React.createElement('div', { style: { position: 'absolute', left: X, top: Y, width: W, height: H, borderRadius: Math.round(w * 0.01), backgroundColor: D.bg, border: `${bd}px solid ${D.surface}`, overflow: 'hidden', opacity: dim, boxShadow: shadow(h, 1.2), padding: pad, boxSizing: 'border-box', display: 'flex', flexDirection: 'column' } },
     header,
-    React.createElement('div', { style: { flex: 1, overflow: 'hidden' } }, ...bodyLines, thinking),
+    React.createElement('div', { style: { flex: 1, overflow: 'hidden', position: 'relative' } }, ...bodyLines, thinking, rr),
     promptBox, status);
 };
 

@@ -72,6 +72,32 @@ felt emotion. Run the **Universal Animation Review Scorecard** (in the reference
 
 ---
 
+## DERIVE EACH BEAT FROM THE SCENE-DESIGN BRIEF (the source — don't re-invent)
+
+The scene already has a director's brief (from `script-scene-design`): a prose `<!-- SCENE DESCRIPTION -->`
+(Environment · Situation · Viewer Realization · Emotional Journey · Visual Transformation · Final Image)
+and a `<!-- SCENE DESIGN -->` field block (style · location · reality anchor · REFERENCE · CINEMATIC ·
+LAYOUT · SHOT · spatial environment · attention flow · beat transitions). **The beats EXECUTE that brief —
+they don't re-invent it.** Read it FIRST, then write each `what happens` to realize the fields:
+
+| Brief field | How the beat realizes it |
+|---|---|
+| **SCENE DESCRIPTION** (Visual Transformation + Final Image) | the beats march the frame from the start state to the Final Image — the scene's last beat IS the Final Image |
+| **CINEMATIC: Camera** | the motion: push-in = the focal group scales up; pull-back = scales down to reveal scale; parallax = layers move at different rates |
+| **CINEMATIC: Depth** | fg / mg / bg layering in the `what happens` (what's sharp vs softened) |
+| **CINEMATIC: Light + Color** | a glow on the hero, a gradient backdrop (never flat), the hero accent token; context desaturated |
+| **LAYOUT** | WHERE each element enters and sits + how big — place to the map, don't float |
+| **SHOT / FRAMING** | the beat's framing — a Reveal beat cuts CLOSE; an overview beat is WIDE |
+| **REFERENCE** (`[asset:]`) | the beat carries `image: [asset: img/x.png]`, preserves the real UI, animates ONLY the change |
+| **ENVIRONMENT** (spatial) | the set is drawn where the brief says, held at fixed positions across beats |
+| **PRIMARY FOCUS** (ranked) | the #1 hero leads the motion; #2/#3 enter dimmer / smaller / later |
+| **BEAT n → n+1 TRANSITION** | the beat ends by setting up that exact transition (carry / dock / match-cut the named element) |
+| **SCENE PURPOSE + PACE** | the beat count + motion energy (a Reveal = ONE bare beat; a Hook = fast/dense) |
+
+If a beat contradicts the brief (different camera, wrong placement, invented UI), the brief wins — fix the
+beat. Honoring the brief is what stops the animation coming out generic. (The validator
+`script-animation-validator` Check 0 fails any beat that ignores the brief.)
+
 ## Write WHAT the viewer sees, not HOW the motion behaves (you're the director, not the animator)
 
 **The governing rule for writing bullets.** The script describes **what the audience sees and

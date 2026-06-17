@@ -28,8 +28,10 @@ human-review, and critique passes are the ones most often dropped). The contract
 |---|---|
 | 3 — Pre-production strategy | `script-youtube-strategy` |
 | 4 — Research | `script-research` |
-| 5 — Scene structure | `script-scene-structure` |
+| 5 — Scene structure (list · arc · loops · patterns · rhythm) | `script-scene-structure` |
 | 5.5 — Story layer | `script-storytelling` |
+| 5.6 — Scene design (the director's brief: style · description · blueprint · reference · cinematic · layout · shot) | `script-scene-design` |
+| 5.7 — Scene-design validator (brief complete? stops the LLM inventing) | `script-scene-design-validator` |
 | 6 — Narration | `script-narration` |
 | 6 — Animation bullets | `script-animation-bullets` |
 | 7a — Animation validator (broken?) | `script-animation-validator` |
@@ -121,15 +123,34 @@ Contrast: [before vs after or entity A vs entity B]
 
 ---
 
-### Step 5 — Design the scene structure → first **invoke the `script-scene-structure` skill**
+### Step 5 — Scene STRUCTURE → invoke `script-scene-structure`
 
-Map the video into scenes. Write the scene list, then fill the **per-scene BLUEPRINT** for
-each scene (Learning Goal · Location · Reality Anchor · Visual Metaphor · Environment ·
-Objects · Primary Focus · Entry/Exit · Initial/Final State · Attention Flow · per-beat
-Purpose/Visual Action/State Change/Text · Next Scene Hook) — the spatial/cinematic design
-that makes a scene look like the real software and explain something, not a slideshow. The
-blueprint's fields map onto the parseable pair-block beats (see the skill's "Blueprint →
-the parseable scene" table). Then proceed directly to Step 6 — no confirmation needed.
+Map the video into a scene LIST: count, order, the hook→…→payoff arc, the open-loop chain,
+scene-to-scene transitions, ONE animation pattern per scene, and the rhythm — assign each scene a
+**SCENE PURPOSE + PACE** so the rhythm VARIES (not 8 identical-shaped scenes). This skill owns the
+STRUCTURE only; the per-scene visual design is Step 5.6.
+
+### Step 5.6 — Scene DESIGN (the director's brief) → invoke `script-scene-design`
+
+After the structure + story exist, design how each scene LOOKS — this is the single biggest lever on
+whether the animation communicates vs comes out generic. Per scene, write — IN ORDER:
+1. **SCENE DESCRIPTION** — a prose **director's brief** (Environment · Situation · Viewer Realization ·
+   Emotional Journey · Visual Transformation · Final Image), written FIRST, the **largest block**. A
+   task list ("show files, show tokens") is NOT a description and yields generic animation.
+2. **SCENE DESIGN** field block — LOCATION · REALITY ANCHOR · **REFERENCE** (concrete `[asset:]` for
+   real UI) · **LAYOUT** (spatial map) · **SHOT/FRAMING** · ranked PRIMARY FOCUS · **CINEMATIC INTENT**
+   (camera/depth/light/color) · spatial ENVIRONMENT · ATTENTION FLOW · ENTRY/EXIT/NEXT HOOK · beat
+   **TRANSITIONS**. Plus ONE `<!-- GLOBAL VISUAL STYLE -->` block at the TOP of the script (the art
+   direction every scene inherits) and a `<!-- REFERENCE ASSETS -->` manifest for real software.
+
+The complete stop-the-guessing set: **STYLE · DESCRIPTION · LAYOUT · SHOT · REFERENCE · CINEMATIC ·
+beat TRANSITIONS.** Both blocks (description first, then design) are MANDATORY in the saved `.txt`.
+
+### Step 5.7 — Validate the design → invoke `script-scene-design-validator`
+
+Gate that every scene's brief is COMPLETE (description present + style + layout + shot + reference
+resolves + cinematic + transitions + the 10 rules). A scene missing any required field is NOT READY —
+fix in `script-scene-design`. Only when the brief is complete does the LLM stop inventing. Then Step 6.
 
 **Scene arc (required):**
 

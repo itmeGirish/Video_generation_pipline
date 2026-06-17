@@ -27,6 +27,28 @@ verification is only the safety net. These are the code recipes; `vg-visual-qual
 | ★ | **artifacts** (draw the REAL mechanism: cell grid / tier bars / pipeline / slider / node rail / KPI) — topic-agnostic | **`vg-code-artifacts`** | `vg-quality-vchecks` |
 
 ## Golden authoring order (per bullet)
+0. **Read the scene's DIRECTOR'S BRIEF first** — produced by `script-scene-design`: the once-per-video
+   `<!-- GLOBAL VISUAL STYLE -->` + per-scene `<!-- SCENE DESCRIPTION -->` (prose) + `<!-- SCENE DESIGN -->`
+   (fields) blocks (see `vg-visual-designer` step 0). The code must REALIZE the brief, not just the bullet.
+   Map EVERY field → a recipe:
+   - **GLOBAL VISUAL STYLE** (art direction, whole video) → `vg-code-tokens` (the palette hex + fonts) +
+     `vg-code-composition` (one render style / shape language held across ALL scenes — this is what makes
+     8 scenes feel like one video). Obey it everywhere; never let a scene drift to a different aesthetic.
+   - **REFERENCE / `image: [asset:]`** → `vg-code-images`: load the real screenshot, PRESERVE its layout,
+     animate only the changes (never redraw/invent UI; missing file → accurate vector from real details).
+   - **CINEMATIC: Camera** → `vg-code-animations`/`vg-code-timing`: push-in = scale the focal group up;
+     pull-back = scale down to reveal scale; parallax = layers at different speeds.
+   - **CINEMATIC: Depth** → `vg-code-composition`: fg/mg/bg layers; blur/dim the non-focal plane.
+   - **CINEMATIC: Light+Mood** → glow on the hero, a vignette, a GRADIENT backdrop (never a flat fill).
+   - **CINEMATIC: Color** → `vg-code-tokens`: one hero accent token; desaturate the context.
+   - **LAYOUT** (spatial map) → `vg-code-composition`/`vg-code-vchecks`: place each element to the map
+     (zones / grid), at the stated size — don't float or re-center.
+   - **SHOT / FRAMING** → `vg-code-animations`: the focal scale — a CLOSE beat fills the frame with the
+     hero; a WIDE beat shows the whole set. Match the brief's shot per beat.
+   - **PRIMARY FOCUS (ranked)** → `vg-code-sequencing`: the #1 hero leads/enters first; #2/#3 follow dimmer.
+   - **BEAT n → n+1 TRANSITION** → `vg-code-transitions`: carry / dock / match-cut the NAMED element (don't invent the cut).
+   - **SCENE PURPOSE/PACE** → motion energy + beat density (a Reveal may be ONE bare beat; a Hook is fast).
+   - **ENVIRONMENT (spatial)** → build the set where the brief says; hold positions across beats.
 1. **Pick the visual** — `vg-visual-map` (what proves the point) + the matching `remotion` rule.
 2. **Frame the canvas** — `vg-code-vchecks` (primary ≥50% h, fill ≥60%, bounds, caption zone).
 3. **Tokens first** — `vg-code-tokens` (color identity, sizes as `w`/`h` fractions, no literals).

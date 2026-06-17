@@ -28,18 +28,25 @@ const projectScenesDir = path.resolve(projectDir, 'scenes');
 
 // Audio: copy/symlink the project audio into remotion/public/ so staticFile()
 // can resolve it. The master composition references staticFile(MASTER_AUDIO_FILE).
-const audioFileName = process.env.MASTER_AUDIO_FILE;
-if (!audioFileName) {
-  console.error('ERROR: MASTER_AUDIO_FILE env var required.');
-  process.exit(1);
+// MASTER_AUDIO_FILE is OPTIONAL. When omitted, the master relies on the per-scene
+// mp4s' BAKED audio — <Series> concatenates them frame-perfectly, so the full
+// narration plays with zero overlay and zero double-audio. Provide it only when the
+// scene mp4s are silent and a single continuous TTS track should be overlaid instead.
+const audioFileName = process.env.MASTER_AUDIO_FILE || '';
+if (audioFileName) {
+  const audioSrc = path.resolve(projectDir, 'audio', audioFileName);
+  const audioDst = path.resolve(REMOTION_DIR, 'public', audioFileName);
+  if (!fs.existsSync(audioSrc)) {
+    console.error(`ERROR: audio file not found: ${audioSrc}`);
+    process.exit(1);
+  }
+  fs.copyFileSync(audioSrc, audioDst);
+} else {
+  console.warn('⚠ no MASTER_AUDIO_FILE — the master will be SILENT unless every scene mp4 has\n'
+    + '  BAKED audio. Per-scene renders in this pipeline are VISUAL-ONLY (silent), so you almost\n'
+    + '  always want MASTER_AUDIO_FILE=<concatenated narration>. Verify the output is not silent\n'
+    + '  (ffmpeg -i out.mp4 -af volumedetect -f null -).');
 }
-const audioSrc = path.resolve(projectDir, 'audio', audioFileName);
-const audioDst = path.resolve(REMOTION_DIR, 'public', audioFileName);
-if (!fs.existsSync(audioSrc)) {
-  console.error(`ERROR: audio file not found: ${audioSrc}`);
-  process.exit(1);
-}
-fs.copyFileSync(audioSrc, audioDst);
 
 // MasterComposition references each scene mp4 via staticFile('out/<sid>.mp4').
 // staticFile() resolves under the bundle's publicDir, so we must mirror the

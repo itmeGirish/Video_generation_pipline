@@ -24,9 +24,11 @@ Storytelling gives those scenes a spine, stakes, and an emotional arc.
 
 ## Contents
 - Why story beats facts
-- The cause-and-effect chain — the core test
+- The cause-and-effect chain — the core test (+ the BUT / THEREFORE rule)
 - Framework 1 — Hook, Build, Payoff (three-act)
 - Framework 2 — The story spine (cause-and-effect beats)
+- Framework 3 — The Story Circle (Dan Harmon's 8 steps — for transformation)
+- Want vs Need — the friction that powers the story
 - The viewer is the hero, you are the guide
 - Stakes, conflict, transformation
 - Applying story to a non-fiction explainer
@@ -60,6 +62,27 @@ item on a list.
 makes sense, you have a story. If you can only say "and then," you have a list — re-order
 or re-frame so each scene is a consequence of the last. (This is the same thread the
 continuity check in rule 05b looks for.)
+
+### The "BUT / THEREFORE" rule (the sharper version — adds the conflict half)
+
+"Because of that" is only HALF the move. The screenwriters' rule (Trey Parker; widely taught as
+the "and-but-therefore" rule) is sharper: **every beat connects to the next with "BUT" or
+"THEREFORE," never "and then."**
+- **THEREFORE** = consequence (your "because of that") — A happened, *therefore* B.
+- **BUT** = the reversal / complication / surprise — B was working, *BUT* then C went wrong.
+
+"And then" is a list (no tension). "Therefore" alone is a logical lecture (no surprise). **A great
+story alternates BUT and THEREFORE** — a consequence, then a complication, then a new consequence.
+The BUTs are where curiosity and tension live; the THEREFOREs are where understanding lands.
+
+| ❌ "And then" (list) | ✅ "But / Therefore" (story) |
+|---|---|
+| "It's powerful, and then it's fast, and then it's cheap." | "It's the most powerful model ever, BUT it failed a simple task. THEREFORE we had to change how we use it." |
+
+**Test:** read your scene boundaries and label each one BUT or THEREFORE. If any is "and then,"
+the boundary is dead — re-frame it as a complication (BUT) or a consequence (THEREFORE). A video
+with no BUTs has no tension; a video with no THEREFOREs has no payoff. Source:
+[The But & Therefore Rule](https://perell.com/note/but-therefore-rule/).
 
 ---
 
@@ -95,6 +118,51 @@ For an explainer, the "until one day" is usually your hook fact, and the "becaus
 that" beats are your body scenes. The spine guarantees a cause-and-effect chain instead
 of a list. (Fill each beat with your real topic and researched facts — don't keep the
 fairy-tale wording on screen.)
+
+---
+
+## Framework 3 — The Story Circle (Dan Harmon's 8 steps — for transformation)
+
+A leaner Hero's Journey, built for character CHANGE. Use it when the video has a clear "before →
+after" for the viewer (or a subject). Eight steps, a full loop from comfort to transformation:
+
+1. **YOU** — a character in their comfort zone (the status quo / the assumption the viewer holds).
+2. **NEED** — they want something, or something's missing (the problem; the question the hook raises).
+3. **GO** — they cross into an unfamiliar situation (enter the topic; the first real fact).
+4. **SEARCH** — they adapt, struggle, try things (the body — the mechanism, the attempts, the tension).
+5. **FIND** — they get what they were looking for (the answer / the reveal).
+6. **TAKE** — they pay its price (the catch, the cost, the trade-off — "but it's not that simple").
+7. **RETURN** — back to the familiar world, changed (apply the new understanding to where they started).
+8. **CHANGE** — they're transformed; the comfort zone is different now (the viewer can't unsee it).
+
+For an explainer the **viewer is the character**: they START believing one thing (1–2), the video
+takes them through the unfamiliar (3–5), shows the cost/catch (6), and returns them CHANGED — they
+now see the topic differently (7–8). A video that ends at step 5 ("here's the answer") with no
+TAKE / RETURN / CHANGE feels like information, not a story. Source:
+[Dan Harmon Story Circle](https://www.studiobinder.com/blog/dan-harmon-story-circle/).
+
+**Pick ONE spine per video:** Hook/Build/Payoff (simplest), the story spine (clear consequence
+chain), or the Story Circle (when transformation is the point). Don't stack all three.
+
+---
+
+## Want vs Need — the friction that powers the story
+
+The strongest stories run on a gap between what the character WANTS and what they NEED:
+- **WANT** = the surface goal (the answer, the quick fix, "just give me the number").
+- **NEED** = the deeper truth they don't yet know they need (the mental model, the reframe).
+
+When want and need pull in opposite directions, that friction IS the story. In an explainer the
+viewer WANTS the simple answer; the video gives it — BUT reveals they NEEDED the deeper model. The
+hook promises the WANT; the payoff delivers the NEED (and the need is usually the shareable insight).
+
+- ❌ want = need (flat): "How fast is it? → It's fast." (no friction, no story)
+- ✅ want ≠ need (story): "Which model is best? → BUT 'best' was the wrong question — you NEEDED to
+  see that the harness matters more than the model." Give the want, then upgrade it to the need.
+
+**Test:** name the viewer's WANT (why they clicked) and their NEED (what they should leave with). If
+they're identical, there's no transformation — find the deeper need the want is hiding. Source:
+[Want vs Need](https://narrativefirst.com/articles/the-mechanics-behind-want-vs-need/).
 
 ---
 
@@ -224,7 +292,9 @@ how-to, but end on the stake, not the instruction.
 
 ### Always
 - Layer a narrative over the scene structure — don't deliver facts as a list
-- Connect scenes with "because of that," not "and then"
+- Connect scenes with **BUT or THEREFORE**, never "and then" (alternate consequence + complication)
+- Pick ONE spine — Hook/Build/Payoff, the story spine, or the Story Circle — don't stack all three
+- Name the viewer's WANT (why they clicked) vs NEED (what they leave with); make them differ
 - Give the script stakes, conflict, and a transformation
 - Make the viewer the hero; be the guide
 - Find the story already in the researched facts — don't invent unsourced drama

@@ -21,180 +21,126 @@ export type SceneTimeline = {
 };
 
 export const TIMELINES: Record<string, SceneTimeline> = {
-  "claude-code-limits-s01": {
-    "id": "claude-code-limits-s01",
-    "durationFrames": 830,
-    "durationSeconds": 27.667,
+  "fable-5-power-s01": {
+    "id": "fable-5-power-s01",
+    "durationFrames": 876,
+    "durationSeconds": 29.2,
     "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
+    "audioFile": "vo-fable_5_power-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 830,
+        "toFrame": 876,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "claude-code-limits-s02": {
-    "id": "claude-code-limits-s02",
-    "durationFrames": 1477,
-    "durationSeconds": 49.233,
+  "fable-5-power-s02": {
+    "id": "fable-5-power-s02",
+    "durationFrames": 1316,
+    "durationSeconds": 43.867,
     "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
+    "audioFile": "vo-fable_5_power-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1477,
+        "toFrame": 1316,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "claude-code-limits-s03": {
-    "id": "claude-code-limits-s03",
-    "durationFrames": 2108,
-    "durationSeconds": 70.267,
+  "fable-5-power-s03": {
+    "id": "fable-5-power-s03",
+    "durationFrames": 1203,
+    "durationSeconds": 40.1,
     "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
+    "audioFile": "vo-fable_5_power-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2108,
+        "toFrame": 1203,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "claude-code-limits-s04": {
-    "id": "claude-code-limits-s04",
-    "durationFrames": 2414,
-    "durationSeconds": 80.467,
+  "fable-5-power-s04": {
+    "id": "fable-5-power-s04",
+    "durationFrames": 1033,
+    "durationSeconds": 34.433,
     "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
+    "audioFile": "vo-fable_5_power-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2414,
+        "toFrame": 1033,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "claude-code-limits-s05": {
-    "id": "claude-code-limits-s05",
-    "durationFrames": 2482,
-    "durationSeconds": 82.733,
+  "fable-5-power-s05": {
+    "id": "fable-5-power-s05",
+    "durationFrames": 1280,
+    "durationSeconds": 42.667,
     "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
+    "audioFile": "vo-fable_5_power-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2482,
+        "toFrame": 1280,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "claude-code-limits-s06": {
-    "id": "claude-code-limits-s06",
-    "durationFrames": 2597,
-    "durationSeconds": 86.567,
+  "fable-5-power-s06": {
+    "id": "fable-5-power-s06",
+    "durationFrames": 1673,
+    "durationSeconds": 55.767,
     "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
+    "audioFile": "vo-fable_5_power-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2597,
+        "toFrame": 1673,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "claude-code-limits-s07": {
-    "id": "claude-code-limits-s07",
-    "durationFrames": 2808,
-    "durationSeconds": 93.6,
+  "fable-5-power-s07": {
+    "id": "fable-5-power-s07",
+    "durationFrames": 1506,
+    "durationSeconds": 50.2,
     "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
+    "audioFile": "vo-fable_5_power-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 2808,
-        "enterFrames": 0,
-        "exitFrames": 0,
-        "transitionIn": "hard_cut"
-      }
-    ]
-  },
-  "claude-code-limits-s08": {
-    "id": "claude-code-limits-s08",
-    "durationFrames": 3312,
-    "durationSeconds": 110.4,
-    "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
-    "anchors": {},
-    "phases": [
-      {
-        "id": "scene",
-        "fromFrame": 0,
-        "toFrame": 3312,
-        "enterFrames": 0,
-        "exitFrames": 0,
-        "transitionIn": "hard_cut"
-      }
-    ]
-  },
-  "claude-code-limits-s09": {
-    "id": "claude-code-limits-s09",
-    "durationFrames": 2230,
-    "durationSeconds": 74.333,
-    "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
-    "anchors": {},
-    "phases": [
-      {
-        "id": "scene",
-        "fromFrame": 0,
-        "toFrame": 2230,
-        "enterFrames": 0,
-        "exitFrames": 0,
-        "transitionIn": "hard_cut"
-      }
-    ]
-  },
-  "claude-code-limits-s10": {
-    "id": "claude-code-limits-s10",
-    "durationFrames": 1749,
-    "durationSeconds": 58.3,
-    "fps": 30,
-    "audioFile": "vo-claude_code_limits-full.mp3",
-    "anchors": {},
-    "phases": [
-      {
-        "id": "scene",
-        "fromFrame": 0,
-        "toFrame": 1749,
+        "toFrame": 1506,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"

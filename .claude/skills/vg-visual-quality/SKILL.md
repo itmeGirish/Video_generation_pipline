@@ -44,19 +44,19 @@ VISUAL QUALITY — <name>, Scene N
 
 | Score (%) | Meaning | Action |
 |---|---|---|
-| **90–100** | Elite (Kurzgesagt / Fireship) | ship |
-| **80–89** | Strong | ship; lift the lowest factor if cheap |
-| **70–79** | Good but flat | **REVISE** the 2 lowest factors, re-render, re-score |
-| **60–69** | Amateur / under-built | **REVISE hard** (usually factors 1–3) |
-| **< 60** | Hurts the video | **REDESIGN the scene** |
+| **90–100** | Elite (Kurzgesagt / Fireship) — the TARGET | ship |
+| **86–89** | Strong, just under target | lift the lowest factor(s) to ≥9, re-render |
+| **< 86 OR any factor < 7** | not at bar | **REVISE** the sub-7 / lowest factors, re-render, re-score |
 
-**Teeth (each triggers NOT READY):**
-- A scene under **70%** is not ready — fix and re-render. Target ≥80 every scene.
-- **Any single factor ≤ 4/10** must be fixed even if the total clears 70 (each factor's own
-  skill defines what caps it at ≤4).
+**Teeth (each triggers NOT READY) — RAISED BAR (per user, 2026-06-14):**
+- **Per-factor FLOOR = 7/10 (hard).** ANY factor scoring **< 7** = NOT READY — fix that beat and
+  re-render. No "the total clears so a low factor is fine": a single **6 anywhere blocks the
+  scene.** (This matches each `vg-quality-*` gate's own "< 7 → REVISE.")
+- **Per-factor TARGET = 9/10.** 7 is only "not blocking"; **9 is "done".** After every factor is
+  ≥7, keep lifting the lowest toward 9 — aim for **≥9 on every factor (≈90%+ overall)** before you
+  write SCENE-PASS. 7 is the floor you must clear, 9 is the bar you ship at.
 - **Any V-check FAIL** (factor 8) = NOT READY regardless of total.
-- **Systemic:** the same factor scoring low on ≥ half the scenes = a project-level design
-  flaw — fix it everywhere.
+- **Systemic:** the same factor low on ≥ half the scenes = a project-level design flaw — fix everywhere.
 
 Report **the per-factor table + the single weakest factor + the one change that raises the
 score most.** When a scene sits at 70–79, it's almost always factors **1–3** (motion that's

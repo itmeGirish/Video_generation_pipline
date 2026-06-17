@@ -102,6 +102,30 @@ catch quality issues:
 These need vision-model QA or human review. The `--extract` flag exists to
 make that review fast (browse a folder of thumbnails instead of scrubbing video).
 
+### The VISION-QA GATE (highest-ROI open improvement — build this)
+
+The deterministic validators now cover overlap, density (`sparse_canvas`), dim-overlap
+(`legibility_clutter`), continuity (`continuity_gap`), freeze, sync, and coverage. What they
+CANNOT judge — and what gets MISSED when a human reviews under pressure — is the subjective-but-
+critical layer: **density-by-meaning, "does the visual explain THIS narration sentence" (V15),
+reality-anchor/authenticity (real interface vs generic fake), and clutter/prominence.** This
+session those exact misses slipped through (generic-interface, sparse, payoff-clutter) and the
+USER caught them, not the gate.
+
+**The gate:** for each bullet, extract the SETTLED frame (≈p92), and send `(frame image + the
+bullet's narration sentence + the scene's reality-anchor)` to a vision LLM (Anthropic SDK, image
+input) with a rubric: score 1–5 each on (a) DENSITY — does content fill the frame, no empty half;
+(b) SENTENCE-TEST/V15 — does the picture literally depict this sentence; (c) REALITY-ANCHOR — is it
+the REAL interface the video established, not a generic stand-in; (d) CLUTTER — is the focal element
+clean and unobstructed. Return pass/fail + a one-line reason per factor. Fail any < 3 → NOT READY.
+
+This is NOT the cache-only architectural invariant (that bans LLM calls in bullet CODEGEN; a separate
+QA tool reading frames is fine — this very file already names it as the intended future step). It is
+the single highest-leverage reliability improvement: it turns "good if the reviewer looks honestly"
+into "good, gated." Author-time (`vg-visual-designer` reality-anchor, `vg-code-artifacts` real
+mechanism) prevents these; the vision-QA gate is the post-render safety net. See
+[[project-best-output-roadmap]].
+
 ---
 
 ## Where this fits in the validator chain

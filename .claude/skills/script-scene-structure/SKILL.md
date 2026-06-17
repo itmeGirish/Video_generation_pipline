@@ -323,102 +323,45 @@ then proceed to Step 4 — narration.
 
 ---
 
-## Per-scene BLUEPRINT — design each scene before you write its beats (REQUIRED)
+## Scene VISUAL design → see `script-scene-design`
 
-The scene list (above) is the retention plan. The **blueprint** is the *spatial /
-cinematic* design of one scene: WHERE we are, WHAT real system it depicts, the metaphor,
-the objects, where the eye goes, and beat-by-beat what changes. Fill the blueprint FIRST —
-it is what makes a scene feel like a designed shot instead of a slideshow. It is the
-single biggest lever on "does this look like the real software and explain something."
+The per-scene VISUAL design now lives in its own focused skill, **`script-scene-design`** (validated by
+**`script-scene-design-validator`**): the prose **SCENE DESCRIPTION** (director's brief), the **SCENE
+DESIGN** field block (location · reality anchor · reference assets · cinematic intent · layout · shot ·
+spatial environment · attention flow · beat transitions), the **GLOBAL VISUAL STYLE** art direction, the
+10 hard rules, and the reference-screenshot rules.
 
-Fill every field. If you can't answer a field, the scene isn't designed yet.
+This skill (`script-scene-structure`) owns only the **STRUCTURE**: the scene list, count, arc, loop chain,
+scene-to-scene transitions, one-pattern-per-scene, and the rhythm/pacing variety below. Assign each scene a
+**SCENE PURPOSE + PACE** here so the rhythm varies; `script-scene-design` then records them and designs the look.
 
-```
-## SCENE X — [TITLE]
+## Vary the rhythm — structured scenes vs surprise scenes (the anti-robotic rule)
 
-LEARNING GOAL:    the ONE thing the viewer should learn (one sentence)
-LOCATION:         where we are — e.g. Claude Code terminal / VS Code / Usage dashboard
-REALITY ANCHOR:   the real software/system this is based on (Claude Code, VS Code, Terminal…)
-VISUAL METAPHOR:  how the concept is shown — e.g. context → stack of paper, tokens → battery,
-                  search → scan beam, queue → conveyor
-ENVIRONMENT:      everything visible in the frame (the set)
-OBJECTS:          the things that MOVE (the actors)
-PRIMARY FOCUS:    where the eye lands FIRST
-ENTRY TRANSITION: how we enter — match cut / morph / camera push / follow motion / slide
-INITIAL STATE:    how the scene begins (the set at rest)
-FINAL STATE:      how the scene ends (what changed)
-ATTENTION FLOW:   1 → 2 → 3 → 4   (the path the eye takes across the scene)
+The template makes scenes *well-planned*. But if EVERY scene is the same shape —
+`location → objects → beat → change → beat → change → transition`, 30–40 times — the viewer
+never *sees* the template, yet they *feel* the pattern, and it reads mechanical. The fix is
+deliberate **contrast in rhythm**, the way Kurzgesagt / Veritasium / Lemmino do: a fast,
+big-number scene, then a slow explainer, then a metaphor, then real software, then an
+unexpected bare reveal, then an emotional beat. The pace changes; the shape changes.
 
-BEAT 1
-  PURPOSE:        why this beat exists (what it teaches/advances)
-  VISUAL ACTION:  the motion event (one event — never two ideas at once)
-  STATE CHANGE:   what is different on screen after this beat
-  TEXT:           ≤ 3 words OR one number   (or none)
-BEAT 1 → 2:       how attention moves to the next beat
-BEAT 2 … (repeat) …
+How to build that in:
 
-NARRATION:        the voice-over for the scene (becomes the per-beat `>` lines, see below)
-EXIT TRANSITION:  how the scene leaves — camera follows object / morph into next / wipe / match cut
-NEXT SCENE HOOK:  the visual element that connects to the next scene (the match-cut handle)
-ON-SCREEN TEXT:   max 3 words OR 1 number per beat. NO paragraphs. NO explanatory labels.
-```
+- **Assign a SCENE PURPOSE to every scene** (Hook / Explain / Reveal / Compare / Escalate /
+  Tension / Resolution) and **don't repeat the same purpose back-to-back**. A Reveal is built
+  differently from an Explain — fewer beats, more impact, sometimes bare.
+- **Vary PACE deliberately.** After a dense 7-beat accumulation, let the next scene breathe
+  (2–3 beats, slow). Two same-paced scenes in a row is the warning sign.
+- **Allow the dramatic bare scene.** The strongest reveals drop the whole apparatus —
+  no metaphor, no environment, no 4 beats. Just: `black → 58 / 100 → done.` Impact comes
+  from *removing* everything, not adding. The template must let a scene do this (purpose =
+  Reveal, metaphor = "none (dramatic)", beat count = 1).
+- **Map the rhythm across the video**, not just per scene: scan the SCENE PURPOSE + PACE column
+  down the scene list. If it reads `Explain · Explain · Explain`, or `medium · medium · medium`,
+  break it — insert a fast hook, a bare reveal, or an emotional beat.
 
-### Hard rules this blueprint enforces
-
-- **REALITY ANCHOR is mandatory.** Every scene must look like the real thing it's about
-  (the actual Claude Code terminal, a real VS Code window) — not abstract shapes on empty
-  canvas. A viewer should recognise the software.
-- **One VISUAL METAPHOR, reused.** Pick the metaphor in the first body scene and keep it
-  consistent (the v2 system: battery = budget, paper stack = context, scan beam = reading).
-  Don't invent a new object every scene.
-- **ATTENTION FLOW is the antidote to clutter.** If you can't write a clean 1→2→3 eye path,
-  the frame has too much in it.
-- **ON-SCREEN TEXT ≤ 3 words / 1 number per beat.** Never put the narration paragraph on
-  screen. 70–90% of understanding comes from the visual; text only LABELS what motion can't
-  say. (This is the visual-first rule — see `script-animation-bullets`.)
-- **One VISUAL ACTION per beat.** Two ideas animating at once = split into two beats.
-
-### Blueprint → the parseable scene (what you actually save)
-
-The blueprint is the DESIGN. The pipeline parser
-([source_parser.py](../../../storyboard/source_parser.py)) reads the **pair-block** beat
-format — so each BEAT becomes a timecoded bullet that carries its own narration + anchor.
-The mapping:
-
-| Blueprint field | Where it goes in the saved `.txt` |
-|---|---|
-| `## SCENE X — TITLE` | the scene header `## SCENE N — "Title" (M:SS – M:SS)` |
-| LEARNING GOAL / REALITY ANCHOR / VISUAL METAPHOR / ATTENTION FLOW / ENTRY+EXIT / NEXT HOOK | a scene design block (parser ignores unknown lines — keep them; they guide the bullet coder) |
-| BEAT n PURPOSE + VISUAL ACTION + STATE CHANGE | the beat's `what happens:` lines |
-| BEAT n TEXT | the beat's `text:` line (≤3 words / 1 number) |
-| LOCATION / ENVIRONMENT / OBJECTS | the beat's `location:` and `visible:` lines |
-| NARRATION (split per beat) | each beat's `> …` line |
-| (chosen trigger word) | the beat's `audio_anchor:` (verbatim from that beat's `>` line) + `anchor_mode:` |
-
-Resulting saved form (one beat shown — full format in `script-animation-bullets`):
-
-```
-## SCENE 1 — "One Message, Gone" (0:00 – 0:35)
-  <!-- LEARNING GOAL: four words can cost a third of the budget
-       REALITY ANCHOR: Claude Code terminal · METAPHOR: budget → battery
-       ATTENTION FLOW: typed command → battery → red third → "?"
-       ENTRY: cold open on black · EXIT: battery docks to corner → Scene 2 -->
-- **0:00 – 0:08 — Four words.**
-  > You typed four words. <pause 0.3s> "Fix the login bug."
-  what happens: terminal cursor blinks → command types itself, one word per beat;
-                BATTERY fades in top-right, full green, idle
-  location: Claude Code terminal
-  visible: terminal line, BATTERY
-  text: none
-  audio_anchor: four words
-  anchor_mode: through
-```
-
-Keep narration **per-beat** (`>` lines) — that is what makes the audio anchor drift-proof.
-Do NOT collapse it into one scene-level NARRATION block (that forces the legacy
-`### Narration` / `### Animation` format and reintroduces sync drift).
-
----
+**The test:** read only the SCENE PURPOSE + PACE of all scenes in order. If they're nearly
+identical, the video will feel monotone no matter how good each scene is — re-orchestrate for
+contrast. Structure is the default; surprise is what makes it watchable.
 
 ## Animation patterns that engage the viewer
 

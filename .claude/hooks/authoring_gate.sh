@@ -12,8 +12,11 @@ set -u
 
 INPUT="$(cat || true)"
 
-# Match edits to bullet-code or structured-script files
-if echo "$INPUT" | grep -qE '(gen_bundle_s[0-9]+\.py|structured_scripts/.*\.txt|/scenes/.*-s[0-9]+\.json)'; then
+# Match edits to bullet-code or structured-script files.
+# NOTE: matches ANY *bundle*.py and *_s<N>*.py / seed file — earlier the regex only caught
+# gen_bundle_s<N>.py, so a bundle named _s1_bundle.py slipped through and the author-time
+# skill checklist was never injected (root-cause lapse 2026-06-14).
+if echo "$INPUT" | grep -qE '([Bb]undle.*\.(py|json)|_s[0-9]+_.*\.(py|json)|seed_bullet_cache|structured_scripts/.*\.txt|/scenes/.*-s[0-9]+\.json)'; then
   cat <<'GATE_EOF'
 ═══════════════════════════════════════════════════════════════════
  ✏️   AUTHORING GATE — failure prevention (auto-injected)
@@ -22,9 +25,17 @@ if echo "$INPUT" | grep -qE '(gen_bundle_s[0-9]+\.py|structured_scripts/.*\.txt|
 You are editing a bullet-code or structured-script file.
 
 ▶ FIRST, IF NOT ALREADY DONE THIS SESSION: invoke the authoring skills
-  (Skill tool) and follow them — do NOT author from memory:
-    `vg-visual-designer`  ·  `vg-layout-quality-gate`
-    `vg-visual-map`  ·  the `remotion` skill (for the primitive you use)
+  (Skill tool) and follow them — do NOT author from memory.
+  WHAT to draw:   `vg-visual-map` · `vg-visual-designer` · `vg-layout-quality-gate`
+                  `vg-graphics-assets` (any logo/photo/screenshot)
+  HOW to code it: `vg-render-code`, then per factor —
+                  `vg-code-animations` · `vg-code-timing` · `vg-code-sequencing`
+                  `vg-code-transitions` · `vg-code-text` · `vg-code-images`
+                  `vg-code-tokens` · `vg-code-vchecks`
+  Channel-quality richness (do NOT skip — this is what stops flat output):
+                  `vg-code-artifacts` · `vg-code-composition`
+                  `vg-code-motion-bank` · `vg-code-trimming`
+  + the `remotion` skill (source of truth for every primitive you use)
 
 Then check these failure modes (each one cost real time on prior projects):
 

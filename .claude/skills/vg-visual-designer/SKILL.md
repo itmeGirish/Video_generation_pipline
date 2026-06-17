@@ -38,10 +38,44 @@ The script is the **director layer**: each bullet's `what happens` is a plain be
 the viewer sees) + an `audio_anchor`/`anchor_mode`. Your job is **translation, not invention** —
 turn each beat into a `Kit` composition; the physics is applied automatically.
 
-0. **Establish the SCENE first — read the scene BLUEPRINT, then `location:` + `visible:`.** If the
-   scene has a blueprint header (LEARNING GOAL / LOCATION / REALITY ANCHOR / VISUAL METAPHOR /
-   ENVIRONMENT / OBJECTS / PRIMARY FOCUS / ATTENTION FLOW — see `vg-source-script-format`
-   §"Scene-blueprint template"), it IS the design contract: **REALITY ANCHOR** says which real
+0. **Read the scene's DIRECTOR'S BRIEF first — it is the source; the bullets only execute it.**
+   Each scene opens with TWO blocks (produced by `script-scene-design`): a prose
+   **`<!-- SCENE DESCRIPTION -->`** (Environment · Situation · Viewer Realization · Emotional Journey
+   · Visual Transformation · Final Image) and a **`<!-- SCENE DESIGN -->`** field block — plus ONE
+   `<!-- GLOBAL VISUAL STYLE -->` at the TOP of the script. **Derive the whole scene from these, then
+   translate the beats** — the bullets only carry out what the brief already decided. Honor EVERY field:
+   - **GLOBAL VISUAL STYLE** (whole-video art direction) — the look every scene inherits: render style,
+     palette (the actual token hex), shape language, type, lighting. Build the bullet IN this style and
+     never let a scene drift to a different aesthetic — consistency across scenes is what reads "designed".
+   - **SCENE DESCRIPTION (prose)** — the story / feel / scale / transformation / final image the
+     animation must realize. *Emotional Journey* + *Visual Transformation* tell you how the frame must
+     CHANGE start→end; *Final Image* is the scene's last frame — build toward it.
+   - **SCENE PURPOSE + PACE** — set rhythm and density: a *Hook* is fast and dense; a *Reveal* may be
+     ONE bare beat (black → `58/100` → done); a *Resolution* is slow with a final hold. Don't force the
+     same shape on every scene; match the beat count and motion energy to the purpose.
+   - **LAYOUT (spatial map)** — place each element where the map says (zones / grid) at the stated size;
+     do NOT float or re-center. **SHOT/FRAMING** — the focal scale per beat (CLOSE fills the frame with the
+     hero; WIDE shows the whole set). **PRIMARY FOCUS (ranked)** — the #1 hero leads/enters first, #2/#3
+     follow dimmer. **BEAT n→n+1 TRANSITION** — carry / dock / match-cut the NAMED element; never invent the cut.
+   - **REFERENCE ASSETS / `image: [asset: img/x.png]`** — that's a REAL screenshot. PRESERVE its layout
+     / typography / spacing / tool-call rows; **animate ONLY the changes** on top. Never redraw or
+     invent the UI. If the file is missing, build an ACCURATE vector from documented real details (the
+     `✻` prompt box, `⏺`/`⎿` rows) — never a fake (see `script-research` §"The REAL interface",
+     `vg-graphics-assets`). A `REFERENCE:` line naming real software with no asset present = author the
+     accurate vector, flag it, do NOT improvise a generic terminal.
+   - **CINEMATIC INTENT** — realize it in the code: CAMERA (push-in = scale-up the focal group over the
+     beat; pull-back = scale-down to reveal scale; parallax = layers moving at different speeds) · DEPTH
+     (fg / mg / bg layers; soften/blur the non-focal) · LIGHT+MOOD (a focal glow, a vignette, a GRADIENT
+     backdrop — never a flat fill) · COLOR (one hero accent token; desaturate the context so the hero
+     pops). These are the difference between "authentic/cinematic" and "generic vector".
+   - **ENVIRONMENT (spatial)** — build the set exactly where it says (surfaces, left/right/above), and
+     HOLD those positions across the scene's beats (continuity).
+   Then apply the field contract below.
+
+0a. **Establish the SCENE — read the BLUEPRINT fields, then `location:` + `visible:`.** The blueprint
+   (LEARNING GOAL / LOCATION / REALITY ANCHOR / VISUAL METAPHOR / ENVIRONMENT / OBJECTS / PRIMARY FOCUS
+   / ATTENTION FLOW — see `vg-source-script-format` §"Scene-blueprint template")
+   IS the design contract: **REALITY ANCHOR** says which real
    software to make the frame look like — and you must build the ACTUAL interface, not an assumed
    one. Research the real look first (real prompt box, real tool-call format, how usage/limits are
    actually shown); never fabricate UI the product doesn't have (e.g. a top "usage bar" Claude Code

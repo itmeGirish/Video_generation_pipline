@@ -193,7 +193,15 @@ WPM: ___   coverage: ___%   pause literals: none/___   silence >2s: none/___
 - B1: ___
 
 **SCENE VERDICT:** [ ] PASS   [ ] FAIL
+SCENE-PASS: <scene-id>
 ```
+
+> The `SCENE-PASS: <scene-id>` line (e.g. `SCENE-PASS: claude_code_limits-s01`) is the
+> machine-readable marker the `render_gate.sh` hook greps for. Add it ONLY when the scene
+> genuinely passed on real frame evidence. Until that exact line exists in this file, the hook
+> HARD-BLOCKS (exit 2) the render of the next scene and the final master render (`render_master.mjs`).
+> On a re-render after a fix, keep the line only if the scene still passes; remove it if it
+> regresses to FAIL.
 
 ### Final section — appended once after stitch
 

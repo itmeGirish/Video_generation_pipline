@@ -34,6 +34,7 @@ layer 2 or 3 — not a missing check here. A paper gate cannot catch a render bu
 ## Contents
 - The two questions every beat must pass
 - CAN REMOTION BUILD IT? — the gate before all others
+- Check 0 — Does the beat HONOR the scene-design brief? (run FIRST — highest-value)
 - Check A — Does the animation MAKE SENSE? (clarity / meaning)
 - Check B — Does it FIT the scene? (staging, timing, sync, pacing)
 - Check C — Is it MOTION, not a text slide? (show-don't-tell, no full-text scenes, richness)
@@ -80,6 +81,31 @@ Remotion CANNOT build (all of these are FAIL — redesign):
 **The test:** can you name the motion as a transform, a spring, a value-over-a-range, or
 a stagger? If yes → Remotion can build it. If you can't express it that way → it can't be
 rendered as written → FAIL and rewrite it in engine terms (see Check D).
+
+---
+
+## Check 0 — Does the beat HONOR the scene-design brief? (run FIRST — highest-value)
+
+The scene carries a director's brief (`script-scene-design`: `<!-- SCENE DESCRIPTION -->` +
+`<!-- SCENE DESIGN -->`). The #1 cause of generic animation is beats that IGNORE it. Check each beat
+against the brief — a beat that contradicts or omits a SPECIFIED field FAILS:
+
+| What to check | PASS | FAIL |
+|---|---|---|
+| Realizes the TRANSFORMATION | the beats move the frame toward the brief's Visual Transformation + Final Image (the last beat IS the Final Image) | beats wander; the scene never reaches its Final Image |
+| Uses the CINEMATIC camera | the named camera move is in the motion (push-in / pull-back / parallax) | a static frame where the brief said "pull back to reveal scale" |
+| Honors LAYOUT | elements sit where the LAYOUT map says, at the right size | floated / centered everything, ignoring the map |
+| Honors SHOT | framing matches the brief (close on a reveal, wide on an overview) | wrong framing (wide on the intended close-up punch) |
+| Uses the REFERENCE asset | a real-UI beat carries `image: [asset:]` and preserves the UI | real-UI beat with `image: none` → invents a generic/fake UI |
+| Depth + Light + Color | fg/mg/bg + hero glow + gradient bg + hero accent, per CINEMATIC | flat single-layer, flat fill, no hierarchy |
+| Beat TRANSITION named | the beat sets up the brief's BEAT n→n+1 transition (carry / dock / match-cut) | adjacent beats with no handoff — the cut is invented |
+| Ranked focus | the #1 hero leads; #2/#3 recede | everything equal-weight |
+
+Any contradiction/omission of a specified brief field = **FAIL** → fix the beat to match the brief (or, if
+the brief itself is wrong, fix it in `script-scene-design` and re-run `script-scene-design-validator`).
+This is WHY the brief exists — if the beats don't honor it, the design work was wasted and the animation
+reverts to generic. (Check 0 has no meaning if the brief is absent — that's a `script-scene-design-validator`
+FAIL, fix there first.)
 
 ---
 
@@ -241,10 +267,12 @@ Validate per scene, per bullet. Report a table — one row per bullet, five colu
 
 ```
 ANIMATION VALIDATION — <name>, Scene N
-Bullet | A:Sense | B:Fit | C:Motion | D:Buildable | E:KnownFail
-  B1   |  PASS   | PASS  |  PASS    |  PASS       |  PASS
-  B2   |  FAIL   | PASS  |  FAIL    |  PASS       |  E1 (floating fragment)
-  B3   |  PASS   | FAIL  |  PASS    |  PASS       |  PASS
+Bullet | 0:Brief | A:Sense | B:Fit | C:Motion | D:Buildable | E:KnownFail
+  B1   |  PASS   |  PASS   | PASS  |  PASS    |  PASS       |  PASS
+  B2   |  FAIL   |  FAIL   | PASS  |  FAIL    |  PASS       |  E1 (floating fragment)
+  B3   |  PASS   |  PASS   | FAIL  |  PASS    |  PASS       |  PASS
+
+(Check 0 = honors the scene-design brief: transformation · camera · layout · shot · reference · transitions)
 
 FAILS (must fix before sync/render):
   S N B2 Sense:  shapes spin with no point — redesign so motion = message
@@ -256,7 +284,11 @@ VERDICT: NOT READY — 2 bullets failing
 ```
 
 ### Escalation teeth (so it can't rubber-stamp)
-- Any FAIL (A–E) on any bullet = scene NOT READY.
+- Any FAIL (0, A–E) on any bullet = scene NOT READY.
+- **Check 0 is the highest-value FAIL** — a beat that renders fine but IGNORES the brief (wrong
+  camera, ignored layout, invented UI, no transition) is the exact "looks clean but generic"
+  failure the brief exists to prevent. A scene whose beats don't honor the brief is NOT READY even
+  if every other check passes.
 - **Systemic FAIL** — the same failure mode hits ≥ half the bullets in a scene (e.g., most
   beats are text slides, or several ADD bullets are floating fragments) = the scene is
   broken by design, not a few nits — flag it as a redesign, not line fixes.

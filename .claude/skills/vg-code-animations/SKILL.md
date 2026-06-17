@@ -39,7 +39,25 @@ const op = interpolate(frame,[0,15],[0,1]);
 return React.createElement('div',{style:{opacity:op}}, '…');
 // ❌ enters then frozen (no hold-alive) → freeze fail
 // ❌ CSS transition/animation or Tailwind animate-* → silently dropped in render
+// ❌ a decorative sweeping BAR/BEAM/dot added ONLY to beat the freeze gate
+//    const pp=(frame*0.02)%1; <div style={{left:px(pp), width:w*0.04, height:h*0.3, background:D.cyan}}/>
+//    → reads as a meaningless floating block gliding across the scene; the viewer asks "what is that?"
 ```
+
+## ⛔ Anti-freeze must be MEANINGFUL — never a free-floating beam (real miss, fable_5_power S2, 2026-06-14)
+A long/establishing beat that sits static fails A4. The WRONG fix (and a real lapse) is to drop in a
+decorative sweeping bar/beam/scan-line just to register motion — it reads as a random moving block with
+no meaning and the viewer notices it as noise. **Anti-freeze motion must carry meaning.** In priority order:
+1. **Animate the actual subject** — advance the runner, drain/fill the real gauge, tick the counter, light
+   the next step. The thing the beat is ABOUT should be what moves.
+2. **Animate the scaffold being built** — a "drawing head" glow at the leading edge of a line/track being
+   laid (the track extending toward the horizon), a bar filling, a diagram wiring up. The construction IS
+   the motion and it means something.
+3. **Subdivide the beat** — if a 12–15s beat has genuinely nothing to move, it's too long for ONE beat:
+   evolve it through sub-phases (state A → state B → state C), each a real change (`script-animation-bullets`
+   §Rhythm). A breathing hero + a real phase change every few seconds beats any sweeping beam.
+A motion you can't name the MEANING of (apply the purpose test) is decoration — cut it, don't ship it to
+pass freezedetect.
 
 ## Before you write, confirm
 - [ ] Hero has ≥2 layered transforms (not opacity-only)
