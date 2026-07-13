@@ -1,6 +1,7 @@
 ---
 name: vg-build-and-run
 description: "How to run the pipeline, config.yaml format, CLI flags, exit codes, and project directory structure. Use whenever running a build, checking flags, writing config.yaml, or any request like "build command," "how to run," "CLI flags," "config format," "run the build," "--force flag," "--scene flag," or "exit code.""
+model: opus
 ---
 
 # Build and Run
@@ -85,9 +86,8 @@ design:
 # NOTE: There is no `llm:` section anymore. The previous `llm.designer_model`
 # knob and `DESIGNER_MODEL` env var were removed when the claude CLI subprocess
 # was removed from the pipeline. Per-bullet React code is authored in-session
-# by the active Claude Code agent (rule 04); the model used is whichever the
-# operator selected via `/model` (Opus 4.7 for authoring/QA, Sonnet 4.6 for
-# routing/mechanical work — see SKILL.md § "MODEL STRATEGY").
+# by the active Claude Code agent (rule 04), which runs on **Opus 4.8** for
+# every step — no Sonnet/Haiku delegation, no `/model` switching.
 
 # Optional — visual-block timing + scene-boundary heuristics.
 # Defaults below; omit any key to use the default.
@@ -208,7 +208,7 @@ Whisper model, etc.).
 | `--redesign` | clear per-bullet codegen cache only (keeps audio + transcript) |
 | `--retts` | clear TTS hash only (re-generates audio + Whisper) |
 | `--strict-bullets` | hard-fail the build at Step 2.5 if any bullet scores VAGUE in the bullet linter. Without this flag, vague bullets are warned but build continues — LLM may hallucinate stats/labels. |
-| `--strict-anchors` | hard-fail the build if Step 7 audio_anchor coverage < threshold (default 70%). Exit code 3 = quality-gate fail (vs 1=fatal, 2=partial). Without this flag, low coverage is a SOFT warn and the build proceeds. |
+| `--strict-anchors` | hard-fail the build if Step 7 audio_anchor coverage < threshold (default 70%). Exit code 3 = testing-engine fail (vs 1=fatal, 2=partial). Without this flag, low coverage is a SOFT warn and the build proceeds. |
 | `--strict-anchor-min-pct N` | coverage percent threshold for `--strict-anchors` (default 70). Ignored without `--strict-anchors`. |
 
 ## Exit codes

@@ -1,0 +1,29 @@
+# Banned words / phrases — the AI-voice + hype lint (personality-pass S6 + quality gate).
+# One per line; '#' comments ignored. Matched case-insensitively as whole words/phrases.
+# "just" is banned only as a MINIMIZER ("just do X") — the lint flags it for human review, not auto-reject.
+game-changer
+insane
+mind-blowing
+mind blowing
+delve
+let's dive in
+lets dive in
+dive into
+in the world of
+it's important to note
+its important to note
+unlock the power
+revolutionary
+seamless
+supercharge
+leverage
+robust
+cutting-edge
+state-of-the-art
+paradigm shift
+needle-mover
+as you can see
+on the screen
+in this video we will
+welcome back
+without further ado

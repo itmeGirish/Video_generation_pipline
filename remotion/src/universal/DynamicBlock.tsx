@@ -6,6 +6,10 @@ import { TransitionSeries, linearTiming, springTiming } from '@remotion/transiti
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
 import { wipe } from '@remotion/transitions/wipe';
+import { ThreeCanvas } from '@remotion/three';
+import { Trail, CameraMotionBlur } from '@remotion/motion-blur';
+import { noise2D, noise3D, noise4D } from '@remotion/noise';
+import { Circle, Ellipse, Rect, Triangle, Star, Pie } from '@remotion/shapes';
 import { D, resolveColor } from './design';
 import { Kit } from './kit';
 import type { WordTimestamp } from '../types';
@@ -51,6 +55,21 @@ import type { WordTimestamp } from '../types';
 //   findWordEnd      — (text, nth?=0) => bullet-relative frame where that word/phrase FINISHES,
 //                      or null. Pair with findWord for sync-to-meaning: land an impact on a
 //                      word's end, or run a motion across [findWord(w), findWordEnd(w)].
+//   ThreeCanvas      — @remotion/three <ThreeCanvas> — REAL 3D (camera-through-space, depth, lighting).
+//                      MUST pass width+height; animate ONLY via `frame` (never useFrame() — flickers);
+//                      inner R3F elements are string tags: React.createElement('mesh'|'ambientLight'|
+//                      'boxGeometry'|'meshStandardMaterial', ...). Any inner <Sequence> needs layout="none".
+//                      The ~1-per-video HERO capability (render cost) — keep the rest 2D (see 3d.md).
+//   noise2D/3D/4D    — @remotion/noise: PURE functions, noise2D(seed,x,y) → ~[-1,1]. Organic drift /
+//                      turbulence / wobble / particle fields — natural motion, NOT sine-regular. Drive
+//                      it off `frame` (render-safe): base + noise2D('drift', frame*0.02, 0)*amp.
+//   Circle, Ellipse, — @remotion/shapes: parametric SVG shape COMPONENTS (props: radius / width+height /
+//   Rect, Triangle,    Star{points,innerRadius,outerRadius}, Pie{radius,progress}, fill, ...). Cleaner
+//   Star, Pie          than hand-rolled border-radius divs; correct arcs / pies / stars.
+//   Trail,            — @remotion/motion-blur: trail / motion-blur HOCs. CAVEAT: they re-render children
+//   CameraMotionBlur    at PAST frames via the frame context, so they only blur children that read
+//                      useCurrentFrame() INTERNALLY. A pre-computed bullet element (the usual pattern)
+//                      won't trail — wrap a hook-based Kit motion component, not raw bullet divs.
 //
 // fitText / measureText rely on the requested font being loaded. Root.tsx
 // awaits the project's display + mono fonts before render begins, so these
@@ -101,6 +120,18 @@ const RUNTIME_KEYS = [
   'findWord',
   'findWordEnd',
   'Kit',
+  'ThreeCanvas',
+  'Trail',
+  'CameraMotionBlur',
+  'noise2D',
+  'noise3D',
+  'noise4D',
+  'Circle',
+  'Ellipse',
+  'Rect',
+  'Triangle',
+  'Star',
+  'Pie',
 ] as const;
 
 // Same tokenizer as audio_anchor matching (rule 04 contract #2): lowered [a-z0-9]+
@@ -267,6 +298,18 @@ export const DynamicBlock: React.FC<Props> = ({ code, captions, blockFramesFrom 
     findWord,
     findWordEnd,
     Kit,
+    ThreeCanvas,
+    Trail,
+    CameraMotionBlur,
+    noise2D,
+    noise3D,
+    noise4D,
+    Circle,
+    Ellipse,
+    Rect,
+    Triangle,
+    Star,
+    Pie,
   };
   const args = RUNTIME_KEYS.map((k) => runtimeBindings[k]);
   // Lockstep guard: TypeScript's index-signature ensures every key has a

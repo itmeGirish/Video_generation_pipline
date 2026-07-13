@@ -1,6 +1,7 @@
 ---
 name: vg-output-validation
 description: "How to verify narration and animation bullets actually ended up in the final rendered video. Checks OUTPUT, not inputs. Use whenever checking video quality, verifying coverage, or any request like "validate output," "check the video," "narration coverage," "animation visibility," "did all bullets render," or "validate_output.py.""
+model: opus
 ---
 
 # Output Validation

@@ -1,0 +1,142 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - button [ref=e5]:
+        - img [ref=e7]
+      - button "File" [ref=e9]
+      - button "View" [ref=e10]
+      - button "Tools" [ref=e11]
+      - button "Packages" [ref=e12]
+      - button "Help" [ref=e13]
+      - button "Update available" [ref=e161] [cursor=pointer]:
+        - img [ref=e162]
+    - generic "C:\\Girish\\Fundamental_Projects\\video_generation\\video_explainer\\remotion" [ref=e14]:
+      - generic "Open in C:WINDOWS otepad.exe" [ref=e164] [cursor=pointer]: remotion
+      - generic [ref=e16]: /
+      - generic "Open in C:WINDOWS otepad.exe" [ref=e165] [cursor=pointer]: pixel-rag-s01
+    - generic [ref=e18]:
+      - button [ref=e19]:
+        - generic "Toggle Left Sidebar (Ctrl+B)" [ref=e20]
+      - button [ref=e22]:
+        - generic "Toggle Right Sidebar (Ctrl+J)" [ref=e23]
+  - generic [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e167]:
+        - generic [ref=e171]:
+          - generic [ref=e173]:
+            - generic [ref=e179]: Pricing
+            - generic [ref=e180]:
+              - generic [ref=e181]:
+                - generic [ref=e182]: Plan
+                - generic [ref=e183]: Price
+                - generic [ref=e184]: Seats
+              - generic [ref=e185]:
+                - generic [ref=e186]: Pro
+                - generic [ref=e187]: $29
+                - generic [ref=e188]: "5"
+              - generic [ref=e189]:
+                - generic [ref=e190]: Team
+                - generic [ref=e191]: $49
+                - generic [ref=e192]: "20"
+              - generic [ref=e193]:
+                - generic [ref=e194]: Scale
+                - generic [ref=e195]: $79
+                - generic [ref=e196]: ∞
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - generic [ref=e204]: Pro
+              - generic [ref=e205]: $29
+              - generic [ref=e206]: "5"
+            - generic [ref=e207]:
+              - generic [ref=e208]: Team
+              - generic [ref=e209]: $49
+              - generic [ref=e210]: "20"
+            - generic [ref=e211]:
+              - generic [ref=e212]: Scale
+              - generic [ref=e213]: $79
+              - generic [ref=e214]: ∞
+          - generic [ref=e215]: $29
+        - generic [ref=e227]: PARSER
+        - generic [ref=e228]: structure lost — “$29” is just text now
+        - generic [ref=e229]: Pricing Plan Price Seats Pro $29 5 Team $49 20 Scale $79 ∞
+      - generic [ref=e83]:
+        - generic [ref=e85]:
+          - button "Zoom out timeline" [disabled] [ref=e86]:
+            - img [ref=e87]
+          - slider "Timeline zoom (1x)" [ref=e89]: "1"
+          - button "Zoom in timeline" [ref=e90]:
+            - img [ref=e91]
+        - generic "Preview Size" [ref=e93]:
+          - button "Fit" [ref=e94]:
+            - generic "Fit" [ref=e95]
+            - img [ref=e96]
+        - generic "Change the playback rate" [ref=e98]:
+          - button "1x" [ref=e99]:
+            - generic "1x" [ref=e100]
+            - img [ref=e101]
+        - button "Jump to beginning" [ref=e103]:
+          - img [ref=e104]
+        - button "Step back one frame" [ref=e106]:
+          - img [ref=e107]
+        - button "Play" [ref=e109]:
+          - img [ref=e110]
+        - button "Step forward one frame" [ref=e112]:
+          - img [ref=e113]
+        - button "Loop video" [ref=e115]:
+          - img [ref=e116]
+        - button "Mute video" [ref=e118]:
+          - img [ref=e119]
+        - button "Mark In (I) - right click to clear" [ref=e121]:
+          - img [ref=e122]
+        - button "Mark Out (O) - right click to clear" [ref=e124]:
+          - img [ref=e125]
+        - button "Show transparency as checkerboard (T)" [ref=e127]:
+          - img [ref=e128]
+        - button "Enter fullscreen preview (F)" [ref=e130]:
+          - img [ref=e131]
+        - generic "Export the current composition (R)" [ref=e230] [cursor=pointer]:
+          - button "Render" [ref=e135]:
+            - generic [ref=e136]:
+              - img [ref=e137]
+              - generic [ref=e139]: Render
+    - generic [ref=e144]:
+      - generic [ref=e146]:
+        - generic [ref=e232]:
+          - generic [ref=e233]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e234]: <Sequence>
+        - generic [ref=e236]:
+          - generic [ref=e237]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e238]: <Sequence>
+        - generic [ref=e240]:
+          - generic [ref=e241]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e242]: <Sequence>
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e246]: <Sequence>
+        - generic [ref=e248]:
+          - generic [ref=e249]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e250]: <Sequence>
+      - generic [ref=e149]:
+        - generic [ref=e150]: 00:23.10
+        - button "700" [ref=e251]
+      - generic [ref=e155]:
+        - generic [ref=e269]: "158"
+        - generic:
+          - generic:
+            - generic: 00:07.00
+          - generic:
+            - generic: 00:14.00
+          - generic:
+            - generic: 00:21.00
+          - generic:
+            - generic: 00:28.00
+          - generic:
+            - generic: 00:35.00
+        - generic:
+          - generic:
+            - img

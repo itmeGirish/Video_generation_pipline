@@ -34,9 +34,15 @@ intermediate. No human/LLM rewrite. Source.txt is the only truth.
 """
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+
+try:
+    import yaml  # PyYAML (already a dep — config.yaml). Used to parse the `motion:` op block.
+except Exception:  # pragma: no cover - yaml is always present in this pipeline
+    yaml = None
 
 
 @dataclass
@@ -46,6 +52,16 @@ class AnimationBullet:
     headline: str              # the bold ALL-CAPS-ish first sentence ("Hard cut. Plain horse silhouette.")
     body: str                  # remainder of the bullet text
     spotlight_items: list[str] | None = None  # set when body contains [SPOTLIGHT: a | b | c]
+    # The structured `motion:` block — a YAML list of motion-system OPERATORS, one per beat:
+    #   - {op, obj, to, token, choreo, sync}   (op ∈ the closed 9; token ∈ the motion tokens)
+    # Parsed deterministically so the codegen builds the canonical Remotion animation per op
+    # (not LLM-interpreted prose). None for legacy bullets that still use prose `what happens`.
+    ops: list[dict] | None = None
+    # JSON render-contract path only: the bullet's ORIGINAL structured object, carried through
+    # verbatim so the LLM codegen reads the full JSON (sentence roles/durations/pauses/emphasis/
+    # visual_intent) directly — "parse for the machine, JSON-direct for the LLM's creative step".
+    # None for .txt scripts. The mechanical spine (TTS/anchors/frames) never reads this.
+    raw: dict | None = None
 
 
 @dataclass
@@ -57,12 +73,25 @@ class Scene:
     narration: str             # raw narration text (single block)
     animation: list[AnimationBullet] = field(default_factory=list)
     pacing: str = ""           # optional ### Pacing block content
+    # ─── director's brief (Phase-1 → Phase-2 bridge) ───────────────────────────
+    # The <!-- SCENE DESCRIPTION --> / <!-- SCENE DESIGN --> comment blocks written by
+    # script-scene-design. They were previously DROPPED by the parser, so the per-bullet
+    # codegen never saw the scene's camera / layout / through-line / visual-metaphor intent
+    # and re-invented it → generic output. Captured here so the brief is DATA, not the
+    # in-session author's memory. `global_style` is the script-level GLOBAL VISUAL STYLE,
+    # DENORMALIZED onto every scene so cache-key + prompt builders (which only receive a
+    # Scene) can read it with zero signature churn. Empty for conversion-path scripts.
+    description: str = ""      # <!-- SCENE DESCRIPTION ... -->  (environment/transformation/final image)
+    design: str = ""           # <!-- SCENE DESIGN ... -->       (location/cinematic/layout/through-line state)
+    global_style: str = ""     # <!-- GLOBAL VISUAL STYLE ... --> (copied from the script, per scene)
 
 
 @dataclass
 class SourceScript:
     title: str
     scenes: list[Scene]
+    global_style: str = ""     # <!-- GLOBAL VISUAL STYLE ... --> (once, top of file)
+    reference_assets: str = "" # <!-- REFERENCE ASSETS ... -->    (once, top of file)
 
 
 # ─── helpers ───
@@ -87,6 +116,18 @@ def _strip_markdown(text: str) -> str:
     return text
 
 
+def _extract_comment_block(text: str, label: str) -> str:
+    """Return the inner content of an HTML comment block whose opening token matches
+    `label`, e.g. label='SCENE DESIGN' captures the body of '<!-- SCENE DESIGN ... -->'.
+    Non-greedy so it stops at the first '-->'. Empty string if absent.
+
+    This is how the Phase-1 director's brief crosses into Phase-2: source_parser keeps
+    these blocks (the renderer's source_parser used to drop every comment) and attaches
+    them to the Scene / SourceScript so the per-bullet codegen sees the design intent."""
+    m = re.search(rf"<!--\s*{re.escape(label)}\b(.*?)-->", text, re.DOTALL)
+    return m.group(1).strip() if m else ""
+
+
 # ─── scene split ───
 _SCENE_HEADER = re.compile(
     r"^##\s*SCENE\s+(\d+)\s*[—-]\s*[\"“]?(.+?)[\"”]?\s*\((\d+:\d{2})\s*[–-]\s*(\d+:\d{2})\)\s*$",
@@ -97,6 +138,8 @@ _SCENE_HEADER = re.compile(
 def lint(source_path: str | Path) -> list[str]:
     """Return list of human-readable warnings about common source.txt mistakes.
     Empty list = clean. Does NOT raise — just reports problems for the user to fix."""
+    if Path(source_path).suffix.lower() == ".json":
+        return _lint_json(Path(source_path))
     text = Path(source_path).read_text(encoding="utf-8")
     warnings: list[str] = []
 
@@ -162,6 +205,13 @@ def lint(source_path: str | Path) -> list[str]:
 
 
 def parse(source_path: str | Path) -> SourceScript:
+    # ── JSON render contract (the canonical machine handover from the script pipeline) ──
+    # projects/structured_scripts/<name>.json maps 1:1 onto SourceScript/Scene/AnimationBullet
+    # (schema: docs/render-contract.schema.json). Everything downstream of the parser is
+    # format-agnostic — TTS/Whisper/anchors/codegen/master/verify see the same dataclasses.
+    if Path(source_path).suffix.lower() == ".json":
+        return _parse_json(Path(source_path))
+
     text = Path(source_path).read_text(encoding="utf-8")
 
     # Extract document title (first H1)
@@ -175,6 +225,13 @@ def parse(source_path: str | Path) -> SourceScript:
             f"No scenes found in {source_path}. "
             f"Expected headers like '## SCENE 1 — \"Title\" (0:00 – 1:00)'"
         )
+
+    # Script-level director's brief (the Phase-1 → Phase-2 bridge): the GLOBAL VISUAL
+    # STYLE + REFERENCE ASSETS blocks live in the preamble, before scene 1. Extract from
+    # that region so a scene body can never shadow them. Empty for conversion-path scripts.
+    preamble = text[: scene_marks[0].start()]
+    global_style = _extract_comment_block(preamble, "GLOBAL VISUAL STYLE")
+    reference_assets = _extract_comment_block(preamble, "REFERENCE ASSETS")
 
     scenes: list[Scene] = []
     for i, m in enumerate(scene_marks):
@@ -215,9 +272,17 @@ def parse(source_path: str | Path) -> SourceScript:
             narration=narration,
             animation=animation,
             pacing=pacing,
+            description=_extract_comment_block(body, "SCENE DESCRIPTION"),
+            design=_extract_comment_block(body, "SCENE DESIGN"),
+            global_style=global_style,   # denormalized so prompt/cache builders need only a Scene
         ))
 
-    return SourceScript(title=title, scenes=scenes)
+    return SourceScript(
+        title=title,
+        scenes=scenes,
+        global_style=global_style,
+        reference_assets=reference_assets,
+    )
 
 
 # ─── section extractors ───
@@ -312,6 +377,55 @@ def _extract_animation(body: str) -> list[AnimationBullet]:
     return bullets
 
 
+# ─── the structured `motion:` operator block (YAML; one op per row) ───
+# Each row: {el, op, topology, params:{…}, token, sync}
+#   op       ∈ the closed 9 (grammar)            topology ∈ the motion language (per op)
+#   params   = scene-specific knobs (structured)  token    = the spring/duration feel
+_OPS_VOCAB = {"Enter", "Exit", "Move", "Transform", "Reveal", "Emphasize", "Connect", "Recolor", "Camera"}
+_TOKEN_VOCAB = {"instant", "fast", "base", "slow", "settle", "pop", "glide", "bounce", "stagger"}
+
+
+def _extract_motion_ops(block: str) -> list[dict] | None:
+    """Parse a bullet's `motion:` block — a YAML list of operator maps — into structured ops.
+
+    The block looks like:
+        motion:
+          - {el: shredder, op: Enter, topology: rise, params: {}, token: glide}
+          - {el: page.table, op: Transform, topology: shatter, params: {split: rows, stagger: 6f}, token: settle, sync: "..."}
+    Returns the list of dicts, or None if there's no `motion:` block (legacy prose bullets).
+    Determinism is the point — the codegen builds DYNAMIC Remotion from op·topology·params (not a fixed
+    template, not re-interpreted prose). Malformed YAML returns None (the validator flags it).
+    """
+    if yaml is None:
+        return None
+    lines = block.splitlines()
+    start = base_indent = None
+    for i, line in enumerate(lines):
+        m = re.match(r"^(\s*)motion:\s*$", line)
+        if m:
+            start, base_indent = i, len(m.group(1))
+            break
+    if start is None:
+        return None
+    items: list[str] = []
+    for line in lines[start + 1:]:
+        if not line.strip():
+            continue
+        indent = len(line) - len(line.lstrip())
+        # a sibling key (text:/image:/audio_anchor:/…) at ≤ the motion: indent ends the block
+        if indent <= base_indent and re.match(r"^\s*\w+:", line):
+            break
+        items.append(line.strip())
+    if not items:
+        return None
+    try:
+        doc = yaml.safe_load("motion:\n" + "\n".join("  " + it for it in items))
+        ops = doc.get("motion") if isinstance(doc, dict) else None
+        return ops if isinstance(ops, list) and all(isinstance(o, dict) for o in ops) else None
+    except Exception:
+        return None
+
+
 # ─── pair-block format (narration + animation coupled per bullet) ───
 def _is_pair_block_scene(body: str) -> bool:
     """A scene is pair-block when it has no `### Animation` section header.
@@ -374,10 +488,172 @@ def _extract_pair_blocks(body: str) -> tuple[str, list[AnimationBullet]]:
             headline=headline,
             body=body_full,
             spotlight_items=spotlight_items,
+            ops=_extract_motion_ops(block),   # structured `motion:` YAML → op·topology·params
         ))
 
     narration = _strip_markdown(" ".join(narration_parts))
     return narration, bullets
+
+
+# ─── JSON render contract (canonical machine handover) ───
+def _lint_json(source_path: Path) -> list[str]:
+    """Soft warnings for a JSON render contract. Hard violations raise in _parse_json;
+    this reports quality gaps (missing briefs, thin bullets) the user should fix."""
+    warnings: list[str] = []
+    try:
+        data = json.loads(source_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return [f"not valid JSON: {e}"]
+    if not isinstance(data, dict) or not isinstance(data.get("scenes"), list):
+        return ["not a render contract (missing top-level 'scenes' array)"]
+    if not str(data.get("global_style", "")).strip():
+        warnings.append("no global_style — every scene will guess the art direction")
+    if not str(data.get("script_ready", "")).startswith("SCRIPT-READY:"):
+        warnings.append("script_ready field missing or malformed (render gate reads it)")
+    for sc in data["scenes"]:
+        num = sc.get("number", "?")
+        if not str(sc.get("description", "")).strip():
+            warnings.append(f"scene {num}: no description (director's brief) — codegen will invent")
+        if not str(sc.get("design", "")).strip():
+            warnings.append(f"scene {num}: no design block — layout/camera/through-line unguided")
+        for bi, b in enumerate(sc.get("bullets") or [], 1):
+            if not str(b.get("what_happens", "")).strip():
+                warnings.append(f"scene {num} bullet {bi}: no what_happens beat sequence")
+    return warnings
+
+
+def _parse_json(source_path: Path) -> SourceScript:
+    """Parse the JSON render contract (docs/render-contract.schema.json) into the SAME
+    SourceScript/Scene/AnimationBullet structure the .txt parser produces.
+
+    Contract highlights (each mirrors a pair-block guarantee, enforced HARD here):
+      - every bullet carries its OWN narration sentences → scene narration is their
+        in-order concatenation (identical to pair-block assembly);
+      - `pause_after_ms` ≥ 400 on a sentence emits an explicit `<pause X.Xs>` tag
+        (same tag the .txt path uses — the TTS/SSML pipeline is unchanged);
+      - `audio_anchor` MUST appear verbatim in the bullet's own narration (drift-proof
+        by construction — a violation raises, it does not silently mis-sync);
+      - labeled brief fields (what_happens/text/image/visual_intent/emphasis) are
+        assembled into the bullet `body`, so downstream `audio_anchor:`/`anchor_mode:`
+        extraction and the codegen brief work with zero changes.
+    """
+    data = json.loads(source_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or "scenes" not in data:
+        raise ValueError(f"{source_path}: not a render contract (missing top-level 'scenes')")
+    title = str(data.get("title") or source_path.stem).strip()
+    global_style = str(data.get("global_style", "")).strip()
+    reference_assets = str(data.get("reference_assets", "")).strip()
+
+    scenes: list[Scene] = []
+    for si, sc in enumerate(data["scenes"], 1):
+        try:
+            scene_num = int(sc["number"])
+            scene_title = str(sc["title"]).strip()
+            win_from = float(sc["window_from_sec"])
+            win_to = float(sc["window_to_sec"])
+        except (KeyError, TypeError, ValueError) as e:
+            raise ValueError(f"{source_path}: scene #{si} missing/invalid required field: {e}")
+        if win_to <= win_from:
+            raise ValueError(f"Scene {scene_num} '{scene_title}': window_to_sec must exceed window_from_sec")
+        raw_bullets = sc.get("bullets") or []
+        if not raw_bullets:
+            raise ValueError(f"Scene {scene_num} '{scene_title}' has no bullets")
+
+        narration_parts: list[str] = []
+        bullets: list[AnimationBullet] = []
+        for bi, b in enumerate(raw_bullets, 1):
+            where = f"Scene {scene_num} bullet {bi}"
+            try:
+                from_sec = float(b["time_from_sec"])
+                to_sec = float(b["time_to_sec"])
+                headline = str(b["headline"]).strip()
+                anchor = str(b["audio_anchor"]).strip()
+                sentences = b["narration"]
+            except (KeyError, TypeError, ValueError) as e:
+                raise ValueError(f"{where}: missing/invalid required field: {e}")
+            if not sentences or not isinstance(sentences, list):
+                raise ValueError(f"{where}: 'narration' must be a non-empty array of sentence objects")
+
+            sent_texts: list[str] = []
+            emphasis_words: list[str] = []
+            for s in sentences:
+                t = str(s.get("text", "")).strip()
+                if not t:
+                    raise ValueError(f"{where}: a narration sentence has empty 'text'")
+                pa = int(s.get("pause_after_ms") or 0)
+                if pa >= 400 and "<pause" not in t[-20:]:
+                    t += f" <pause {pa / 1000:.1f}s>"
+                sent_texts.append(t)
+                ew = str(s.get("emphasis_word", "")).strip()
+                if ew:
+                    emphasis_words.append(ew)
+            bullet_narr = " ".join(sent_texts)
+            narration_parts.append(bullet_narr)
+
+            # Pair-block anchor guarantee, enforced (compare with pause tags stripped).
+            plain = re.sub(r"<pause[^>]*>", " ", bullet_narr)
+            plain = re.sub(r"\s+", " ", plain).lower()
+            if anchor and anchor.lower() not in plain:
+                raise ValueError(
+                    f"{where}: audio_anchor '{anchor}' is not a verbatim phrase of the bullet's own narration"
+                )
+
+            # Assemble the free-form brief `body` — same labeled-line convention the
+            # .txt path space-joins, so downstream extraction/codegen is unchanged.
+            parts: list[str] = []
+            if str(b.get("what_happens", "")).strip():
+                parts.append("what happens: " + str(b["what_happens"]).strip())
+            if str(b.get("text", "")).strip():
+                parts.append("text: " + str(b["text"]).strip())
+            if str(b.get("image", "")).strip():
+                parts.append("image: " + str(b["image"]).strip())
+            if str(b.get("visual_intent", "")).strip():
+                parts.append("hint: " + str(b["visual_intent"]).strip())
+            if emphasis_words:
+                parts.append("emphasis: " + ", ".join(emphasis_words))
+            parts.append("audio_anchor: " + anchor)
+            parts.append("anchor_mode: " + str(b.get("anchor_mode", "appear")).strip().lower())
+            body_full = " ".join(parts)
+
+            spotlight_items = None
+            sm = _SPOTLIGHT_RE.search(body_full)
+            if sm:
+                spotlight_items = [item.strip() for item in sm.group(1).split("|") if item.strip()]
+                body_full = _SPOTLIGHT_RE.sub("", body_full).strip()
+
+            ops = b.get("ops")
+            if ops is not None and not (isinstance(ops, list) and all(isinstance(o, dict) for o in ops)):
+                raise ValueError(f"{where}: 'ops' must be null or a list of operator objects")
+
+            bullets.append(AnimationBullet(
+                time_from_sec=from_sec,
+                time_to_sec=to_sec,
+                headline=headline,
+                body=body_full,
+                spotlight_items=spotlight_items,
+                ops=ops,
+                raw=b,   # the original structured object — LLM codegen reads this directly
+            ))
+
+        scenes.append(Scene(
+            number=scene_num,
+            title=scene_title,
+            window_from_sec=win_from,
+            window_to_sec=win_to,
+            narration=" ".join(narration_parts),
+            animation=bullets,
+            pacing=str(sc.get("pacing", "")).strip(),
+            description=str(sc.get("description", "")).strip(),
+            design=str(sc.get("design", "")).strip(),
+            global_style=global_style,
+        ))
+
+    return SourceScript(
+        title=title,
+        scenes=scenes,
+        global_style=global_style,
+        reference_assets=reference_assets,
+    )
 
 
 # ─── self-test ───

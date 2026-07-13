@@ -1,6 +1,7 @@
 ---
 name: vg-code-motion-bank
 description: AUTHOR-TIME motion-design pattern bank modeled on top technical-explainer channels (the commitlog house style). The ONE principle — scaffold → fill with value-driven motion → payoff — plus copy-paste code for the signature builds (scaffold-then-fill, value-growth + synced counter, count-up number, staggered fill, state-change recolor+pulse, comparison into reserved space, payoff-lands-last, persistent reference card, curve draw). Use WHILE writing a data/diagram bullet so the motion reads as professional "data settling into place." Grounded in remotion timing.md/sequencing.md + vg-code-animations/timing/sequencing.
+model: opus
 ---
 
 # Motion-design bank — "scaffold → fill → payoff"
@@ -10,6 +11,21 @@ The house style of premium technical explainers: restrained, value-driven, confi
 animate the DATA into it with eased value motion and counting numbers, then land a PAYOFF
 line last. Feel = `Easing.out(Easing.cubic)`, numbers counting, gentle springs — never
 flashy. Nothing freezes (hold-alive breathe/pulse on held elements).
+
+## ⭐ THE ONE-VALUE LAW (what makes motion read as ENGINEERED, not decorated)
+
+Every beat has **ONE driving value** — a single frame-interpolated progress/quantity — and the
+counter, the geometry (bar heights, fills, positions), and the colors/states are ALL **functions of
+that one value**. Nothing in the beat is separately keyframed: when the number moves, the diagram and
+the state colors move *because they derive from the same driver*. This is why premium explainers feel
+mechanical-precise — number, picture, and color can never disagree, and cause→effect is literal (one
+prop changes → everything downstream re-derives). Corollaries:
+- Author the driver first (`interpolate(frame, phase, [from,to])`, values from the CONTRACT), then
+  express every element as a pure function of it. If an element needs its own timeline, it's a
+  different beat.
+- A parameter beat (a visible control/slider) is the same law with the control as the driver.
+- Stagger/sequencing offsets phase per element (`vg-code-sequencing`), but each element still reads
+  the shared driver — offset, not independent.
 
 ## Topic-agnostic — the patterns are universal, the data is swappable
 These are NOT about tokens/caches. Map any topic to a pattern:
@@ -30,97 +46,64 @@ P2 the bar DRAINS while a `$1.2M → $0` counter falls (ease-out) → P5 it turn
 pulses → P7 payoff "11 months left." Same code, different labels.
 
 ## P1 — Scaffold-then-fill (reserve space first)
-```js
-// scaffold appears 0→8f: the empty column/track/axes/title — reserve ALL space now
-const scaffold = interpolate(frame,[0,8],[0,1],{extrapolateRight:'clamp'});
-// data fills AFTER the scaffold is up (starts ~frame 8)
-const fill = interpolate(frame,[8, durationInFrames*0.55],[0,1],
-  {extrapolateLeft:'clamp', extrapolateRight:'clamp', easing:Easing.out(Easing.cubic)});
-```
 
 ## P2 — Value-growth + SYNCED counter (the core build)
-```js
-// ONE progress drives BOTH the bar height AND the displayed number → they move together
-const FINAL = 320;                                  // e.g. GB
-const p = interpolate(frame,[8, durationInFrames*0.55],[0,1],
-  {extrapolateLeft:'clamp', extrapolateRight:'clamp', easing:Easing.out(Easing.cubic)});
-const barH   = Math.round(maxH * p);                // bar grows
-const shown  = Math.round(FINAL * p);              // number counts up in sync
-// render: a D.red column of height barH + a label `${shown} GB`
-```
 
 ## P3 — Count-up number (incl. the "X to Y" dual count)
-```js
-const a = Math.round(interpolate(frame,[10,durationInFrames*0.5],[3,80],
-  {extrapolateLeft:'clamp',extrapolateRight:'clamp',easing:Easing.out(Easing.cubic)}));
-const b = Math.round(interpolate(frame,[10,durationInFrames*0.5],[0,92],
-  {extrapolateLeft:'clamp',extrapolateRight:'clamp',easing:Easing.out(Easing.cubic)}));
-// label: `${a} to ${b}%`  → reads "80 to 92%" as it settles
-```
 
 ## P4 — Staggered fill (bars / cells / token boxes one-by-one)
-```js
-const cells = DATA.map((d,i)=>{
-  const g = spring({frame:frame-(10+i*4), fps, config:{damping:20,stiffness:200}}); // per-cell delay
-  return React.createElement('div',{key:i,style:{opacity:g, transform:`scale(${0.6+0.4*g})`,
-    backgroundColor:d.cached?D.green:D.surface, /* … */}}, d.label);
-});
-```
 
 ## P5 — State-change recolor + pulse (e.g. cache invalidation)
-```js
-const flip = durationInFrames*0.45;                 // the moment state changes
-const pulse = 0.6+0.4*Math.abs(Math.sin(frame*0.18));
-const color = (i>=insertAt && frame>=flip) ? D.red : D.green;
-const op    = (i>=insertAt && frame>=flip) ? pulse : 1;   // changed cells keep pulsing (alive)
-```
 
 ## P6 — Comparison slides into RESERVED space (after the first lands)
-```js
-// left gap was empty on purpose; the compare bar enters once the hero has landed
-const cmp = spring({frame:frame-Math.round(durationInFrames*0.55), fps, config:{damping:18}});
-const cmpX = interpolate(cmp,[0,1],[Math.round(-W*0.15),0]);   // slide in from left
-const cmpH = Math.round(maxH*0.44*cmp);                        // grows to its (smaller) value
-```
 
 ## P7 — Payoff lands LAST (the takeaway pill/caption)
-```js
-const payoff = spring({frame:frame-Math.round(durationInFrames*0.8), fps, config:{damping:14}});
-const payY = interpolate(payoff,[0,1],[Math.round(H*0.04),0]);
-// a pill bottom-center: `≈ 3.2x cheaper` — opacity:payoff, transform:`translateY(${payY}px)`
-```
 
 ## P8 — Persistent reference card (breathes the whole scene)
-```js
-const ref = 1 + 0.015*Math.sin(frame*0.1);          // never frozen
-// a small static card (e.g. "2.5 MB / per token") with transform:`scale(${ref})` — context anchor
-```
 
 ## P9 — Curve / line draw into axes
-```js
-const draw = interpolate(frame,[12,durationInFrames*0.7],[0,1],
-  {extrapolateLeft:'clamp',extrapolateRight:'clamp',easing:Easing.inOut(Easing.cubic)});
-// svg path with strokeDasharray=LEN, strokeDashoffset=LEN*(1-draw)  → the line draws on
-```
 
 ## P10 — Formula / breakdown fill (terms populate, then collapse to result)
-```js
-// a formula's terms appear one-by-one, then the whole thing collapses into its result
-const terms = ['2','80','64','128','N','P'];          // any breakdown: factors, line items, parts
-const shownTerm = (i)=> spring({frame:frame-(10+i*6), fps, config:{damping:20,stiffness:200}});
-// each term: opacity:shownTerm(i), transform:`scale(${0.6+0.4*shownTerm(i)})`
-const collapse = interpolate(frame,[durationInFrames*0.55,durationInFrames*0.7],[0,1],
-  {extrapolateLeft:'clamp',extrapolateRight:'clamp'});            // formula fades → result card grows in
-// result card opacity:collapse, scale: interpolate(collapse,[0,1],[0.8,1])
-```
 
 ## P11 — Linked highlight (activating A lights up related B)
-```js
-// when a step/panel goes active, a RELATED element elsewhere highlights too (cause across panels)
-const active = frame >= durationInFrames*0.4;          // step becomes active
-const panelGlow = active ? (0.6+0.4*Math.abs(Math.sin(frame*0.15))) : 0;   // the panel pulses
-// the linked element (a row/label elsewhere) gets: opacity: active?1:0.3, borderColor: active?D.amber:D.surface
-```
+
+**⛔ CONNECTOR REGISTRATION (the law for ANY drawn link/beam/arrow/leader line).** A connector names two
+elements; its endpoints must be **DERIVED from the same layout variables that place those two elements** —
+one geometry source, so the line *cannot* miss what it names. Guessed endpoint constants next to computed
+element layout = two sources of truth for one relationship → guaranteed misregistration.
+- **Both endpoints resolve to element coordinates**: source = the element's computed center/edge, target =
+  the named row/cell/region's own position variables. If an element is flex/grid-placed and its coordinates
+  aren't derivable, PLACE IT at computed positions instead — a connector may never point at a guess.
+- **The pairing comes from the CONTRACT** (the Connect event's source → target map), never invented at
+  codegen. No map in the beat = route back, don't improvise one.
+- **One link fires at a time** (stagger per `vg-code-sequencing`) — the eye follows one match; N simultaneous
+  crossing lines is spaghetti regardless of registration.
+- **The landing triggers the target's reaction** (the cell ignites / the row highlights — P5 on arrival).
+  A connector whose target stays inert is a decorative line, not a taught relationship.
+- **Technique note:** rotated-div beams are the render-safe build (a full-canvas animated `<svg>` hung a
+  headless render >180s) — keep the technique; compute its `len`/`angle` FROM the two derived endpoints.
+
+## P12 — Stream / type-on as the SUBJECT (the process of production IS the concept)
+
+When the beat's concept is *something being produced piece by piece* (text generating, a log filling, a
+message arriving, items emitted over time), the type-on IS the subject — not a caption effect. Build it
+frame-driven: reveal the content unit-by-unit (word/token/line) at a FIXED rate derived from the concept's
+real cadence, with a caret/cursor at the leading edge (the eye's anchor) and a small live rate/progress
+readout (`Kit.Tag`/`Counter`) that makes the cadence measurable, not just felt. `slice()` the content by
+`Math.floor(frame/RATE)` — never CSS animation. Exempt from the text-motion-ratio cap ONLY when the
+production process is the beat's point (the exemption is the concept, not the styling); a title flying in
+is still text-motion. Pair with a ticking timeline/ruler if the beat's claim is about the RATE itself.
+
+## OPERATOR HELPERS — the SUBJECT-TRANSFORM kit (make the hero MOVE, as a function call)
+
+The P-patterns above are *data settling in*. These are the **anti-PPT operators** — ready helpers so authoring
+"the SUBJECT transforms" is a call, not bespoke React each scene. Each takes an OBJECT (an element/render) + a
+fire frame, and returns the transformed object. (Pass the SUBJECT region's box to `vg-quality-animations`
+§SUBJECT-MOVED so the SSIM check knows where to look.) `at` = the bullet-relative fire frame (use `findWord`).
+**The rule:** the hero of every beat is built with ONE of these (it MOVES/BECOMES/CLIMBS/DIES) — `Enter`(fade)
++ `Camera` + ambient is the SLIDE fallback. If you reached for an opacity-fade as the main event, reach for an
+operator instead. (These satisfy `vg-quality-animations` §SUBJECT-MOVED by construction: the subject's pixels
+genuinely change p10→p90.)
 
 ## The beat timeline (how to assemble)
 ```

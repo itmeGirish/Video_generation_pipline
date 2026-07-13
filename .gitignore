@@ -91,3 +91,14 @@ remotion/public/vo-*.mp3
 models/piper/*.onnx
 documents/*.mp4
 remotion/out/*.mp4
+
+# Heavy reference / benchmark assets + media (not for git)
+documents/
+*.webm
+feed_back/*.mp4
+feedback/*.mp4
+
+# Project-specific render mirrors (generated from the ignored projects/)
+remotion/public/scenes/
+remotion/public/captions/
+remotion/public/fonts/

@@ -426,11 +426,12 @@ def test_render_stability_settings() -> None:
           "process.exit(2)" in rs,
           "exit code 2 lets build_video.py distinguish partial failure from fatal")
 
-    # build_video.py recognizes both codes
-    check("build_video.py handles render exit code 1 (fatal)",
-          "r.returncode == 1" in bv and "RENDER FAILED" in bv)
-    check("build_video.py handles render exit code 2 (partial)",
-          "r.returncode == 2" in bv and "RENDER PARTIAL" in bv)
+    # build_video.py (NATIVE flow): the per-scene render loop was removed — the ONE
+    # expensive step is render_master.mjs. Any non-zero master exit fails the build.
+    check("build_video.py fails the build on a non-zero final master render",
+          "REMOTION MASTER STITCH FAILED" in bv and "rc != 0" in bv)
+    check("build_video.py fails the single-scene preview on a non-zero master render",
+          "SINGLE-SCENE MASTER RENDER FAILED" in bv)
 
 
 def test_remotion_version_floor() -> None:
@@ -516,19 +517,19 @@ def test_render_browser_reuse_and_watchdog() -> None:
     check("render_scenes.mjs handles SIGINT/SIGTERM/SIGBREAK to close browser",
           "SIGINT" in rs and "SIGTERM" in rs and "SIGBREAK" in rs)
 
-    # --- build_video.py side ---
-    check("build_video.py uses subprocess.Popen (not subprocess.run with shell=True)",
-          "subprocess.Popen(" in bv and 'cwd=str(REMOTION_DIR), env=env,' in bv,
+    # --- build_video.py side (NATIVE flow: the render child is render_master.mjs —
+    #     the ONE live master render; there is no per-scene render loop) ---
+    check("build_video.py uses subprocess.Popen for the master render (not run/shell=True)",
+          "subprocess.Popen(" in bv and "render_master.mjs" in bv,
           "shell=True breaks Ctrl+C propagation — orphan node.exe + chrome.exe stay alive")
-    check("build_video.py drops shell=True for the render call",
-          "[\"node\", \"render_scenes.mjs\"] + to_render" in bv
-          and bv.count("shell=True") == 0,
+    check("build_video.py has zero shell=True (orphan-process guard)",
+          bv.count("shell=True") == 0,
           "any remaining shell=True risks orphan Chromium processes on Ctrl+C")
     check("build_video.py uses CREATE_NEW_PROCESS_GROUP for the render child",
           "CREATE_NEW_PROCESS_GROUP" in bv,
           "without it, parent's Ctrl+C kills node before our handler can clean up")
     check("build_video.py KeyboardInterrupt → taskkill /F /T (Windows tree-kill)",
-          "KeyboardInterrupt" in bv and 'taskkill' in bv and '/T' in bv and '/F' in bv,
+          "KeyboardInterrupt" in bv and 'taskkill' in bv and '"/T"' in bv and '"/F"' in bv,
           "without /T, only the cmd shell dies — node + chrome remain")
     check("build_video.py reports tree-kill clearly + exits 130",
           "killing render tree" in bv and "sys.exit(130)" in bv)
@@ -541,7 +542,7 @@ def test_render_browser_reuse_and_watchdog() -> None:
           "render_timeout_per_scene_s" in bv and "RENDER_TIMEOUT_PER_SCENE_S" in bv)
     check("on render TimeoutExpired → tree-kill + exit 124",
           "subprocess.TimeoutExpired" in bv and "RENDER STUCK" in bv
-          and "_kill_render_tree()" in bv and "sys.exit(124)" in bv)
+          and "_kill_render_tree(" in bv and "sys.exit(124)" in bv)
 
 
 def test_strict_anchors_quality_gate() -> None:
@@ -642,18 +643,14 @@ def test_render_crash_defenses() -> None:
     check("_mp4_is_healthy guards against zero-byte file",
           "min_size_bytes" in src and "stat().st_size" in src)
 
-    # 2. Resume-skip uses health check (not just mtime)
-    check("resume-skip path calls _mp4_is_healthy(out_file)",
-          "_mp4_is_healthy(out_file)" in src,
-          "without health-check, killed prior build leaves corrupt mp4 that's silently skipped")
-
-    # 3. Post-render integrity check after the bundle render
-    check("post-render check identifies corrupt scene mp4s",
-          "RENDER PRODUCED CORRUPT mp4" in src,
-          "0-exit-code render with corrupt output would otherwise leak into stitch")
-    check("post-render check uses _mp4_is_healthy on each rendered scene",
-          "for sid in to_render if not _mp4_is_healthy" in src
-          or ("_mp4_is_healthy(RENDER_OUT" in src and "to_render" in src))
+    # 2+3. NATIVE flow: no per-scene mp4s — the health check guards the MASTER outputs.
+    check("final master output health-checked before promote",
+          "_mp4_is_healthy(final_inprogress)" in src,
+          "a 0-exit-code render with corrupt output must not be promoted to the final mp4")
+    check("single-scene preview output health-checked before promote",
+          "_mp4_is_healthy(preview_inprogress)" in src)
+    check("corrupt master output aborts with a clear message",
+          "PRODUCED CORRUPT mp4" in src or "PREVIEW CORRUPT" in src)
 
     # 4. _clean.mp4 atomic write
     check("_clean.mp4 stitch step uses .inprogress staging file",
@@ -681,7 +678,7 @@ def test_dynamic_block_bindings_wiring() -> None:
        - DynamicBlock.tsx invocation (compiled() args)
        - visual_designer.py system prompt bindings list
        - visual_designer.py _make_bullet_prompt closing line
-       - rules/04-visual-designer.md bindings table
+       - vg-visual-designer/SKILL.md bindings table (was rules/04 before the skill restructure)
 
     A drift in any of these means the LLM either gets undefined bindings at
     runtime (silently returns null, blank frame) or cannot use a helper that
@@ -691,8 +688,10 @@ def test_dynamic_block_bindings_wiring() -> None:
 
     db = (ROOT / "remotion" / "src" / "universal" / "DynamicBlock.tsx").read_text(encoding="utf-8")
     vd = (ROOT / "storyboard" / "visual_designer.py").read_text(encoding="utf-8")
-    rule04 = (ROOT / ".claude" / "skills" / "video_generation" / "rules" / "04-visual-designer.md").read_text(encoding="utf-8")
-    rule19 = (ROOT / ".claude" / "skills" / "video_generation" / "rules" / "19-layout-and-quality-gate.md").read_text(encoding="utf-8")
+    # Skill restructure (2026-06) moved the docs: bindings table → vg-visual-designer,
+    # fitText cap idiom → vg-code-text (formerly rules/04 + rules/19).
+    vdesigner = (ROOT / ".claude" / "skills" / "vg-visual-designer" / "SKILL.md").read_text(encoding="utf-8")
+    codetext = (ROOT / ".claude" / "skills" / "vg-code-text" / "SKILL.md").read_text(encoding="utf-8")
     root_tsx = (ROOT / "remotion" / "src" / "Root.tsx").read_text(encoding="utf-8")
 
     new_bindings = ("fitText", "Easing", "measureText", "Img", "staticFile")
@@ -706,8 +705,8 @@ def test_dynamic_block_bindings_wiring() -> None:
               db.count(name) >= 3, f"only {db.count(name)} occurrences")
         check(f"visual_designer.py system prompt names {name}",
               name in vd, f"{name!r} missing from visual_designer.py")
-        check(f"rule 04 bindings table mentions {name}",
-              name in rule04, f"{name!r} missing from rule 04")
+        check(f"vg-visual-designer bindings table mentions {name}",
+              name in vdesigner, f"{name!r} missing from vg-visual-designer/SKILL.md")
 
     # Easing pattern: must reference Easing.<curve> form somewhere in the
     # system prompt so the LLM knows how to use it (not just that it exists).
@@ -715,86 +714,137 @@ def test_dynamic_block_bindings_wiring() -> None:
           "Easing.in" in vd or "Easing.out" in vd or "Easing.bezier" in vd,
           "system prompt must show how to use Easing, not just name it")
 
-    # fitText: rule 19 must give the cap-the-result idiom so the LLM doesn't
+    # fitText: vg-code-text must give the cap-the-result idiom so the LLM doesn't
     # let fitText return a 200px font.
-    check("rule 19 shows the Math.min cap idiom for fitText",
-          "Math.min" in rule19 and "fitText" in rule19,
-          "rule 19 must demonstrate the cap pattern, else fitText can over-inflate")
+    # Code idioms were deliberately stripped from skills (prose principles only) —
+    # the skill must still TEACH shrink-to-fit sizing for unbounded strings.
+    check("vg-code-text teaches fitText shrink-to-fit sizing",
+          "fitText" in codetext and "shrink-to-fit" in codetext,
+          "the skill carries the fit principle in prose; fitText must not over-inflate")
 
     # Root.tsx: fonts MUST be awaited via delayRender, otherwise fitText
-    # measurements are based on fallback fonts → wrong.
+    # measurements are based on fallback fonts → wrong. Fonts are VENDORED
+    # (public/fonts + FontFace from staticFile) — zero render-time network;
+    # the @remotion/google-fonts loaders were removed 2026-07-04 (an unstable
+    # network intermittently failed renders with font ERR_CONNECTION_CLOSED,
+    # and 'Space Grotesk' — the font_display token — was never loaded at all).
     check("Root.tsx uses delayRender for font load",
-          "delayRender" in root_tsx and "waitUntilDone" in root_tsx,
+          "delayRender" in root_tsx and "continueRender" in root_tsx
+          and "FontFace" in root_tsx,
           "fitText measurements require fonts to be loaded BEFORE first frame renders")
-    check("Root.tsx awaits BOTH display + mono fonts",
-          "loadInter()" in root_tsx and "loadJetBrainsMono()" in root_tsx
-          and root_tsx.count("waitUntilDone") >= 2,
-          "both font families must be awaited (fitText is unsafe for partially-loaded fonts)")
+    check("Root.tsx loads LOCAL fonts (no google-fonts network fetch)",
+          "@remotion/google-fonts" not in root_tsx
+          and "staticFile" in root_tsx
+          and root_tsx.count(".woff2") >= 5
+          and "JetBrains Mono" in root_tsx and "Space Grotesk" in root_tsx,
+          "fonts must be vendored in public/fonts and loaded via FontFace — "
+          "render-time fonts.gstatic.com fetches fail on unstable networks")
 
 
-def test_model_strategy_enforced_via_subagents() -> None:
-    """The model strategy is enforced by the Agent tool's INLINE `model:`
-    parameter on the `general-purpose` subagent type — verified working in
-    Claude Code 2026-05.
+def test_model_strategy_all_opus() -> None:
+    """Model strategy: EVERYTHING runs on Opus 4.8 — no Sonnet/Haiku split,
+    no subagent delegation. The user reversed the old split-by-task strategy
+    (`feedback_model_strategy`), so every skill is pinned `model: opus` and the
+    pipeline never delegates mechanical phases to a cheaper subagent.
 
-    Tested empirically (2026-05) by spawning a smoke-test subagent in this
-    session: `Agent(subagent_type: "general-purpose", model: "haiku", ...)`
-    returned a Haiku-cost response in ~4s. The custom file-based pattern
-    (`.claude/agents/<name>.md`) was rejected by the harness with
-    "Agent type 'X' not found", so we use the inline-model pattern instead.
-
-    This test guards the recipes in SKILL.md so they can't be silently
-    rewritten back to the unsupported file-based form."""
-    print("\n[16] Model strategy enforced via Agent tool inline `model:` param")
+    This test guards the reversal so the old Sonnet/Haiku subagent recipes
+    can't be silently reintroduced."""
+    print("\n[16] Model strategy — all-Opus (no Sonnet/Haiku delegation)")
 
     skill = (ROOT / ".claude" / "skills" / "video_generation" / "SKILL.md").read_text(encoding="utf-8")
 
-    # Headline sections present
-    check("SKILL.md contains MODEL STRATEGY section",
-          "MODEL STRATEGY" in skill)
-    check("SKILL.md contains ENFORCEMENT section with subagent recipes",
-          "ENFORCEMENT" in skill and "subagent" in skill.lower())
+    # The reversal: no cheaper-model delegation anywhere in the orchestrator skill.
+    check("video_generation SKILL.md does NOT pin model: \"sonnet\"",
+          'model: "sonnet"' not in skill,
+          "Sonnet delegation reappeared — strategy is all-Opus")
+    check("video_generation SKILL.md does NOT pin model: \"haiku\"",
+          'model: "haiku"' not in skill,
+          "Haiku delegation reappeared — strategy is all-Opus")
+    check("video_generation SKILL.md has no MODEL STRATEGY split section",
+          "MODEL STRATEGY" not in skill,
+          "the split-by-task MODEL STRATEGY section was removed in the reversal")
 
-    # Recipes use the verified pattern: subagent_type: "general-purpose"
-    # with inline model: "<name>". No custom-name subagents (those don't work).
-    check("SEED+BUILD recipe uses subagent_type: \"general-purpose\"",
-          'subagent_type: "general-purpose"' in skill)
-    check("SEED+BUILD recipe pins model: \"sonnet\"",
-          'model: "sonnet"' in skill)
-    check("STATUS POLL recipe pins model: \"haiku\"",
-          'model: "haiku"' in skill)
-    check("Quality review section keeps reasoning on Opus",
-          re.search(r"stay(s)?\s+on\s+(this\s+)?Opus", skill, re.IGNORECASE) is not None)
+    # Every skill front-matter is pinned model: opus (spot-check the core ones).
+    # Skills consolidated away by the 2026-07 script-skill overhaul may not
+    # exist anymore — skip those instead of crashing the whole suite.
+    for sk in ("video_generation", "vg-visual-designer", "vg-render-code",
+               "vg-motion-compiler", "script-animation-bullets"):
+        p = ROOT / ".claude" / "skills" / sk / "SKILL.md"
+        if not p.exists():
+            print(f"  SKIP  {sk} (SKILL.md removed by skill consolidation)")
+            continue
+        fm = p.read_text(encoding="utf-8")
+        check(f"{sk} is pinned model: opus",
+              re.search(r"^model:\s*opus\s*$", fm, re.MULTILINE) is not None,
+              f"{sk} must declare `model: opus` in front-matter")
 
-    # Anti-regression: no custom subagent_type names (those silently fail).
-    # If anyone re-introduces the file-based pattern, the test catches it.
+    # Anti-regression: no custom subagent_type names (those silently fail in this build).
     forbidden_types = ['"video-mechanical"', '"video-status"', '"video-quality-review"']
     for ft in forbidden_types:
         check(f"SKILL.md does NOT reference unsupported {ft}",
               f'subagent_type: {ft}' not in skill,
-              f"unsupported custom subagent_type {ft} reappeared — Claude Code "
-              f"harness rejects these with 'Agent type X not found'")
+              f"unsupported custom subagent_type {ft} reappeared")
 
-    # No leftover .claude/agents/ files — those were the unsupported pattern
+    # No leftover .claude/agents/ files — those were the unsupported file-based pattern
     agents_dir = ROOT / ".claude" / "agents"
     check(".claude/agents/ has no orphaned agent-file definitions",
           (not agents_dir.exists()) or not list(agents_dir.glob("*.md")),
-          f"agent files still present in {agents_dir} — they don't work in "
-          f"this Claude Code build and mislead callers into using broken patterns")
+          f"agent files still present in {agents_dir} — they mislead callers into broken patterns")
 
-    # Rule 04 must point at the enforcement (no raw `python` instructions for
-    # mechanical phases — those go through a Sonnet subagent)
-    rule04 = (ROOT / ".claude" / "skills" / "video_generation" / "rules" / "04-visual-designer.md").read_text(encoding="utf-8")
-    check("rule 04 references the Agent tool subagent enforcement",
-          "Agent" in rule04 and ("subagent" in rule04.lower() or "ENFORCEMENT" in rule04))
-
-    # Pipeline scripts must NOT pin a model — model is selected at the Agent call
+    # Pipeline scripts must NOT pin a model knob — there is no model to choose (all Opus).
     bv = (ROOT / "storyboard" / "build_video.py").read_text(encoding="utf-8")
     check("build_video.py has no llm.designer_model knob",
           "config.get(\"llm\"" not in bv and "DESIGNER_MODEL = " not in bv)
 
 
 # Run ──────────────────────────────────────────────────────────────────────
+def test_boundary_contraction_variant_and_sanity_gate() -> None:
+    """Class 21 — Whisper contracts spoken copulas ('here is' → \"here's\").
+    The exact boundary matcher then misses the true position and the
+    shrinking-prefix pass can hit the SAME opening words verbatim inside a
+    LATER scene (pixel_rag 2026-07-04: scene 2 matched scene 8's 'So here is
+    the rule' at t=319.5s → scenes 2-7 collapsed to ~0.2s each). Defense:
+    (a) boundary matching also tries a contracted variant of the opening;
+    (b) any match deviating from the proportionally-scaled script position
+    by more than BOUNDARY_MAX_DEV_SEC is rejected."""
+    print("\n[21] boundary contraction variant + proportional sanity gate — Class 21")
+    src = (ROOT / "storyboard" / "build_video.py").read_text(encoding="utf-8")
+    ns: dict = {"re": re}
+    for const_re in (
+        r'DIGIT_WORDS\s*=\s*\{.*?\n\}',
+        r'_WRITTEN_TENS[^=]*=\s*\{.*?\n\}',
+        r'_WRITTEN_ONES_COMPOUND[^=]*=\s*\{.*?\n\}',
+    ):
+        m = re.search(const_re, src, re.DOTALL)
+        assert m, f"constant matching {const_re!r} not found"
+        exec(m.group(0), ns)
+    for fn in ["expand_decimals", "normalize_for_match", "_norm",
+               "_compress_written_numbers", "_contraction_variant", "find_phrase"]:
+        exec(_slice_fn(src, fn), ns)
+    fp, cv, norm = ns["find_phrase"], ns["_contraction_variant"], ns["normalize_for_match"]
+    # Synthetic transcript: the scene-2 opening spoken EARLY but contracted by
+    # Whisper; the same words appear un-contracted verbatim in a LATER scene.
+    tokens = ("by the end you will know here's the whole map what parsing destroys "
+              "lots of middle words go by so here is the rule you take to work").split()
+    words = [{"word": t, "start": float(i)} for i, t in enumerate(tokens)]
+    opening = "Here is the whole map."
+    as_written = " ".join(norm(opening).split()[:4])
+    check("as-written opening does NOT exact-match the true contracted position",
+          fp(words, as_written) != 6, f"got {fp(words, as_written)}")
+    alt = cv(opening)
+    check("_contraction_variant contracts 'Here is' → \"Here's\"",
+          "here's" in alt.lower(), f"got {alt!r}")
+    idx = fp(words, " ".join(norm(alt).split()[:4]))
+    check("contracted variant exact-matches at the TRUE early position (idx 6)",
+          idx == 6, f"idx={idx}")
+    check("boundary loop tries contraction variants",
+          "_contraction_variant(sc.narration)" in src,
+          "boundary pass 1 must search both opening variants")
+    check("boundary loop carries the proportional sanity gate",
+          "BOUNDARY_MAX_DEV_SEC" in src and "REJECTED exact match" in src,
+          "a wrong-but-exact match must not bypass the fallbacks")
+
+
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     print("=" * 60)
@@ -822,7 +872,8 @@ def main() -> int:
     test_render_crash_defenses()
     test_render_stability_settings()
     test_dynamic_block_bindings_wiring()
-    test_model_strategy_enforced_via_subagents()
+    test_model_strategy_all_opus()
+    test_boundary_contraction_variant_and_sanity_gate()
     print()
     print("=" * 60)
     print(f" PASS: {PASSED}    FAIL: {FAILED}")

@@ -1,6 +1,7 @@
 ---
 name: vg-video-duration
 description: "Calculate the final video's duration — exactly after a build, or estimated before one. Use whenever asked how long the video is, the runtime, the total length, 'how many minutes,' duration check, chapter timing, or whether a script will hit a target length. Reads build_timing.json for the exact number; estimates from narration word count at the pinned WPM before TTS."
+model: opus
 ---
 
 # Video Duration Calculator

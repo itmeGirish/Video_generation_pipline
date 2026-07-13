@@ -1,514 +1,182 @@
 ---
-name: script-writer
-description: Generates complete production-grade YouTube video scripts in pipeline format (narration + animation bullets) saved to `projects/structured_scripts/<name>.txt`. Collects user style preferences on first use and maintains them across sessions. Output feeds directly into the video_generation pipeline with zero reformatting.
-when_to_use: Use when the user wants to write a new YouTube video script. Handles the full pre-production flow — strategy, research, scene structure, storytelling, narration, animation bullets, then validation, retention engineering, human review, content gate, and a world-class critique-and-improve pass — before handing off to video_generation for rendering.
+name: script_generation
+description: Orchestrator + entry point for the Visual Story Engine — the full compiler-style pipeline (32 core stages + 10 cross-cutting skills) that turns a topic into a produced video. Each stage has ONE responsibility and emits a typed artifact for the next. Invoke FIRST, then invoke each stage's skill in order. Stages 1–25 produce the validated Render Contract (the canonical `projects/structured_scripts/<name>.json` — the RENDER CONTRACT, schema docs/render-contract.schema.json); stages 26–32 execute the render (also driven by the video_generation orchestrator). Output feeds the render with zero reformatting.
+when_to_use: Use when the user wants to write a script / make a video. Invoke FIRST, then invoke each stage's skill in order — none skippable.
 model: opus
 ---
 
-# Script Writer — Production Grade
+# script_generation — the Visual Story Engine (32 stages + 10 cross-cutting)
 
-Transforms a topic into a complete `projects/structured_scripts/<name>.txt` file
-with cinematic narration and animation bullets, ready for `build_video.py` to render.
+The pipeline is a **compiler**: each stage has ONE responsibility and produces a typed artifact the next
+stage consumes. This is not one giant prompt — it is 32 single-purpose stages, gated at validation points,
+with 10 cross-cutting skills running throughout. Invoke this orchestrator first, then invoke every stage's
+skill in order — **NONE skippable.**
 
-**Two inputs → one output:**
-- Your style preferences (collected once, reused forever)
-- The topic / title for this video
-- Output: `projects/structured_scripts/<name>.txt`
+> **THE MISSION:** a **visual learning experience** — every scene teaches ONE concept through motion,
+> transformation, and visual cause-and-effect; narration only REINFORCES. Hierarchy: `Concept → Viewer
+> Understanding → Visual Story → Motion Story → Remotion` (implementation LAST). **The success metric over all
+> others:** *mute the audio — can a first-time viewer explain the concept from the visuals alone?* Proven at
+> `render-validator` (pre-render, cheap) and `quality-assurance-engine` (post-render, on the real video).
 
----
+## THE ARCHITECTURE IS COMPLETE — harden owners, never add stages (the moratorium)
 
-## MANDATORY — load each step's skill (never work from memory)
+The 32-stage set is a deliberate many-small-passes design (each stage ONE job over typed artifacts —
+the architecture compilers converged on). The system's real cost is not stage count but the invocation
+surface, so improvements go INTO existing owners and their mechanical gates — **never a new stage, skill,
+or gate**. A capability gap = expand the owner that already holds that responsibility (the
+expand-the-owner rule); a quality gap = make an existing gate countable. A proposal for a new stage must
+first prove no existing owner can absorb it.
 
-This is a plugin: every step below is its own skill. **Before doing a step's work, INVOKE
-that step's skill with the Skill tool** — that loads its full rules as an active skill, not
-just a file you skimmed. Working from memory is exactly how rules get skipped (hook, retention,
-human-review, and critique passes are the ones most often dropped). The contract:
+## MANDATORY — invoke each stage's skill (never work from memory)
 
-| Step | Invoke this skill (Skill tool) |
+Every stage is its own skill. **Before doing a stage's work, INVOKE its skill with the Skill tool.** Working
+from memory is how gates get skipped. If you reach a stage without invoking its skill this session, STOP and
+invoke it first.
+
+## PHASE 0 — SCRIPT PRODUCTION (the master clock) — invoke S1→S7 FIRST
+
+The SCRIPT is the master clock: every downstream motion event, camera move, and hold binds to a narration
+sentence. **But the LOCK comes AFTER the visual world exists — not before.** S1–S6 produce the VERIFIED
+DRAFT (facts checked, laws linted, voice applied — `locked: false`); the visual stages (1–23) then design
+the world and seen events; `scene-composer` may adjust WORDING ONLY (never facts, numbers, structure, or
+sentence count) so each line CONFIRMS what the viewer just watched; **then S7 runs its final rounds,
+TTS-times, and locks.** Locking words before the world exists is the documented text-first failure: every
+visual becomes an illustration of a frozen sentence, and discovery-led ("visual fires → narration
+confirms") is structurally impossible. Words-serve-the-seen, then freeze.
+
+| S | Script stage | Input → Output | Gate |
+|---|---|---|---|
+| S1 | **topic-intelligence** | Topic → Topic Brief | GO/NO-GO (NO-GO stops here — a success) |
+| S2 | **research-engine** | Topic Brief → Knowledge Package | primary sources · running example · boundary facts |
+| S3 | **angle-engine** | Knowledge Package → Angle Map | one stake · every tension released · open loop · mid-video re-hook (>8min) |
+| S4 | **narrative-architect** | Angle Map → Narrative Blueprint | concrete-before-abstract (mechanical) · ≤30s hook · one goal/chapter |
+| S5 | **script-writer** | Blueprint → Draft Script (sentences) | the 11 sentence laws (incl. the COMMENTARY LAW) — **run `scripts/sentence_laws_lint.py`** |
+| S6 | **personality-pass** | Draft → Voiced Script | diff fact-safe · banned-words clean (`references/banned-words.txt`) |
+| S7 | **verification-pass** | Voiced (+ scene-composer wording adjustments) → **LOCKED master clock** | runs AFTER stage 23 · 4 rounds + TTS-timed + rubric ≥4 → `locked:true` |
+
+**Consistency artifacts (the mechanical floor):** `references/voice-profile.json` (spoken identity) ·
+`references/banned-words.txt` · `references/sentence-laws.md` + `scripts/sentence_laws_lint.py` (runnable) ·
+`references/scoring-rubric.md` (the ship bar, ≥4 avg, no 2s). Once `locked:true`, the script is IMMUTABLE — a
+one-word change reopens S7 because the visual stages bind to sentence IDs + `cumulative_start_ms`.
+
+The visual pipeline below **choreographs to the verified DRAFT** (sentence IDs are stable from S5;
+`scene-composer` pairs beats to them and may adjust wording to serve the seen events); the S7 LOCK then
+freezes the final text and `tempo-sync-engine` uses the locked timings. A post-lock change of even one
+word reopens S7. (In the script-first flow, the script layer's `angle-engine`+`narrative-architect` own
+the teaching flow/chaptering that `teaching-narrative-engine` sketched — treat that stage as their
+thinking pass.)
+
+## THE UNIT IS THE SCENE, NOT THE BEAT (scene-driven — the governing rule of every stage below)
+
+Every stage designs **per scene, scene-first**: first the scene's **STAGE** — the one persistent world
+(the settled composite with every element in a reserved zone + the cast at their homes) and the scene's
+**RUNNING MECHANISM(S)** (what operates continuously for the scene's whole span — the machine the scene
+exists to show) — and only THEN the beats, which are **MODULATIONS of that stage** (spotlight a station,
+change a rate, break an invariant, land the payoff). A stage whose output designs beats first and
+assembles a world from them re-creates the bullet-driven slideshow. Contract-side this exports as
+`stage: {composite, process[]}` per scene (stages 23–25); render-side the stage renders continuously on
+scene-local time and beats draw only their deltas. Beats never re-declare the world.
+
+## The 32 core stages — invoke in this order (they consume the LOCKED script)
+
+| # | Stage skill | Input → Output |
+|---|---|---|
+| 1 | **research-engine** | Topic → Knowledge Package |
+| 2 | **teaching-narrative-engine** | Knowledge Package → Teaching Narrative |
+| 3 | **cognitive-model-engine** | Teaching Narrative → Cognitive Model |
+| 4 | **visual-metaphor-engine** | Cognitive Model → Visual Metaphor Library |
+| 5 | **visual-story-engine** | Narrative + Metaphors → Story Beats (**Wonder gate <8 = NOT READY**) |
+| 6 | **scene-planner** | Story Beats → Scene Plan |
+| 7 | **visual-world-engine** | Scene Plan → World Model |
+| 8 | **object-library-engine** | World Model → Object Library |
+| 9 | **state-graph-compiler** | World Model → State Graph (typed world states) |
+| 10 | **event-graph-compiler** | State Graph → Event Graph (State→Event→State) |
+| 11 | **event-validator** | Event Graph → Validated Event Graph (pre/postconditions + buildable + muted chain) |
+| 12 | **object-continuity-engine** | State Graph → Continuity Graph (identity · morph targets · carry-over) |
+| 13 | **attention-director** | Story + Events → Attention Graph (eye path · transformation intent) |
+| 14 | **camera-director** | Attention Graph → Camera Track |
+| 15 | **lighting-director** | Attention Graph → Lighting Track |
+| 16 | **motion-operator-engine** | Event Graph → Motion Operators (the closed, buildable verb per event) |
+| 17 | **physics-engine** | Motion Operators → Physics Graph (spring/easing/weight/anticipation) |
+| 18 | **tempo-sync-engine** | Script + Motion → Timeline (anchor→frame sync · pauses · cadence) |
+| 19 | **audio-design-engine** | Events → Audio Track (voice · music+duck · sfx · silence · swells) |
+| 20 | **transition-designer** | Continuity Graph → Transition Graph (morph · match-cut · carry-over) |
+| 21 | **visual-style-engine** | World + Motion → Style Graph (GLOBAL VISUAL STYLE + tokens) |
+| 22 | **idiom-library-engine** | Events → Idiom Library (concept → reusable pattern) |
+| 23 | **scene-composer** | All graphs → Scene Specification (director's brief + pair-block narration/beats) |
+| 24 | **render-contract-compiler** | Scene Specs → Render Contract (deterministic, fully-resolved) |
+| 25 | **contract-linter** | Render Contract → **Validated Contract** (completeness · consumed-not-re-derived · format) |
+| — | **↑ stages 1–25 produce the canonical `<name>.json` RENDER CONTRACT (schema docs/render-contract.schema.json). ↓ 26–32 execute the render (video_generation).** | |
+| 26 | **remotion-component-mapper** | Validated Contract → Component Graph (objects→reusable React components) |
+| 27 | **asset-manager** | Component Graph → Asset Manifest (resolve · decode-safe · semantic) |
+| 28 | **remotion-composer** | Component Graph → Remotion Composition (Series, zero-overlap, audio overlay) |
+| 29 | **render-validator** | Composition → Render Report (**GO**: sync·continuity·audio + the cheap MUTED proof per scene) |
+| 30 | **remotion-renderer** | Composition → Video Frames (one live master render + audio mux + CRF encode) |
+| 31 | **quality-assurance-engine** | Rendered Video → QA Report (**SHIP**: full battery + muted test on real frames) |
+| 32 | **feedback-optimizer** | QA Report → Optimized Contract (fact-check · reconcile · DIMENSION LOCK · iterate) |
+
+## The 10 cross-cutting skills — run THROUGHOUT (not at one stage)
+
+`knowledge-validator` (fact accuracy, everywhere a claim appears) · `design-system-manager` (style consistency
+across scenes) · `documentation-engine` (keep docs true) · `testing-engine` (the validation tests + gate
+wiring, incl. the 12 content tests) · `debug-engine` (symptom→root→owner routing) · `performance-optimizer`
+(render cost/memory/determinism) · `component-library-manager` (the reusable Kit) · `token-sync-engine`
+(design↔code tokens) · `code-review-engine` (generated-code render-safety) · `deployment-engine` (package ·
+YouTube checks · ship).
+
+## The gates (evidenced hard blocks)
+
+- **SCRIPT-READY** (after stage 25 + the content tests via `testing-engine` + facts via `knowledge-validator`):
+  the `.txt` may not enter render until the flag is replaced with the evidenced line. `render_gate.sh` enforces.
+- **GO** (stage 29 `render-validator`): no expensive render until sync/continuity/audio + the muted proof pass.
+- **SHIP** (stage 31 `quality-assurance-engine`): no upload until the full battery passes.
+Each is EVIDENCED (recorded numbers) — a bare pass is the hallucination the gate stops. **LOCKED invariants**
+(re-verified by `feedback-optimizer`): accuracy · buildable/muted · Wonder ≥8 · sync ≥70.
+
+## Property → OWNER map (a script quality is weak → route to the ONE owner)
+
+CLAUDE.md's BUG ROUTER lands here. One weak property → ONE owner stage (invoke its skill);
+never re-run all gates for one symptom.
+
+| Weak property (the symptom) | OWNER to invoke |
 |---|---|
-| 3 — Pre-production strategy | `script-youtube-strategy` |
-| 4 — Research | `script-research` |
-| 5 — Scene structure (list · arc · loops · patterns · rhythm) | `script-scene-structure` |
-| 5.5 — Story layer | `script-storytelling` |
-| 5.6 — Scene design (the director's brief: style · description · blueprint · reference · cinematic · layout · shot) | `script-scene-design` |
-| 5.7 — Scene-design validator (brief complete? stops the LLM inventing) | `script-scene-design-validator` |
-| 6 — Narration | `script-narration` |
-| 6 — Animation bullets | `script-animation-bullets` |
-| 7a — Animation validator (broken?) | `script-animation-validator` |
-| 7a2 — Narration-visual sync (good?) | `script-narration-visual-sync` |
-| 7b — Technical validator | `script-validator` (and `script-format-validation`) |
-| 7c — Retention engineering | `script-retention-engineering` |
-| 7d — Human review | `script-human-review` |
-| 7e — Content quality gate | `script-content-quality` |
-| 7f — Critique / rebuild | `script-critique-improve` |
-
-**Rule: if you arrive at a step without having invoked its skill this session, STOP and invoke
-it first.** Do not paraphrase a step's rules from memory — load the skill and follow it.
-
----
+| Hook slow / >30s to the point / dead open | `narrative-architect` (≤30s hook law) |
+| No stake · tension never released · no open loops · retention risk | `angle-engine` |
+| Generic angle / "seen this video before" / commodity topic | `topic-intelligence` (GO/NO-GO) + `angle-engine` |
+| Thin value · no evidence · no running example · boundary facts missing | `research-engine` |
+| A fact is wrong / unverifiable | `knowledge-validator` (+ `feedback-optimizer` hard gate) |
+| Sentences robotic / AI-sounding / a sentence law violated | `script-writer` (re-run `scripts/sentence_laws_lint.py`) |
+| Voice flat · banned words · no personality | `personality-pass` |
+| Not memorable · no peak/screenshot moment · Wonder <8 | `visual-story-engine` |
+| Doesn't teach visually · muted test fails · narration-dependent | `render-validator` (the gate) + `visual-metaphor-engine` (the metaphor) |
+| Structure muddled · abstract-before-concrete | `narrative-architect` |
+| Pacing/rhythm off · scenes same-shaped | `scene-planner` (rhythm) · `tempo-sync-engine` (sync) |
+| One of the 12 content tests fails | `testing-engine` defines the test → route the fix to the stage it names |
+| Gates fighting each other / a LOCKED dimension regressed | `feedback-optimizer` (the reconciler — DIMENSION LOCK) |
 
 ## Workflow
 
-### Step 1 — Check preferences
-
-```bash
-python3 .claude/skills/script_generation/scripts/script_db.py is_initialized
-```
-
-If `false` → collect preferences (Step 2).
-If `true` → load preferences, skip to Step 3.
-
----
-
-### Step 2 — Collect preferences (first use only)
-
-Ask the user for each of these once. Save them. Never ask again unless the user asks to update.
-
-| Preference | Options |
-|---|---|
-| **Tone** | Analytical / Dramatic / Educational / Story-driven / Casual |
-| **Audience** | Beginner / Intermediate / Expert |
-| **Hook style** | Bold statement / Contradiction / Question / Number reveal |
-| **Sentence style** | Short punchy / Medium balanced / Long flowing |
-| **Use of humor** | Yes / Sparingly / No |
-| **Personal stories** | Frequently / Occasionally / Rarely |
-| **Video length default** | Short 3-5 min / Medium 8-12 min / Long 15-20 min |
-| **CTA preference** | Direct / Soft / Minimal |
-| **Channel niche** | (free text — e.g. "AI tools", "developer productivity") |
-
-Save using:
-```bash
-python3 .claude/skills/script_generation/scripts/script_db.py save_preferences '<json>'
-```
-
----
-
-### Step 3 — Pre-production strategy → first **invoke the `script-youtube-strategy` skill**
-
-Before researching or writing, establish the 5 strategic foundations:
-
-1. **Title** — write the final title before the script. Under 60 chars. Contains a contradiction, impossible number, or "why/how/actually". Test: would you click this?
-2. **Thesis** — what the video ARGUES (not just what it covers). One sentence. Takes a side.
-3. **Thumbnail moment** — which scene and bullet creates the thumbnail frame. Decide now.
-4. **Shareable insight** — the one thing viewers will repeat to a colleague tomorrow.
-5. **Open loop map** — 4 loops: hook, planted, mid-video, pre-CTA. Map where each is raised and resolved.
-
-Do not proceed until all 5 are written out. A weak strategy = weak video regardless of production quality.
-
----
-
-### Step 4 — Research the topic → first **invoke the `script-research` skill**
-
-**Before writing a single word of script**, use WebSearch to find:
-
-1. **The hook fact** — the surprising, counterintuitive, or shocking thing about this topic
-2. **2-3 real statistics** — spoken as words in narration (`"eighty-six percent"`, not `"86%"`)
-3. **One real quote** — named person, verbatim quote, source
-4. **The central metaphor** — what physical object or process this topic resembles
-5. **The before/after or the race** — the contrast that proves the point
-
-No invented numbers. Every statistic must have a source.
-Write a brief research summary comment at the top of the output file (parser ignores HTML comments):
-
-```
-<!--
-RESEARCH
-Hook: [surprising fact] — Source: [citation]
-Numbers: [stat 1] — [source]; [stat 2] — [source]
-Quote: "[text]" — [Name, Role]
-Metaphor: [named object chosen]
-Contrast: [before vs after or entity A vs entity B]
--->
-```
-
----
-
-### Step 5 — Scene STRUCTURE → invoke `script-scene-structure`
-
-Map the video into a scene LIST: count, order, the hook→…→payoff arc, the open-loop chain,
-scene-to-scene transitions, ONE animation pattern per scene, and the rhythm — assign each scene a
-**SCENE PURPOSE + PACE** so the rhythm VARIES (not 8 identical-shaped scenes). This skill owns the
-STRUCTURE only; the per-scene visual design is Step 5.6.
-
-### Step 5.6 — Scene DESIGN (the director's brief) → invoke `script-scene-design`
-
-After the structure + story exist, design how each scene LOOKS — this is the single biggest lever on
-whether the animation communicates vs comes out generic. Per scene, write — IN ORDER:
-1. **SCENE DESCRIPTION** — a prose **director's brief** (Environment · Situation · Viewer Realization ·
-   Emotional Journey · Visual Transformation · Final Image), written FIRST, the **largest block**. A
-   task list ("show files, show tokens") is NOT a description and yields generic animation.
-2. **SCENE DESIGN** field block — LOCATION · REALITY ANCHOR · **REFERENCE** (concrete `[asset:]` for
-   real UI) · **LAYOUT** (spatial map) · **SHOT/FRAMING** · ranked PRIMARY FOCUS · **CINEMATIC INTENT**
-   (camera/depth/light/color) · spatial ENVIRONMENT · ATTENTION FLOW · ENTRY/EXIT/NEXT HOOK · beat
-   **TRANSITIONS**. Plus ONE `<!-- GLOBAL VISUAL STYLE -->` block at the TOP of the script (the art
-   direction every scene inherits) and a `<!-- REFERENCE ASSETS -->` manifest for real software.
-
-The complete stop-the-guessing set: **STYLE · DESCRIPTION · LAYOUT · SHOT · REFERENCE · CINEMATIC ·
-beat TRANSITIONS.** Both blocks (description first, then design) are MANDATORY in the saved `.txt`.
-
-### Step 5.7 — Validate the design → invoke `script-scene-design-validator`
-
-Gate that every scene's brief is COMPLETE (description present + style + layout + shot + reference
-resolves + cinematic + transitions + the 10 rules). A scene missing any required field is NOT READY —
-fix in `script-scene-design`. Only when the brief is complete does the LLM stop inventing. Then Step 6.
-
-**Scene arc (required):**
-
-```
-Scene 1:      Cold open / hook        — The surprising fact or contradiction
-Scene 2:      Context                 — Why this topic exists and what the stakes are
-Scene 3–N-1:  Body scenes             — One idea per scene, one metaphor per scene
-Scene N-1:    The turn                — The angle no other video covers
-Scene N:      Verdict + CTA           — Answer the hook, decision rule, subscribe ask
-```
-
-**Scene count by length:**
-
-| Length | Scenes | Avg scene |
-|---|---|---|
-| 3–5 min | 4–5 | ~50s |
-| 8–12 min | 7–9 | ~75s |
-| 15–20 min | 10–12 | ~90s |
-
-One idea per scene. If a scene title needs "and" — split it into two scenes.
-
----
-
-### Step 5.5 — Layer the story → first **invoke the `script-storytelling` skill**
-
-Before writing narration, turn the scene list from a list of facts into a STORY. Apply a
-narrative spine (hook/build/payoff or the story spine), connect scenes with "because of
-that" not "and then", and make sure the script has stakes, conflict, and a transformation
-with the viewer as the hero. A story is far more memorable and watchable than a list.
-
-**STORY IS PRIMARY — animation is LAST** (`references/storytelling_principles.md`). Order:
-Storytelling → Information Design → Visual Design → Animation. Score every scene on the 15-point
-**Storytelling Scorecard** (curiosity gap · open loops · stakes · cause-effect · momentum ·
-escalation · specificity · relatability · mental model · progressive understanding · emotional
-progression · contrast · payoff density every 20–40s · no explanation loops · one purpose). The
-story must score HIGH on the page before Step 6 designs any beat — don't optimize animation before
-story.
-
----
-
-### Step 6 — Write each scene (PAIR-BLOCK: narration + visual coupled per beat)
-
-Author each scene in **pair-block format** — every beat couples its narration sentence(s)
-with the visual that depicts them and the anchor that fires it, all in one bullet. This is
-the preferred format: it **eliminates narration↔animation sync drift**, because the anchor
-must come from the bullet's OWN narration (no second block to keep in sync). The parser
-auto-detects it (a scene with no `### Animation` header) and reassembles the full narration
-by concatenating each bullet's `>` lines in order — TTS/Whisper/render run identically.
-
-**Pair-block format (preferred):**
-```
-## SCENE N — "Title" (M:SS – M:SS)
-- **M:SS – M:SS — [REPLACE if applicable] Headline.**
-  > The narration sentence(s) for THIS beat. <pause 0.3s>
-  Visual / animation description (motion, color tokens, position).
-  audio_anchor: a 2–4 word verbatim phrase from this bullet's own `>` line
-- **M:SS – M:SS — Next headline.**
-  > Next narration sentence(s). <pause 0.5s>
-  Visual description...
-  audio_anchor: phrase from THIS bullet's narration
-```
-Rule: the `audio_anchor` MUST be a verbatim substring of the same bullet's `>` narration.
-That co-location is the whole point — it makes the anchor check and the sentence test
-trivial and drift impossible. (Legacy two-block `### Narration` / `### Animation` still
-parses, but author new scripts pair-block.)
-
-For each beat, write the narration and the visual together:
-
-#### 6a — The narration line → **invoke the `script-narration` skill**
-
-Write each beat's `>` narration to the user's style AND the pipeline sync rules. Crucially,
-the **concatenated** narration (all `>` lines in order) must still read as continuous,
-natural speech — don't fragment the prose just because beats are separate.
-
-**Pipeline sync rules (non-negotiable regardless of style):**
-- `<pause Xs>` after every hero number or key reveal
-- Numbers spoken as words: `"thirty-six percent"`, not `"36%"`
-- Each beat's narration contains the phrase its `audio_anchor` will use
-- Short clauses before dramatic reveals, longer sentences for explanation
-
-**Style application:** Dramatic → short punchy + longer pauses; Educational → explain-then-
-reveal; Casual → conversational openers; Story-driven → entity named early.
-Apply the user's hook style to Scene 1's first beat (bold statement / contradiction /
-question / number reveal).
-
-#### 6b — The visual + anchor → **invoke the `script-animation-bullets` skill**
-
-**FIRST read `references/explainer_animation_principles.md`** — the 20 universal explainer-animation
-principles + the 4-level model (Story / Information / Visual Design / Motion) + the per-shot
-Production Checklist. Every beat is designed against it. The four NON-NEGOTIABLES (a beat that
-fails any is "displays but explains nothing" — the claude_code_limits S1 reject):
-**(1) animate the VERB not the noun** (the input *consuming/producing* the thing, not a static
-object) · **(2) cause→effect visible** (the cause feeds the effect on screen) · **(3)
-invisible→visible** (show the real system as units/parts, not an abstract bar) · **(4) mute test**.
-
-For each beat's visual, follow it: clarity first (the motion must MEAN something — pass the
-muted test), motion not bare fades, show-don't-tell (no text slides), rich/choreographed,
-dense by AREA (not a thin element on empty canvas), answer the per-shot checklist. Every beat must
-be one Remotion can build, and its `audio_anchor` must be verbatim from the beat's own `>` line.
-(Validated in Step 7a by 03b + the Check-E catalog + the Universal Scorecard Check F, scored in 7a2.)
-
-**6 techniques — every bullet must apply all that are relevant:**
-
-**1. Named metaphor** — every scene's first bullet names a specific object:
-   Not `"a comparison visual"` → `"Two parallel capsule race lanes, MAGENTA top, CYAN bottom."`
-
-**2. Color identity** — assign tokens to entities in Scene 1, never break them:
-   Every bullet that shows an entity uses its token: `D.cyan`, `D.violet`, `D.amber`, `D.red`, `D.green`
-
-**3. Exact quantities** — numbers not adjectives:
-   Not `"shards fly out"` → `"30-40 irregular shards fly outward"`
-
-**4. Physics intent** — name one of four:
-   `bouncy spring` (damping 8) / `snappy spring` (damping 20, stiffness 200) / `heavy spring` (damping 12-15, stiffness 80-100, mass 2) / `smooth reveal` (damping 200)
-
-**5. Audio anchor target** — bullet body echoes the narration trigger phrase:
-   Narration says `"watch the needle"` → bullet body contains `"needle"` → anchor picks itself
-
-**6. Real image vs coded vector** — for a NAMED real-world thing (logo, person, place),
-   reference `[asset: img/<name>.ext>]` in the body AND name the motion
-   (`KEN BURNS 1.0→1.08` / `LOGO POP (bouncy damping 9)` / `PUSH-IN reveal`). Otherwise vector.
-   Static image = A4 freeze fail. Build's Step 2.6 auto-fetches missing assets from Openverse
-   (CC commercial-safe); pre-place by hand for named logos / specific charts. See rule 03 §7.5
-   and video_generation rule 24.
-
-**REPLACE vs ADDITIVE:**
-- ADDITIVE (default): bullet adds to what's already on screen
-- REPLACE: bullet wipes everything and starts fresh → mark `[REPLACE]` in headline
-
-**Bullet density:** 6-9 bullets per 60s scene. 3-5 per 30s scene.
-
----
-
-### Step 6.5 — Cut pass (CGP Grey rule)
-
-Before validation, do one cutting pass. Tighter = higher retention every time.
-CGP Grey writes 30–50 drafts. The cut IS the craft.
-
-**For every scene, ask:**
-1. Does this scene serve the thesis? (rule 07 Step 3) — if not, cut it
-2. Does this scene raise a question OR answer a prior one? — if neither, cut it
-3. Is there a sentence that explains what the visual already shows? — cut the sentence
-4. Is there background/context the viewer already knows? — cut it
-5. Does this scene have "and" in the title? — split it or cut the weaker half
-
-**For every narration sentence, ask:**
-1. Does this sentence advance the story OR trigger a visual? — if neither, cut it
-2. Is this filler: "So as you can see...", "Moving on...", "Let me explain..." — cut it
-3. Can this be said in fewer words with no loss of meaning? — rewrite it shorter
-
-**Target:** remove at least 10% of sentences from the first draft.
-A scene that survives the cut is a stronger scene.
-
-**The cut test:** read the script without the scene you're considering cutting.
-Does the video still make sense? Does it flow better? If yes — it was padding.
-
----
-
-### Step 7 — Validate, critique, and improve until ready
-
-Run these passes in order. Each has its own rule file. Do not skip any — every pass we
-built exists to catch a different failure. Retry as many times as needed; never proceed
-to Step 8 with an unresolved FAIL.
-
-Order matters: validate the build is sound → engineer retention → judge it as a viewer →
-gate the content → critique and (if weak) rebuild.
-
----
-
-#### 7a — Animation validator → **invoke `script-animation-validator`**
-
-Per scene, per bullet: does the animation MAKE SENSE, FIT the scene, read as MOTION (not
-a text slide), and can Remotion actually BUILD it? Plus the "can Remotion build it" gate,
-the no-full-text-scenes rule, and the Check E known-render-failure catalog. Fix failing
-beats in rule 03, re-run. (03b = is it BROKEN.)
-
-#### 7a2 — Narration-visual sync scorecard → **invoke `script-narration-visual-sync`**
-
-Quality gate, runs right after 7a. 03b cleared "broken"; this scores "is it GOOD?" — a
-10-factor /100 scorecard (narration-visual sync, muted test, cause-effect, cognitive load,
-transformation, motion purpose, memorability, emotional impact) grounded in multimedia-
-learning research. Any scene under **70 = NOT READY** (target ≥80); the usual fix is
-**consequence visualization** (show the cost, don't state it). Fix in rule 03, re-score.
-
-#### 7b — Technical validator → **invoke `script-validator`** (and `script-format-validation`)
-
-Format, research, narration, bullets, anchors, density, canvas, arc. Fix every FAIL
-(pipeline aborts on any FAIL) and any scene with 3+ WARNs. Re-run the fixed scenes.
-
-#### 7c — Retention engineering → **invoke `script-retention-engineering`**
-
-Engineer the curve: 30-second hook, pattern interrupts, re-hooks, no front-loaded payoff,
-strong ending. Fix the slow points before judging it as a viewer.
-
-#### 7d — Human script review → **invoke `script-human-review`**
-
-Watch it as a viewer — all 9 questions: robotic+tone, generic, understand, keep-watching,
-examples, why-watch/value, think/feel, makes-sense, and continuity (flow across cuts).
-Any FAIL or 2+ WEAKs on a scene → send back to the owning rule, revise, re-run.
-
-#### 7e — Content quality gate → **invoke `script-content-quality`**
-
-All 12 tests: hook, unique angle, value, evidence, tension-resolution, "so what",
-freshness, human-not-AI, not-generic, not-over-polished, the critique pass, and viewer
-psychology. Verdict must be STRONG or ACCEPTABLE — fix FAIL/WEAK and re-run.
-
-#### 7f — Critique and improve / rebuild → **invoke `script-critique-improve`**
-
-Final senior pass: critique the script as a world-class YouTube writer from every angle,
-fact-check every claim (hard gate), score the quality factor, then PATCH if strong or
-REBUILD if weak at the core (< 0.6, or a broken hook/value/thesis). Loop until it clears
-the bar.
-
----
-
-#### Retry budget
-
-There is no maximum retry limit. Keep validating, critiquing, and improving until every
-pass is clean. After each retry, show the updated table so the user can see progress.
-Never save to Step 8 while any pass is failing.
-
----
-
-### Step 8 — Save to pipeline path
-
-```
-projects/structured_scripts/<project_name>.txt
-```
-
-`<project_name>` = snake_case, matches `config.yaml` `project:` field.
-
-File must start with:
-```
-# <Video Title> — PRODUCTION DOCUMENT
-```
-
-Then research comment block, then scenes.
-
-After saving, present the script for human approval:
-
----
-
-**SCRIPT REVIEW — <Video Title>**
-
-Show the user:
-1. Full script (all scenes, narration + bullets)
-2. Scene count + estimated total duration
-3. One-line anchor summary per scene (which word fires the first visual)
-4. Content quality verdict (rule 06) + critique/quality-factor result (rule 06b)
-
-Then ask exactly this:
-
-> "Script is ready. Does this look good to you, or would you like any changes before I render the video?"
-
-**WAIT for explicit approval before proceeding to video_generation.**
-
-**On user response — 3 cases:**
-
-**Case 1 — User approves:**
-User says yes / looks good / go ahead → save record to database → hand off to `video_generation`
-
-**Case 2 — User provides a modified script:**
-User pastes or describes their own version of the script.
-- Apply their changes EXACTLY as given — do not second-guess, do not add your own edits
-- Run the technical validator only (rule 05 — format, narration format, bullet format, anchors)
-- If it PASSES → show updated script → ask for approval again
-- If it FAILS → show exactly which checks failed with specific line numbers
-  → Ask: "These format issues will break the pipeline. Should I fix just these technical errors and keep everything else exactly as you wrote it?"
-  → If yes → fix ONLY the technical errors, nothing else → re-show → ask approval
-  → If no → leave as-is and wait for user's next instruction
-
-**Case 3 — User says script is not good, gives new direction:**
-User says "rewrite scene 3", "change the hook", "make it shorter" etc.
-- Apply their direction exactly
-- Re-run the Step 7 passes (validate → retention → human review → content → critique/improve)
-- Re-show updated script for approval
-- Do NOT invoke video_generation until user explicitly approves
-
-**One rule above all: the user's script is the user's script.**
-Never rewrite content the user provided unless they ask you to.
-Only fix technical format errors that would break the pipeline — and only with permission.
-
-Save script record to database only after approval:
-```bash
-python3 .claude/skills/script_generation/scripts/script_db.py add_script '<json>'
-```
-
----
-
-## What this skill produces vs what it does not
-
-| Produces | Does NOT produce |
-|---|---|
-| `projects/structured_scripts/<name>.txt` | Rendered video |
-| Narration in user's preferred style | Bullet cache (`storyboard/.cache/`) |
-| Animation bullets for pipeline | TTS audio |
-| Format-validated, parser-ready output | Scene JSON files |
-
-The video_generation pipeline picks up where this skill ends.
-
----
-
-## Style + pipeline: how they work together
-
-The user's style preferences control the narration voice. The pipeline rules control the animation bullets.
-They do not conflict — they operate on different parts of the script.
-
-| Script element | What controls it |
-|---|---|
-| Narration tone (casual/dramatic/educational) | User preferences |
-| Narration sentence length | User preferences |
-| Narration hook style | User preferences |
-| `<pause Xs>` placement | Pipeline sync rules (non-negotiable) |
-| Numbers spoken as words | Pipeline sync rules (non-negotiable) |
-| Animation bullet metaphors | Cinematic rules (rule 03) |
-| Color tokens | Cinematic rules (rule 03) |
-| Physics intent | Cinematic rules (rule 03) |
-| REPLACE/ADDITIVE | Cinematic rules (rule 03) |
-
----
-
-## Cross-references
-
-- `docs/script.md` — complete format reference with 5 worked examples
-- `../script-research/SKILL.md` — finding real facts before writing
-- `../script-scene-structure/SKILL.md` — scene arc and count rules
-- `../script-storytelling/SKILL.md` — narrative layer: hook/build/payoff, story spine, cause-and-effect, stakes, transformation
-- `../script-narration/SKILL.md` — pause placement, trigger phrases, hero numbers
-- `../script-animation-bullets/SKILL.md` — clarity→motion→show-don't-tell→rich; 10-point checklist; Remotion-buildable
-- `../script-animation-validator/SKILL.md` — does each beat make sense, fit the scene, read as motion, and can Remotion build it (is it BROKEN)
-- `../script-narration-visual-sync/SKILL.md` — animation QUALITY scorecard (/100): narration-visual sync, cognitive load, cause-effect, transformation, consequence visualization (is it GOOD)
-- `references/storytelling_principles.md` — **STORY FIRST (the primary priority): the 15 storytelling parameters + Storytelling Scorecard + the order Storytelling→Information→Visual→Animation.** Read/apply BEFORE animation — most videos fail by optimizing animation before story.
-- `references/explainer_animation_principles.md` — **the 20 universal explainer-animation principles + 4-level model (Story/Information/Visual/Motion) + Universal Scorecard + per-shot Production Checklist.** Read before designing any scene's beats. The non-negotiables: action-over-noun, cause→effect, invisible→visible, mute test.
-- `references/animation_principles.md` — motion-physics layer (12 principles), scene-level build, director/animator split, purpose & restraint
-- `references/animation_sentence_test.md` — worked good/bad pairs for the sentence test (visual explanation vs visual noise)
-- `../script-format-validation/SKILL.md` — parser format rules
-- `../script-validator/SKILL.md` — technical quality gate (format, anchors, bullets, density)
-- `../script-retention-engineering/SKILL.md` — keeping viewers: 30s hook, pattern interrupts, mid-video surprise, strong ending (runs after validator, before human review)
-- `../script-human-review/SKILL.md` — watch it as a viewer: robotic/tone, generic, understand, why-watch, value, psychology
-- `../script-content-quality/SKILL.md` — content quality gate (hook, unique angle, viewer benefit, evidence, freshness, human-not-AI, critique, psychology)
-- `../script-critique-improve/SKILL.md` — world-class critique + fact-check, score, patch or rebuild
-- `../script-youtube-strategy/SKILL.md` — pre-production: title, thesis, thumbnail, open loops, shareable insight
-
----
-
-## Example interaction
-
-```
-User: write a script about why Kubernetes is hard
-
-Step 1: Load preferences → dramatic tone, expert audience, bold statement hook
-Step 2: (preferences already saved)
-Step 3: WebSearch → find real stats, a real quote, the central metaphor
-Step 4: Design scene list → show user → confirm
-Step 6: Write each scene → narration first, then bullets → cut pass
-Step 7: Validate + critique → 7a animation (03b), 7b technical (05), 7c retention (05a),
-        7d human review (05b), 7e content gate (06, 12 tests), 7f critique/improve (06b)
-Step 8: Save to projects/structured_scripts/kubernetes_hard.txt
-        Report: scene count, est. length, anchor summary, content + quality-factor verdict
-        Next: run video_generation skill to render
-```
+**Step 1 — preferences** `python3 .claude/skills/script_generation/scripts/script_db.py is_initialized` →
+if `false`, collect + save (Tone · Audience · Hook · Sentence style · Humor · Personal stories · Length · CTA
+· Niche); else load. Preferences drive the narration VOICE only; the pipeline rules control everything else.
+
+**Step 2 — run stages 1–25** (each via its Skill), carrying each typed artifact forward in working memory.
+The research block + the scene blocks land in the `.txt`; the graphs are in-memory.
+
+**Step 3 — save** `projects/structured_scripts/<name>.json` — the RENDER CONTRACT (schema docs/render-contract.schema.json; snake_case = config `project:`; run `python storyboard/build_video.py` on it directly). On first draft
+write line 2 `<!-- SCRIPT-READY: REQUIRED -->`; `feedback-optimizer` replaces it with the evidenced line
+(`sync=` from render-validator's proof, `wonder=` from visual-story-engine) once the gates pass.
+
+**Step 4 — present + approval.** Show the full script · scene count + duration · one-line anchor per scene ·
+the content verdict. Ask exactly: *"Script is ready. Does this look good to you, or would you like any changes
+before I render the video?"* **WAIT for explicit approval.** If the user edits it → run `contract-linter` only
+(format), fix only pipeline-breaking errors with permission. If new direction → apply + re-run the affected
+gates. **The user's script is the user's script** — never rewrite their content unasked.
+
+**Step 5 — render (stages 26–32)** → hand off to `video_generation` (which orchestrates the render-side
+stages against the real pipeline scripts). Save the DB record after approval.
+
+## Boundary
+**Produces:** the validated, parser-ready `.txt` (stages 1–25). **Render (26–32)** is executed by
+`video_generation` + the render scripts. References while composing: `references/` (script format, storytelling,
+explainer animation principles).

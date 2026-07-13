@@ -284,6 +284,9 @@ def validate_output(project_dir: Path, extract_frames: bool = False) -> int:
             issues.append(f"scene {sc.number} ({sid}): scene JSON missing")
             continue
         blocks = json.loads(scene_json.read_text(encoding="utf-8"))
+        # Scene-driven: the optional role:'stage' block is the scene's persistent world,
+        # not a bullet — exclude it from the bullet↔block fidelity count.
+        blocks = [b for b in blocks if b.get("role") != "stage"]
 
         if len(blocks) != len(sc.animation):
             issues.append(

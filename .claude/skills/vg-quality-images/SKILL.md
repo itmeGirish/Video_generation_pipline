@@ -1,6 +1,7 @@
 ---
 name: vg-quality-images
 description: Production-quality gate for IMAGES — cinematic asset quality. Scores 0-10 on whether real images are used only for named real-world things, each carries cinematic motion (Ken Burns / push-in / logo pop), legibility overlay ≤0.6, and the subject matches the meaning — never a static photo (freeze) or wrong-subject stock. Grounded in remotion images.md + vg-graphics-assets. Use after a scene with images renders, or when a photo feels static/stocky/wrong. Score N/A if the scene has no images. One of the 8 visual-quality factors (see vg-visual-quality).
+model: opus
 ---
 
 # Quality Factor 6 — Images (cinematic asset quality)

@@ -2,7 +2,7 @@
 
 The deep "why" behind great animation, in four stacked layers. These are **principles, not
 numbers** — apply the judgment; the right size/timing follows. Read this before designing a
-scene's beats; it's the theory under `script-animation-bullets` (composition, sequencing,
+scene's beats; it's the theory under `scene-composer` (composition, sequencing,
 rhythm, density). World-class = all four layers true at once, timed to the voiceover.
 
 A beat that feels "off / amateur" is almost always breaking one specific principle below —
@@ -119,7 +119,7 @@ amount of per-beat polish saves it.
 
 In the script, this scene flow IS the **`what happens` beat sequence across the scene's bullets**:
 a storyboard of how one anchor visual evolves from establish to payoff, each beat connected to the
-next. Design the scene's flow first (`script-scene-structure` §anchor visual), then the beats.
+next. Design the scene's flow first (`scene-planner` §anchor visual), then the beats.
 
 ---
 

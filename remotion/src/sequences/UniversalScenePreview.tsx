@@ -41,7 +41,7 @@ export const makeUniversalScenePreview = (sceneId: string): React.FC => {
   // AbsoluteFill picks them up automatically — never hardcode dimensions here.
   const Preview: React.FC = () => (
     <AbsoluteFill style={{ backgroundColor: D.bg, overflow: 'hidden' }}>
-      <UniversalScene blocks={blocks} captions={words} />
+      <UniversalScene blocks={blocks} captions={words} sceneId={sceneId} />
       {/* Burned-in captions disabled — separate SRT used for YouTube upload */}
     </AbsoluteFill>
   );

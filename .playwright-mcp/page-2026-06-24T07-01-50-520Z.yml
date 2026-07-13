@@ -1,0 +1,121 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - button [ref=e5]:
+        - img [ref=e7]
+      - button "File" [ref=e9]
+      - button "View" [ref=e10]
+      - button "Tools" [ref=e11]
+      - button "Packages" [ref=e12]
+      - button "Help" [ref=e13]
+    - generic "C:\\Girish\\Fundamental_Projects\\video_generation\\video_explainer\\remotion" [ref=e14]:
+      - generic "Open GitHub Repo" [ref=e15] [cursor=pointer]: remotion
+      - generic [ref=e16]: /
+      - generic "pixel-rag-s01" [ref=e17]
+    - generic [ref=e18]:
+      - button [ref=e19]:
+        - generic "Toggle Left Sidebar (Ctrl+B)" [ref=e20]
+      - button [ref=e22]:
+        - generic "Toggle Right Sidebar (Ctrl+J)" [ref=e23]
+  - generic [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e38]:
+        - generic [ref=e44]:
+          - generic [ref=e50]:
+            - generic [ref=e56]: Pricing
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: Plan
+                - generic [ref=e60]: Price
+                - generic [ref=e61]: Seats
+              - generic [ref=e62]:
+                - generic [ref=e63]: Pro
+                - generic [ref=e64]: $29
+                - generic [ref=e65]: "5"
+              - generic [ref=e66]:
+                - generic [ref=e67]: Team
+                - generic [ref=e68]: $49
+                - generic [ref=e69]: "20"
+              - generic [ref=e70]:
+                - generic [ref=e71]: Scale
+                - generic [ref=e72]: $79
+                - generic [ref=e73]: ∞
+          - generic [ref=e80]:
+            - generic [ref=e81]: +18%
+            - generic [ref=e82]: +18.1% across 6 benchmarks
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic: Search
+              - generic:
+                - generic: Chatbot
+              - generic:
+                - generic: Agent
+              - generic:
+                - generic: Copilot
+            - generic:
+              - generic:
+                - generic:
+                  - generic: Pricing
+                  - generic:
+                    - generic:
+                      - generic: Plan
+                      - generic: Price
+                      - generic: Seats
+                    - generic:
+                      - generic: Pro
+                      - generic: $29
+                      - generic: "5"
+                    - generic:
+                      - generic: Team
+                      - generic: $49
+                      - generic: "20"
+                    - generic:
+                      - generic: Scale
+                      - generic: $79
+                      - generic: ∞
+            - generic: every AI reads the web the same way
+      - generic [ref=e83]:
+        - generic [ref=e85]:
+          - button "Zoom out timeline" [disabled] [ref=e86]:
+            - img [ref=e87]
+          - slider "Timeline zoom (1x)" [ref=e89]: "1"
+          - button "Zoom in timeline" [ref=e90]:
+            - img [ref=e91]
+        - generic "Preview Size" [ref=e93]:
+          - button "Fit" [ref=e94]:
+            - generic "Fit" [ref=e95]
+            - img [ref=e96]
+        - generic "Change the playback rate" [ref=e98]:
+          - button "1x" [ref=e99]:
+            - generic "1x" [ref=e100]
+            - img [ref=e101]
+        - button "Jump to beginning" [ref=e103]:
+          - img [ref=e104]
+        - button "Step back one frame" [ref=e106]:
+          - img [ref=e107]
+        - button "Play" [ref=e109]:
+          - img [ref=e110]
+        - button "Step forward one frame" [ref=e112]:
+          - img [ref=e113]
+        - button "Loop video" [ref=e115]:
+          - img [ref=e116]
+        - button "Mute video" [ref=e118]:
+          - img [ref=e119]
+        - button "Mark In (I) - right click to clear" [ref=e121]:
+          - img [ref=e122]
+        - button "Mark Out (O) - right click to clear" [ref=e124]:
+          - img [ref=e125]
+        - button "Show transparency as checkerboard (T)" [ref=e127]:
+          - img [ref=e128]
+        - button "Enter fullscreen preview (F)" [ref=e130]:
+          - img [ref=e131]
+        - generic "Connect to the Studio server to render" [ref=e134]:
+          - button "Render" [disabled] [ref=e135] [cursor=pointer]:
+            - generic [ref=e136]:
+              - img [ref=e137]
+              - generic [ref=e139]: Render
+    - generic [ref=e149]:
+      - generic [ref=e150]: 00:14.25
+      - button "445" [ref=e151]

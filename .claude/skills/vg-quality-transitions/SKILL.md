@@ -1,9 +1,16 @@
 ---
 name: vg-quality-transitions
 description: Production-quality gate for TRANSITIONS — the handoffs between beats and scenes. Scores 0-10 on clean REPLACE backdrops (full AbsoluteFill, no leak), deliberate scene boundaries (crossfade or match-cut, no double-dark), and smooth within-bullet handoffs. Grounded in remotion transitions.md + vg-scene-transitions. Use after a scene renders, when a prior bullet bleeds through, a cut feels abrupt, or two fades stack into a dark flash. One of the 8 visual-quality factors (see vg-visual-quality).
+model: opus
 ---
 
 # Quality Factor 4 — Transitions (handoffs)
+
+> ⛔ **Score from the FILMSTRIP, not one frame.** A handoff is *temporal* — a leak/double-dark/whip only
+> shows DURING the cut. Sample frames spanning the boundary (the last frames of the outgoing beat + the
+> first of the incoming): does the prior bullet bleed through mid-transition? do two fades stack into a
+> dark flash? does an element pop without a settle? One settled frame hides all of it. (Strip extraction:
+> `vg-visual-quality` / protocol Layer 1.5.)
 
 Source of truth: `remotion/rules/transitions.md` + `vg-scene-transitions`. The cut between
 beats/scenes is where attention leaks and where leaks/flashes show — handoffs must be clean

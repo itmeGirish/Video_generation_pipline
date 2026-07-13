@@ -1,0 +1,496 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "render-contract.schema.json",
+  "title": "Render Contract \u2014 the JSON handover from the script pipeline to video_generation",
+  "description": "The canonical machine handover: projects/structured_scripts/<name>.json. Produced by render-contract-compiler (stage 24), validated by contract-linter (stage 25), consumed by storyboard/source_parser.py (parse() branches on the .json extension and maps this 1:1 onto SourceScript/Scene/AnimationBullet \u2014 everything downstream of the parser is unchanged). Carries the S7 master-clock enrichments (sentence durations, pauses, emphasis, roles) that the legacy .txt flattened into comments.",
+  "type": "object",
+  "required": [
+    "title",
+    "script_ready",
+    "scenes"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "script_ready": {
+      "type": "string",
+      "description": "The literal SCRIPT-READY line (render_gate.sh greps this raw text). Pending: 'SCRIPT-READY: REQUIRED \u2014 Phase-1 gates not yet passed'. Evidenced: 'SCRIPT-READY: <name> | sync=<NN>/100 wonder=<N>/10 gates=...'.",
+      "pattern": "^SCRIPT-READY:"
+    },
+    "global_style": {
+      "type": "string",
+      "description": "GLOBAL VISUAL STYLE block (LOOK \u00b7 RENDER STYLE \u00b7 TEXTURE \u00b7 SHAPE \u00b7 GRID+SPACING \u00b7 TYPE \u00b7 PALETTE \u00b7 LIGHTING \u00b7 THROUGH-LINE \u00b7 HOMES of recurring elements) \u2014 denormalized onto every scene by the parser."
+    },
+    "reference_assets": {
+      "type": "string",
+      "description": "REFERENCE ASSETS manifest \u2014 real screenshots to place in public/img/."
+    },
+    "concepts": {
+      "type": "array",
+      "description": "THE CONCEPT SPINE (provenance thread): the cognitive model's concept list exported top-level — the ground truth of what the video must teach. Every beat's semantics.concept references one of these ids; contract_scorecard.py counts CONCEPT COVERAGE (every concept visibly taught by >=1 beat; every beat traces to a concept). Producer: render-contract-compiler (from cognitive-model-engine); consumers: the scorecard + beats + S5 sentence concept_tags (same id space).",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "description": "stable concept id (the same ids S5 sentences carry as concept_tag)" },
+          "label": { "type": "string" },
+          "shape": { "type": "string", "description": "the cognitive shape (comparison | decomposition | flow | hierarchy | timeline | cause-effect | part-to-whole | transformation)" },
+          "misconception": { "type": "string", "description": "the belief this concept's beat(s) must visibly replace" }
+        }
+      }
+    },
+    "numbers_ledger": {
+      "type": "object",
+      "description": "The video's quantified WORLD (from research-engine's knowledge package): every quantity that may appear on any instrument/panel/HUD/chart/derivation, plus derived values \u2014 all mutually consistent. The render may only display ledger (or narration) values; it never invents numbers. A thin ledger starves instruments \u2014 carry MORE real numbers, not fewer.",
+      "properties": {
+        "quantities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "value"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "value": { "type": ["number", "string"] },
+              "unit": { "type": "string" },
+              "source_fact": { "type": "string" }
+            }
+          }
+        },
+        "derived": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["expr", "value"],
+            "properties": {
+              "expr": { "type": "string", "description": "The arithmetic over quantity ids (e.g. 'n01 / n02') \u2014 shown on screen when the beat derives it." },
+              "value": { "type": ["number", "string"] },
+              "shown_where": { "type": "string" }
+            }
+          }
+        },
+        "series": {
+          "type": "array",
+          "description": "RENDER-SHAPED data (the anti-text-slide deliverable): real multi-point data \u2014 samples over time, a distribution, per-item rows \u2014 that charts/instruments animate from. A scalar supports only a reading; an animated chart/curve/row-fill REQUIRES a series. Every planned chart in the scenes must trace to one of these.",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "points"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "unit": { "type": "string" },
+              "shape": { "type": "string", "description": "time-series | distribution | per-item rows" },
+              "points": { "type": "array", "items": { "type": "array" }, "description": "the real data points, from the source" },
+              "source_fact": { "type": "string" }
+            }
+          }
+        },
+        "trace": {
+          "type": "object",
+          "description": "The running example EXECUTED step-by-step through the mechanism \u2014 real intermediate values per pass, so a scene's `cycle` replays a genuine computation instead of a decorative loop.",
+          "properties": {
+            "of_mechanism": { "type": "string" },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "step": { "type": "number" },
+                  "flow_ref": { "type": "string" },
+                  "state_before": { "type": "object" },
+                  "operation": { "type": "string" },
+                  "state_after": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "consistency": {
+          "type": "string",
+          "description": "Statement that every derived value was recomputed and any two on-screen appearances of one quantity agree."
+        }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "description": "S7 verification-pass lock metadata (the master clock).",
+      "properties": {
+        "runtime_total_s": {
+          "type": "number"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "locked_at": {
+          "type": "string"
+        },
+        "verification_log": {
+          "type": "string"
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "number",
+          "title",
+          "window_from_sec",
+          "window_to_sec",
+          "bullets"
+        ],
+        "properties": {
+          "number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "window_from_sec": {
+            "type": "number",
+            "minimum": 0
+          },
+          "window_to_sec": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": {
+            "type": "string",
+            "description": "SCENE DESCRIPTION prose brief (Environment \u00b7 Situation \u00b7 Realization \u00b7 Emotional Journey \u00b7 Visual Transformation \u00b7 Final Image)."
+          },
+          "design": {
+            "type": "string",
+            "description": "SCENE DESIGN field block (LOCATION \u00b7 CAST \u00b7 PRIMARY FOCUS \u00b7 ATTENTION FLOW \u00b7 CINEMATIC \u00b7 THROUGH-LINE STATE \u00b7 ...)."
+          },
+          "cast": {
+            "type": "array",
+            "description": "THE TYPED CAST \u2014 the scene's world as DATA, not prose (the object graph from visual-world-engine/object-library-engine, carried through the seam so the renderer never re-interprets English). Every scene needs \u22651 object with kind='world-object' (a physical thing \u2014 machine/page/vessel/figure \u2014 never a text panel). Ops' obj/to fields and on-screen labels resolve against these ids.",
+            "items": {
+              "type": "object",
+              "required": ["id", "kind", "form"],
+              "properties": {
+                "id": { "type": "string", "description": "stable id ops and labels reference (e.g. 'page', 'shredder')" },
+                "kind": { "type": "string", "enum": ["world-object", "instrument", "label"], "description": "world-object = physical thing with form; instrument = a gauge/meter/card DISPLAYING values; label = text welded to an owner" },
+                "form": { "type": "string", "description": "the concrete physical form, drawable without interpretation (e.g. 'dark machine block with intake slot and teeth')" },
+                "material": { "type": "string", "description": "paper | glass | metal | glow | ink \u2014 picks easing + light behaviour" },
+                "accent": { "type": "string", "description": "the entity's locked color token name (e.g. 'red')" },
+                "home": { "type": "string", "description": "its fixed screen region (from the world model's HOMES)" },
+                "states": { "type": "array", "items": { "type": "string" }, "description": "its lifecycle states used in this scene (from the object library)" },
+                "owner": { "type": "string", "description": "for kind=label/instrument: the cast id it is welded to / reports on \u2014 REQUIRED for labels (the referent gate)" }
+              }
+            }
+          },
+          "pacing": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "object",
+            "description": "SCENE-DRIVEN architecture: the scene's PERSISTENT WORLD — the one settled composite (zones + cast at their homes + atmosphere) plus the scene's RUNNING MECHANISMS, alive for the scene's WHOLE duration on scene-local time (mechanism cycles never reset at beat boundaries). The renderer draws the stage continuously; bullets are MODULATIONS of it (spotlight a station, change a rate, land a payoff), never re-declarations of the world. A scene without `stage` falls back to self-contained beats (legacy).",
+            "properties": {
+              "composite": {
+                "type": "string",
+                "description": "the settled FINAL-FRAME layout as one spec: every element of every beat placed together in disjoint reserved zones (overlap impossible by reservation) — beats progressively reveal/modulate this one composite. INCLUDES CORRIDORS: every mover's swept path (a sweep/travel/dock/cycle circuit) is reserved like a zone — a corridor crosses no text zone and no occupied zone, because transform-animated elements overlay whatever they cross (the renderer never reflows for motion)."
+              },
+              "zones": {
+                "type": "array",
+                "description": "THE MACHINE-CHECKABLE geometry of the composite (the script-side overlap gate): every reserved region as a fractional rect. contract-linter verifies mechanically (scripts/composite_lint.py): element/text zones pairwise DISJOINT; corridors cross no text/element zone; every cast home resolves to a zone. Overlap is prevented AT THE SCRIPT, before any render exists.",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "kind", "region"],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "kind": { "type": "string", "enum": ["element", "text", "corridor"], "description": "element = an object's home; text = a label/reading region; corridor = a mover's swept path (may cross nothing occupied)" },
+                    "region": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" }, "description": "[x, y, w, h] as fractions of canvas (0..1)" },
+                    "occupant": { "type": "string", "description": "the cast id (or mover id) reserved into this zone" }
+                  }
+                }
+              },
+              "process": {
+                "type": "array",
+                "description": "mechanisms that run for the ENTIRE scene (same shape as semantics.process): the machine keeps operating while beats come and go — the reference-grade continuous world.",
+                "items": {
+                  "type": "object",
+                  "required": ["object", "circuit"],
+                  "properties": {
+                    "object": { "type": "string", "description": "a cast id — the thing that cycles" },
+                    "circuit": { "type": "array", "items": { "type": "string" }, "description": "ordered station refs (cast ids / regions) traversed each pass" },
+                    "emits": { "type": "string", "description": "what each pass visibly produces and where it lands (a reading on a cast id)" },
+                    "rate": { "type": "string", "description": "the narrated per-unit meaning of one pass" }
+                  }
+                }
+              }
+            }
+          },
+          "camera": {
+            "type": "object",
+            "description": "THE CAMERA TRACK (from camera-director, stage 14) — exported so it reaches the renderer instead of dying in-memory. The camera carries MEANING; without this field the render is camera-locked (a flat-render failure class). Realized deterministically (push = scale the focal group up; pull = scale down to reveal scale; parallax = layers at different rates).",
+            "properties": {
+              "move": { "type": "string", "description": "push | pull | orbit | pan | tilt | rack | whip | macro | parallax | locked" },
+              "target": { "type": "string", "description": "a cast id — what the move frames/points at (default = the beat's payoff / the through-line)" },
+              "meaning": { "type": "string", "description": "why this move (importance = push · scale = pull · depth = parallax · unease = tilt · discovery = orbit)" },
+              "shot": { "type": "string", "description": "wide | medium | close | extreme-close (the dominant framing; per-beat changes ride the bullet's shot/visual_intent)" }
+            }
+          },
+          "bullets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "time_from_sec",
+                "time_to_sec",
+                "headline",
+                "narration",
+                "audio_anchor"
+              ],
+              "properties": {
+                "time_from_sec": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Seconds RELATIVE to scene start."
+                },
+                "time_to_sec": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "headline": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "\u22648-word beat identity \u2014 MACHINE METADATA ONLY (logs/QA/cache keys); prefix '[REPLACE] ' for a full-backdrop replace beat. NEVER rendered as on-screen text: this field is not part of the frame. The ONLY source of on-screen words is the opt-in `text` field (and readings on instruments). Rendering the headline was the structural per-beat text quota that produced text-rich output."
+                },
+                "narration": {
+                  "type": "array",
+                  "minItems": 1,
+                  "description": "THIS beat's spoken sentences, in order (pair-block coupling \u2014 the anchor comes from these). The parser joins them (adding <pause Xs> from pause_after_ms) into the scene narration for TTS/Whisper.",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "text"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "S7 sentence id (e.g. s014) \u2014 the master-clock binding."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "Spoken text; numbers as words; may embed <pause Xs> tags directly."
+                      },
+                      "duration_ms": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "From S7 TTS timing."
+                      },
+                      "pause_after_ms": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "\u2265400ms becomes an explicit <pause> (a HOLD downstream)."
+                      },
+                      "emphasis_word": {
+                        "type": "string",
+                        "description": "At most one \u2014 what the voice stresses and the visuals Emphasize."
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "hook",
+                          "stake",
+                          "proof",
+                          "mechanism",
+                          "example",
+                          "tension",
+                          "release",
+                          "interrupt",
+                          "reanchor",
+                          "boundary",
+                          "takeaway",
+                          "breath"
+                        ]
+                      },
+                      "concept_tag": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "what_happens": {
+                  "type": "string",
+                  "description": "Human-readable ILLUSTRATION of the beat (prose for reviewers). Where a `semantics` block exists it is AUTHORITATIVE and this prose only illustrates it \u2014 the renderer builds from semantics, never re-interprets this text."
+                },
+                "semantics": {
+                  "type": "object",
+                  "description": "THE AUTHORITATIVE beat spec \u2014 world physics, not storyboard verbs (what must BECOME TRUE, not how to tween it). Exported from the state/event graphs (stages 9-11) so they reach the renderer instead of dying in-memory. Realization is compiled deterministically from the video's style-locked verb\u2192topology table \u2014 never re-chosen per render (determinism + film consistency).",
+                  "properties": {
+                    "concept": {
+                      "type": "string",
+                      "description": "the concept id (from top-level `concepts`) this beat teaches \u2014 the provenance thread from cognitive model \u2192 beat \u2192 proof. The scorecard counts coverage both ways."
+                    },
+                    "transitions": {
+                      "type": "array",
+                      "description": "Object state deltas: cast id + lifecycle state from \u2192 to (the state graph's diff).",
+                      "items": {
+                        "type": "object",
+                        "required": ["object", "from", "to"],
+                        "properties": {
+                          "object": { "type": "string", "description": "a cast id" },
+                          "from": { "type": "string" },
+                          "to": { "type": "string" },
+                          "cause": { "type": "string" }
+                        }
+                      }
+                    },
+                    "relationships": {
+                      "type": "array",
+                      "description": "First-class RELATIONSHIP deltas \u2014 edges between cast ids whose strength changes (e.g. adjacency(label,value) 1.0 \u2192 0.0). The relationship, not an object, is the subject.",
+                      "items": {
+                        "type": "object",
+                        "required": ["edge", "from", "to"],
+                        "properties": {
+                          "edge": { "type": "string", "description": "relation(castIdA, castIdB) \u2014 e.g. 'adjacency(maxLabel,price200)'" },
+                          "from": { "type": "number" },
+                          "to": { "type": "number" },
+                          "failure_mode": { "type": "string", "description": "e.g. 'irrecoverable'" }
+                        }
+                      }
+                    },
+                    "invariants": {
+                      "type": "object",
+                      "description": "What the beat must PRESERVE and what it deliberately BREAKS \u2014 the teaching stated as constraints.",
+                      "properties": {
+                        "preserve": { "type": "array", "items": { "type": "string" } },
+                        "break": { "type": "array", "items": { "type": "string" } }
+                      }
+                    },
+                    "process": {
+                      "type": "array",
+                      "description": "RUNNING MECHANISMS sustained through the beat (Run events / the state's `process` field): a subject repeatedly traverses a circuit, each pass visibly emitting an effect. The renderer realizes each as a `cycle` \u2014 the beat's honest hold-alive. Required whenever the beat's narration describes per-unit/rate/repeated behavior.",
+                      "items": {
+                        "type": "object",
+                        "required": ["object", "circuit"],
+                        "properties": {
+                          "object": { "type": "string", "description": "a cast id \u2014 the thing that cycles" },
+                          "circuit": { "type": "array", "items": { "type": "string" }, "description": "ordered station refs (cast ids / regions) traversed each pass" },
+                          "emits": { "type": "string", "description": "what each pass visibly produces and where it lands (a reading on a cast id)" },
+                          "rate": { "type": "string", "description": "the narrated per-unit meaning of one pass" }
+                        }
+                      }
+                    },
+                    "proof": {
+                      "type": "object",
+                      "description": "The beat's checkable outcome: what the viewer should realize + a MEASURABLE visual predicate the proof gate verifies on rendered frames (geometry: distances, counts, luminance \u2014 mechanically checkable).",
+                      "properties": {
+                        "realize": { "type": "string" },
+                        "predicate": { "type": "string", "description": "e.g. 'distance(maxLabel, price200) increases monotonically across the beat'" }
+                      }
+                    }
+                  }
+                },
+                "attention": {
+                  "type": "object",
+                  "description": "THE EYE PATH for this beat (from attention-director, stage 13) — exported so the renderer directs the eye deterministically instead of the author guessing. SERIAL ATTENTION: one focus at a time; everything not in focus dims/settles.",
+                  "properties": {
+                    "focus": { "type": "string", "description": "a cast id — the ONE element the eye lands on this beat (the kinetic focus)" },
+                    "order": { "type": "array", "items": { "type": "string" }, "description": "cast ids in the order the eye visits them across the beat (the path)" },
+                    "dim": { "type": "array", "items": { "type": "string" }, "description": "cast ids pushed to the periphery this beat (spotlight-dim; the two-tier texture class)" }
+                  }
+                },
+                "transition": {
+                  "type": "object",
+                  "description": "THE BOUNDARY HANDOFF into this beat (from transition-designer, stage 20) — exported as TYPED data (was prose in `design`). Rendering-library-independent: it declares WHAT happens at the cut, not how React does it. The declared `carry` is what runtime telemetry then verifies — R7 (single instance, no ghost) + R5 (the carried element holds its HOME across the cut).",
+                  "properties": {
+                    "mode": { "type": "string", "description": "evolve (settled priors + delta — the default) | replace (composite-out → skeleton-in → data-in) | match-cut | morph | dock | fade-through | hard-cut" },
+                    "carry": { "type": "string", "description": "the cast id carried ACROSS this boundary as a SINGLE instance (match-cut/morph/dock/persistent) — the shared-element that must not be double-drawn; null for a clean evolve/replace" }
+                  }
+                },
+                "text": {
+                  "type": "string",
+                  "description": "OPT-IN on-screen label \u2014 \u22643 words or one number, ONLY when the frame fails the deaf-viewer test without it (scene-composer's label budget: \u2248 one headline + a few labels per SCENE, not per beat). Empty string / omitted = no new label, the world carries the beat. A term's first appearance requires its owner object on stage (cast owner \u2014 linter Check 3d)."
+                },
+                "image": {
+                  "type": "string",
+                  "description": "'none' or '[asset: img/<name>.png]'."
+                },
+                "visual_intent": {
+                  "type": "string",
+                  "description": "One-phrase hint for the choreographer (from S5) \u2014 never a storyboard."
+                },
+                "audio_anchor": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "2\u20134 word phrase VERBATIM from this bullet's own narration sentences (parser enforces)."
+                },
+                "anchor_mode": {
+                  "type": "string",
+                  "enum": [
+                    "appear",
+                    "through",
+                    "land"
+                  ],
+                  "default": "appear"
+                },
+                "ops": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "description": "Optional compiled motion operators (one per beat event): {op, obj, to, token, choreo, sync} \u2014 op from the closed set. Null \u2192 the motion compiler infers from what_happens.",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "op"
+                    ],
+                    "properties": {
+                      "op": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "RENDER CONSTRAINTS exported from the Capability Registry \u2014 binding on ANY renderer consuming this contract (ours or external). Violating a constraint = non-conformant render. Emitted by render-contract-compiler."
+    },
+    "audio": {
+      "type": "object",
+      "description": "The AUDIO TRACK (stage 19 audio-design-engine output). Narration synthesis + mux is MANDATORY \u2014 a silent render is non-conformant.",
+      "properties": {
+        "voice": {
+          "type": "object",
+          "description": "engine + loudness target (e.g. piper, -14 LUFS integrated, TP<-1.5)"
+        },
+        "music": {
+          "type": "object",
+          "description": "bed arc per scene + duck_db under voice + asset status (wired|GAP)"
+        },
+        "sfx": {
+          "type": "array",
+          "description": "cues: {scene, beat, on (anchor/event), sound, asset: wired|GAP}"
+        },
+        "silences": {
+          "type": "array",
+          "description": "designed drops (scene, after-sentence id, bed-cut true/false)"
+        },
+        "gaps": {
+          "type": "array",
+          "description": "honest missing-asset list"
+        }
+      }
+    }
+  }
+}

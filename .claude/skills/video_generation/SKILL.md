@@ -1,7 +1,8 @@
 ---
-name: video-builder
-description: "Complete pipeline for creating production YouTube explainer videos from a structured script. Per-bullet React code is authored in-session and seeded into cache; build does cache lookup to TTS to Whisper to render to stitch. Never spawns the claude CLI. Use this skill whenever: rendering a script, building a video, running the pipeline, generating the mp4, diagnosing pipeline failures, fixing broken bullets, seeding the bullet cache, running post-render QA, or any request like "render my script," "build the video," "run the pipeline," "make the video," "I have a script ready," "start video production," or "seed the cache.""
+name: video_generation
+description: "Complete pipeline for creating production YouTube explainer videos from a structured script. Per-bullet React code is authored in-session and seeded into cache; build does cache lookup to TTS to Whisper to align to ONE live master render (render_master.mjs — no per-scene mp4 stitch). Never spawns the claude CLI. Use this skill whenever: rendering a script, building a video, running the pipeline, generating the mp4, diagnosing pipeline failures, fixing broken bullets, seeding the bullet cache, running post-render QA, or any request like "render my script," "build the video," "run the pipeline," "make the video," "I have a script ready," "start video production," or "seed the cache.""
 when_to_use: Use when a structured script at projects/structured_scripts/<name>.txt is ready and you need to render it into a final mp4. Also use when diagnosing pipeline failures, fixing broken bullets, improving narration quality, or running post-render QA.
+model: opus
 ---
 
 # Video Generation Pipeline
@@ -52,136 +53,22 @@ authoring keeps context loaded once for the whole script.
      vector code. Record attribution → `CREDITS.md`.
    - No chaotic animations, citations for all stats
 4. Write a JSON bundle and call `python storyboard/seed_bullet_cache.py <script_path> --json bundle.json`
-5. Run `python storyboard/build_video.py <script_path>` — 100% cache hits expected; pipeline
-   flows through TTS → Whisper → align → render → stitch with zero token cost
+5. VISUAL PROOF every scene CHEAP before the render (step 6b — MANDATORY):
+   `python storyboard/preview_bullet.py <script_path> --scene N --visual-proof` per scene →
+   judge the 3 proofs (Composition · Narrative · Transformation) against the scene's DDI →
+   record the `VISUAL-PROOF:` marker in `projects/<name>/verification.md`
+   (`render_gate.sh` HARD-BLOCKS the master render until EVERY scene has its marker)
+6. Run `python storyboard/build_video.py <script_path>` — 100% cache hits expected; pipeline
+   flows through TTS → Whisper → align → ONE live MASTER render (`render_master.mjs`, plain
+   `<Series>`, narration overlaid at the mux; NO per-scene mp4 stitch) with zero token cost
 
-## MODEL STRATEGY — which Claude model does what
+## MODEL — everything runs on Opus 4.8
 
-The acting Claude Code session's model is selected via `/model` (Opus 4.7 / Sonnet 4.6 /
-Haiku 4.5). Pipeline scripts in `storyboard/` no longer take a `model:` config — there is
-no subprocess to feed; the active session does the work.
-
-| Phase | Model | Why |
-|---|---|---|
-| Hand-convert raw → structured (rule 18) | **Opus 4.7** | 9-step checklist with silent downstream-fatal mistakes (frame-timing math, design-token preservation, bespoke metaphors). Needs deep reasoning to get right first time. |
-| Build `config.yaml` from comment blocks | **Sonnet 4.6** | Mechanical: copy hex values from `<!-- ## DESIGN TOKENS -->` block into yaml. Pure templating. |
-| Verify parse-gate, count bullets, list assets | **Sonnet 4.6** | File ops + arithmetic. |
-| **Step 2 — author per-bullet React code** | **Opus 4.7** | Each bullet is 100-200 lines satisfying 10 fidelity contracts (no JSX, design tokens only, audio_anchor verbatim, durationInFrames-fraction phase timing, spring-preset → intent map, no-text-overlap, etc.). Bespoke metaphors (octopus tentacles, vault doors, glass shatter, lie detector, planets) need deep understanding of bullet body intent. |
-| Step 2 — seed cache (`seed_bullet_cache.py`) | **Sonnet 4.6** | Pure command execution. |
-| Run TTS, Whisper, render, stitch | **Sonnet 4.6** | Watch logs, parse status. No reasoning. |
-| **Quality check** — `validate_output.py` review, frame inspection, narration coverage analysis | **Opus 4.7** | Subtle judgment: does the rendered visual match the bullet's intent? Reading scene JSON + structured-script bullet + frame thumbnails together. |
-| **Correction** — bullet rendered wrong, rewrite code | **Opus 4.7** | Same skill as Step 2 authoring; debugging + re-authoring complex code with multiple constraints. |
-| Routing — "which rule to read", "which file to edit", "which cache to invalidate" | **Sonnet 4.6** | Lookup against rule index + decision tree (rule 13). |
-| Status polls — cache file count, render progress, file existence | **Sonnet 4.6** (or Haiku 4.5 for the cheapest) | Sub-second answers, no chain reasoning. |
-
-**Heuristic for switching:**
-- *Generating creative code, debugging subtle behavior, or making a judgment call?* → Opus 4.7.
-- *Running commands, reading files, making templated edits?* → Sonnet 4.6.
-- *Yes/no determinations, file existence, status checks?* → Haiku 4.5 (or stay on Sonnet, fine).
-
-**Practical session pattern:**
-1. Stay on **Opus 4.7** during scene authoring + QA + correction phases.
-2. Switch (`/model sonnet`) for the seed → build → render → stitch phase (mechanical).
-3. Switch back to **Opus 4.7** when reviewing `validate_output.py` results or fixing
-   broken bullets.
-
-## ENFORCEMENT — Agent tool with `model` parameter (verified working in Claude Code 2026-05)
-
-Manual `/model` switching is fragile — easy to forget and burn Opus tokens on
-mechanical work. The real enforcement is the **`Agent` tool's `model` parameter**:
-the subagent literally runs as that model, billing is correct, and the subagent
-gets an isolated context window so log-parsing doesn't bloat the parent's
-context.
-
-**What was verified (2026-05) by spawning a test subagent in this session:**
-- ✅ `Agent(subagent_type: "general-purpose", model: "haiku", ...)` — works.
-  Subagent responded in ~4s on Haiku-consistent token count.
-- ❌ `Agent(subagent_type: "<custom-name>", ...)` reading `.claude/agents/<name>.md` —
-  **NOT supported** in this harness. The Claude Code build resolves only the 5
-  builtin types (`general-purpose`, `Plan`, `Explore`, `claude-code-guide`,
-  `statusline-setup`). Custom file-based subagents may exist in other Anthropic
-  surfaces but were rejected with "Agent type 'video-status' not found" here.
-
-So all recipes use the **inline-model pattern** on `general-purpose` — the only
-combination tested and known to work in this session.
-
-### Recipe 1 — SEED + BUILD phase (Sonnet)
-
-After authoring all bullets in this Opus session and writing `bundle.json`:
-
-```
-Agent(
-  description: "Seed bullet cache + run video build",
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  prompt: "You are running mechanical pipeline commands for the video_generation
-    project. Do NOT author or modify any React.createElement code, do NOT edit
-    the structured script, do NOT make quality judgments — surface those back
-    to the parent Opus session if they come up.
-
-    Run in order, watching the output of each:
-
-      1. python storyboard/seed_bullet_cache.py <script_path> --json <bundle_path>
-      2. python storyboard/build_video.py <script_path>
-
-    After step 1: report cache file count vs bundle entry count.
-    After step 2: report final mp4 path, total runtime, audio_anchor coverage %,
-    and placeholder count. If a CacheMissError surfaces, STOP and report
-    which bullet. Final report under 250 words, structured as:
-
-      COMMAND:   <which command ran>
-      RESULT:    <pass/fail>
-      ARTIFACTS: <paths to mp4/srt/chapters/thumbnail produced>
-      METRICS:   <cache hits, anchor %, runtime, placeholders>
-      WARNINGS:  <verbatim from logs>"
-)
-```
-
-### Recipe 2 — STATUS POLL (Haiku)
-
-When the user asks "what's the build status" mid-run:
-
-```
-Agent(
-  description: "Video build status poll",
-  subagent_type: "general-purpose",
-  model: "haiku",
-  prompt: "Report video build state for projects/<name>/. Run these checks:
-
-    1. ls storyboard/.cache/designs/bullet-s*-b*-*.json | wc -l
-    2. ls projects/<name>/audio/*.mp3 (file size if exists)
-    3. ls projects/<name>/scenes/*.json | wc -l
-    4. ls remotion/out/<project-with-hyphens>-s*.mp4 | wc -l
-    5. ls projects/<name>/out/*.mp4 (file size if exists)
-
-  Return EXACTLY 4 lines, no prose:
-    cache:   <N> files
-    audio:   <yes|no> [<size>]
-    scenes:  <N> json, <N> mp4
-    final:   <yes|no> [<size>] [<path>]"
-)
-```
-
-### Recipe 3 — QUALITY REVIEW (stays on Opus, no subagent)
-
-When `validate_output.py` finishes and a coverage % or per-bullet visibility flag
-is below threshold, do NOT delegate. Stay on Opus and read:
-- `projects/<name>/out/<output>.mp4_validation_report.txt`
-- The flagged bullet's `code` field in `projects/<name>/scenes/<sid>.json`
-- The structured-script bullet body
-Then decide: re-author this bullet, fix the bullet body in the structured script,
-or accept the warning. This decision is THE thing that requires Opus's depth.
-
-### When NOT to spawn a subagent
-
-- Authoring per-bullet React code → MUST stay on this Opus session (deep reasoning).
-- Hand-converting a raw script per rule 18 → MUST stay on this Opus session.
-- Reviewing validate_output.py findings + deciding action → MUST stay on this Opus session.
-- A one-line shell command you can run faster than spelling out a prompt → just use Bash here.
-
-The line: *if the work needs judgment, stay on Opus. If it just runs commands and
-parses logs, delegate to Sonnet (Recipe 1). If it answers a yes/no count,
-delegate to Haiku (Recipe 2).*
+Every step of this pipeline — conversion, config, authoring, seeding, build/render, QA, correction —
+runs on **Opus 4.8** (the acting Claude Code session). There is NO model-splitting and NO delegation
+to Sonnet/Haiku subagents: every step is worth Opus, even the "mechanical" ones. Pipeline scripts in
+`storyboard/` take no `model:` config (no subprocess to feed — the active session does the work), and
+every skill is pinned `model: opus` in frontmatter so none can silently downgrade.
 
 ## HARD PREFLIGHT — NON-NEGOTIABLE (auto mode does NOT skip this)
 
@@ -219,17 +106,23 @@ per-scene verify loop, the asset rules, and the known-bug defenses get skipped. 
 | Phase | Invoke (Skill tool) |
 |---|---|
 | Script just arrived | `vg-when-script-received` (START HERE) |
-| Convert raw → canonical | `vg-rich-script-conversion` (+ `vg-script-conversion`) |
+| Convert raw → canonical | `vg-script-conversion` (the single converter; movie-script = its MODE B) |
 | From the script-writer output | `vg-script-gen-integration` |
 | Parse / canonical format | `vg-source-script-format` |
 | Per-bullet authoring | `vg-visual-map` + `vg-visual-designer` + `vg-layout-quality-gate` (+ `vg-graphics-assets` for assets) + the `remotion` skill |
+| **Compile motion BEFORE authoring (step 3b)** | **`vg-motion-compiler`** — translate the writer's STORY beats (event/change/result/sync) into the motion GRAMMAR (el/op/topology/params/token); the writer never authors grammar. Grammar/target defined by `vg-remotion-engineering` §THE MOTION SYSTEM. |
 | **Write the bullet CODE right the first time** (author-time code recipes) | **`vg-render-code`** → `vg-code-animations` · `vg-code-timing` · `vg-code-sequencing` · `vg-code-transitions` · `vg-code-text` · `vg-code-images` · `vg-code-tokens` · `vg-code-vchecks` — copy-paste code patterns per factor, READ BEFORE writing. The same 8 factors are checked after render by `vg-quality-*` via `vg-visual-quality`. |
+| **Break the flat-2D ceiling** (the bespoke hero scene / camera-through-space / real clip / illustrated feel) | **`vg-remotion-engineering`** — use Remotion's full range (3D · `Video` · `Audio` · GIF · Lottie · camera depth/parallax · slide/wipe/flip/clockWipe). Says what's ALREADY wired vs needs a binding add; the layering model; the scene-transition model (master is a plain `<Series>` with NO fade — only the per-scene Backdrop fades). Reach for it ~once per video, deliberately. |
 | SSML narration | `vg-ssml-narration` |
+| **Sound design (the AUDIO LAYER)** | **`vg-sound-design`** — voice engine (edge/piper) · music bed + ducking · sfx cues (`sfx_emitter.py`) · deliberate silence (`<pause>`) · peak swell/sting. Says what's WIRED vs a GAP; the render-side executor of `teaching-narrative-engine`'s multi-channel plan. Author here; score with `vg-quality-audio`. |
 | audio_anchor sync | `vg-narration-alignment` |
-| **Per-scene RENDER→VERIFY→FIX loop (MANDATORY)** | `vg-when-script-received` §Step 4 + `vg-verification-protocol` (broken?) → **`vg-visual-quality`** (production-grade? — runs the 8 `vg-quality-*` factor gates) → audio-sync check |
-| Production-quality scorecard (per scene) | **`vg-visual-quality`** → `vg-quality-animations` · `vg-quality-timing` · `vg-quality-sequencing` · `vg-quality-transitions` · `vg-quality-text-fit` · `vg-quality-images` · `vg-quality-tokens` · `vg-quality-vchecks` |
+| **Per-scene VISUAL PROOF (cheap, BEFORE the master render — MANDATORY; NO per-scene mp4 render→verify loop)** | `vg-when-script-received` §Step 4 — `preview_bullet.py --scene N --visual-proof` → 5-keyframe FILMSTRIP from the LIVE composition; judge Composition (`vg-visual-quality` factors 5–8 + `layout_validator`) · Narrative (muted test, `render-validator`) · Transformation (mechanical Δ vs the DDI) → record the `VISUAL-PROOF:` marker in `verification.md`. `render_gate.sh` HARD-BLOCKS the master until EVERY scene has one. |
+| **MASTER RENDER (the ONE expensive step, after every scene has its marker)** | `render_master.mjs` — the LIVE per-scene COMPONENTS composed via plain `<Series>` (zero overlap → sync-safe; NOT TransitionSeries); NO per-scene mp4 stitch; only fade = per-scene Backdrop (`vg-scene-transitions`). `render_scenes.mjs` = OPTIONAL debug watch only, never a gate. |
+| **FINAL gate — ON THE RENDERED MASTER** | `vg-verification-protocol` (V1–V13 + AUDIO-SYNC drift + volumedetect) → **`vg-visual-quality`** (the 8 `vg-quality-*` gates) → **`vg-quality-audio`** → `vg-output-validation` → **`video-narrative-editor`** (watch the WHOLE video MUTED — SHIP\|RE-CUT) → **`vg-scene-validator`** (12-layer Motion-Native conformance + cross-scene continuity) → record `MASTER-PASS: <name> \| visual=<NN>/100 audio=<N>/10 transform=<min-Δ>%` |
+| Production-quality scorecard (on the rendered MASTER) | **`vg-visual-quality`** → `vg-quality-animations` · `vg-quality-timing` · `vg-quality-sequencing` · `vg-quality-transitions` · `vg-quality-text-fit` · `vg-quality-images` · `vg-quality-tokens` · `vg-quality-vchecks` — **motion factors 1–4 scored from the FILMSTRIP, not one frame** |
+| **Audio scorecard (per scene + final mux)** | **`vg-quality-audio`** — voice expressiveness · −14 LUFS / TP<−1 · music bed + ducking · sfx-on-reveals · silence-at-peak · non-silent. The half the visual gates don't touch (audit doc 06). |
 | Visual QA (coverage) | `vg-output-validation` |
-| Stitch / transitions | `vg-scene-transitions` |
+| Scene-boundary transitions (per-scene Backdrop fade only) | `vg-scene-transitions` |
 | YouTube upload gate | `vg-verification-protocol` (Layer 3) + `vg-youtube-validation` |
 | About to edit `storyboard/*.py` | `vg-known-bugs` |
 | Debugging build/render failure | `vg-pipeline-internals` |
@@ -240,8 +133,9 @@ per-scene verify loop, the asset rules, and the known-bug defenses get skipped. 
 | Commands / config.yaml | `vg-build-and-run` |
 
 **Rule: if you reach a phase without having invoked its skill this session, STOP and invoke it
-first.** The per-scene verify loop (`vg-verification-protocol`) is the one most often skipped
-under time pressure — it is non-negotiable.
+first.** The per-scene VISUAL PROOF (step 6b) and the FINAL gate on the master
+(`vg-verification-protocol` + the battery) are the ones most often skipped under time
+pressure — they are non-negotiable.
 
 ### Pipeline-step → which rule(s) to read
 
@@ -263,9 +157,9 @@ follows below.)
 | **Step 2.6** — missing `[asset:]` at build time (auto-fetch) | 17 | `build_video.py` auto-sources any missing `[asset:]` from the bullet description (Openverse default), records `CREDITS.md`, else HARD-FAILS with the manual command. Pre-place images where the wrong one is costly. Knobs: `assets.auto_fetch`, `assets.source`. |
 | **Step 3** — SSML compile | 05 | Prosody knobs, `<pause Xs>` markers |
 | **Step 7** — audio_anchor lookup | 08 | How visuals lock to spoken words |
-| **Step 4 — per-scene RENDER → VERIFY → FIX loop (MANDATORY)** | **00 (§Step 4) + 23** | **One scene at a time. NEVER render scene N+1 until scene N passes rule 23 all four layers. Hard-won discipline — short-circuit = wasted renders. See rule 00 Step 4 for full loop spec.** |
+| **Step 6b — per-scene VISUAL PROOF (cheap, BEFORE the master render — MANDATORY)** | **00 (§Step 4) + 23** | **Prove every scene on CHEAP keyframes (`preview_bullet.py --scene N --visual-proof`) before the ONE expensive master render. NEVER start the master until EVERY scene has its `VISUAL-PROOF:` marker (`render_gate.sh` enforces). No per-scene mp4 render→verify loop. See rule 00 Step 4 for the full proof spec.** |
 | **Step 9.5** — visual QA | 12 | Coverage thresholds + post-render checks |
-| **Step 10** — stitch + within-block stagger (ONLY after ALL scenes pass loop) | 09 | Backdrop fade, stitch mode, in-code cross-fade pattern |
+| **Step 10** — ONE live MASTER render via `render_master.mjs` (ONLY after every scene has its `VISUAL-PROOF:` marker) | 09 | Plain `<Series>` master (no per-scene mp4 stitch); per-scene Backdrop fade; narration overlaid at the master mux |
 | **Step 10.5** — output validation | 12 | Same rule as 9.5 |
 | **Step 11** — YouTube upload standards | 23 (Layer 3); 22 for the "why" | T1–T12 technical gate lives in rule 23 Layer 3; rule 22 points there + lists YouTube's consequences for non-compliance |
 | **Cross-cutting** — verifying rendered scenes (visual, animation, audio, YouTube upload) | 23 | V1–V8 frame inspection, filmstrip A1–A8, freeze detection, PSNR, audio WPM/coverage, YouTube T1–T12 gate |
@@ -284,6 +178,7 @@ Read rule files for each concern:
 - [../vg-pipeline-architecture/SKILL.md](../vg-pipeline-architecture/SKILL.md) — End-to-end steps: parse → per-bullet codegen → SSML → TTS → Whisper → render → stitch
 - [../vg-visual-designer/SKILL.md](../vg-visual-designer/SKILL.md) — Per-bullet codegen: LLM emits React.createElement code that DynamicBlock compiles + invokes at runtime
 - [../vg-ssml-narration/SKILL.md](../vg-ssml-narration/SKILL.md) — How to write SSML for dramatic, non-flat narration
+- [../vg-sound-design/SKILL.md](../vg-sound-design/SKILL.md) — the AUDIO LAYER: voice engine · music+duck · sfx cues · deliberate silence · peak swell (wired vs GAP); author-side of `vg-quality-audio`
 - [../vg-build-and-run/SKILL.md](../vg-build-and-run/SKILL.md) — Commands to run the pipeline, config.yaml format (including optional build/stitch/whisper/narration sections), output locations
 - [../vg-narration-alignment/SKILL.md](../vg-narration-alignment/SKILL.md) — audio_anchor mechanism: how visuals lock to actual spoken words; uses round() not int() for s→frames
 - [../vg-scene-transitions/SKILL.md](../vg-scene-transitions/SKILL.md) — Backdrop fade, primitive sequencing, stitch mode (hard_cut vs crossfade)
@@ -293,9 +188,8 @@ Read rule files for each concern:
 - [../vg-rerun-after-correction/SKILL.md](../vg-rerun-after-correction/SKILL.md) — **Cookbook.** When a validator flags an error: which file to edit, which cache to invalidate, the exact re-run command. Decision tree included.
 - [../vg-script-conversion/SKILL.md](../vg-script-conversion/SKILL.md) — How any-format `projects/scripts/*.txt` is auto-converted to canonical `projects/structured_scripts/*.txt` before parsing. Two-stage: regex (fast, free) → LLM fallback (robust). The structured_scripts folder is the parser's single source of truth — never edit by hand.
 - [../vg-narration-clarity/SKILL.md](../vg-narration-clarity/SKILL.md) — **Quality bar.** Read when output feels flat or visuals feel generic. Four levers: TTS (edge-tts ignores SSML — use ElevenLabs/Azure for drama), designer prompt (CLARITY > CLEVERNESS), audio_anchor sync, and pacing (8-12 bullets per 60s scene).
-- [../vg-script-writing-prompt/SKILL.md](../vg-script-writing-prompt/SKILL.md) — **Copy-paste prompt** for writing a new `source.txt` script the pipeline can render with high fidelity. Use when starting a new video. Includes primitive list, format rules, and good/bad examples.
 - [../vg-graphics-assets/SKILL.md](../vg-graphics-assets/SKILL.md) — **Use your own graphics.** How to drop logos/screenshots/diagrams/SVGs into `projects/<name>/public/` and reference them from animation bullets via `[asset: filename.png]`. The per-bullet LLM emits `<Img src={staticFile('...')} />` directly — both bindings are wired into `DynamicBlock` (rule 04 bindings table).
-- [../vg-rich-script-conversion/SKILL.md](../vg-rich-script-conversion/SKILL.md) — **MANDATORY first step when a raw script is given.** Read raw `projects/scripts/<name>.txt` → apply the 9-step conversion checklist → write canonical output to `projects/structured_scripts/<name>.txt`. Covers everything `script_converter.py` does NOT handle (frame timing, `### VO:`, sub-scenes, design-token preambles, bespoke metaphors). Includes the bespoke-visual handling guidance and the bullet density target. Canonical store is `projects/structured_scripts/` — never write conversion output anywhere else.
+- [../vg-script-conversion/SKILL.md](../vg-script-conversion/SKILL.md) — **The single converter (both modes).** MODE A regex auto-convert; **MODE B** (movie-script: frame timing, `### VO:`, sub-scenes, design-token preambles, bespoke metaphors) → the 9-step checklist in [references/movie-script-conversion.md](../vg-script-conversion/references/movie-script-conversion.md). Read raw `projects/scripts/<name>.txt` → write canonical to `projects/structured_scripts/<name>.txt` (never anywhere else). The canonical FORMAT itself is owned by `vg-source-script-format`.
 - [../vg-layout-quality-gate/SKILL.md](../vg-layout-quality-gate/SKILL.md) — Canvas-utilization minima, phase-timing idiom (`durationInFrames * 0.3/0.6/0.9`), spring-preset → intent map, proportional typography sizing, common LLM-emitted-code failure modes, and the pre-render checklist. Read when bullet visuals look small/empty, when elements clip, or before shipping a render.
 - [../vg-script-gen-integration/SKILL.md](../vg-script-gen-integration/SKILL.md) — How `.claude/script_generation/` (the YouTube script-writer skill) feeds the pipeline via `storyboard/script_gen_to_raw.py`. Two-step bridge — generate, then convert — with no changes to the existing parser/build code.
 - [../vg-youtube-validation/SKILL.md](../vg-youtube-validation/SKILL.md) — **Pointer to the YouTube technical gate** (which lives in rule 23 Layer 3, T1–T12) plus the consequence table for *why* each check matters (what YouTube does to non-compliant videos). Run the actual gate from rule 23 after rule 12 passes. FAIL = do not upload.

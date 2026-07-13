@@ -86,7 +86,10 @@ async function main() {
   const serveUrl = await bundle({
     entryPoint:     path.resolve('./src/index.ts'),
     webpackOverride,
-    publicDir:      projectDir,
+    // Same publicDir as render_master.mjs — the proof must serve the SAME static
+    // assets (vendored fonts!) as the master, or stills render with fallback
+    // glyphs + intermittent 404-driven render failures (2026-07-05).
+    publicDir:      path.resolve(REMOTION_DIR, 'public'),
   });
   console.log(`  bundled in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 

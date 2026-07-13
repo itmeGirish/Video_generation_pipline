@@ -1,19 +1,41 @@
 ---
 name: vg-scene-transitions
 description: "How scene-to-scene and within-scene transitions work. Backdrop fade, block sequencing, within-block stagger, and stitch mode. Use whenever adding transitions, configuring crossfade, fixing overlap artifacts, or any request like "scene transitions," "crossfade," "hard cut," "backdrop fade," "stitch mode," or "within-block stagger.""
+model: opus
 ---
 
 # Scene Transitions
 
-> **Source of truth for the transition primitives = `remotion/rules/transitions.md`.**
-> The recommended `remotion_master` stitch mode below uses Remotion's native
-> `<TransitionSeries>` / `<TransitionSeries.Transition fade()>` with `linearTiming` /
-> `springTiming` — exactly as that rule documents. `crossfade_frames` maps to the
-> transition's `durationInFrames`, and transitions overlap adjacent scenes (total length
-> is shorter than the sum of sequences — see transitions.md "Duration calculation").
-> Read it before changing stitch behavior.
+> **Source of truth for the transition primitives = `remotion/rules/transitions.md`** (for
+> *within-bullet* transitions — `<TransitionSeries>` / `linearTiming` / `springTiming`).
+> **At the MASTER level there is NO crossfade:** `remotion_master` plays scenes through a plain
+> `<Series>` (zero overlap) so the master audio and video stay frame-for-frame aligned. A master
+> `<TransitionSeries>` crossfade was rejected (it overlaps scenes → ~12 frames of audio drift per
+> transition). The only scene-to-scene fade is the per-scene `<Backdrop>` (Layer 4). `crossfade_frames`
+> in config is therefore inert for the master.
 
 Four layers of transition, from finest to coarsest.
+
+## Transition OPERATORS — the morph vocabulary (how the carried object CROSSES, not a cut)
+The mechanics below are *how the layers fade*; this is *what the protagonist DOES* at a boundary so the cut
+reads as one continuous take instead of a slide-swap. Pick an operator (the script's `carry:` / `BEAT n→n+1
+TRANSITION` names it); build it as a `frame`-driven transform on the carried element — **never an opacity
+cut on the protagonist**:
+| Operator | What the object does | Build |
+|---|---|---|
+| **carry** | stays on screen, just moves to its new spot/state | interpolate its x/y/scale from old→new across the boundary |
+| **dock** | shrinks into a corner to persist as a reference | scale-down + translate to a corner anchor |
+| **match-move / match-morph** | keeps the SAME screen position+scale across the cut → the eye doesn't see a cut | author the prior scene's LAST frame and the next scene's FIRST frame at identical transform |
+| **split** | divides into parts that become the next beat's elements | clip/translate the parts apart |
+| **fold / collapse** | folds/crushes down, the next thing unfolds from it | scaleY→0 then the next scaleY→1 from the same edge |
+| **flow / thread / conveyor** | travels along a path into the next station | translate along an SVG path (`getPointAtLength`) |
+| **pour / explode** | bursts into particles that reform as the next element | the particle field (`vg-code-composition` §8c) as the bridge |
+| **snap** | a hard, deliberate cut WITH a motion accent (whip-pan + sound hit) | reserve for an energy break — the one intentional cut |
+**Within a scene** these are free (one composition). **Scene→scene** is capped by the architecture: the master
+plays separate scene mp4s via a plain `<Series>` (Layer 4) — so a true cross-scene morph isn't renderable
+today; the **match-move** illusion (identical transform on the last/first frames either side of the cut) is the
+closest achievable, and real cross-scene object continuity needs the master-composition re-architecture
+(`vg-pipeline-architecture`).
 
 ## Layer 1: Within-scene (block-to-block) — ADDITIVE LAYERING
 
@@ -30,17 +52,19 @@ const seqDur = sceneEnd - b.framesFrom;
 </Sequence>
 ```
 
-This means **blocks STACK additively**: bullet 1 keeps rendering while bullet 2
-paints on top of it, then bullet 3 on top of that, and so on. This matches how
-scripts naturally describe a scene ("cards slide in" → "rows fill INSIDE the
-cards" → "totals appear") — earlier elements stay visible as later ones add on.
+⚠ **CORRECTED — beats do NOT stack additively (scene-driven model).** Each beat's `<Sequence>` runs for
+EXACTLY its `framesFrom→framesTo` window and the prior beat UNMOUNTS; the persistent world is carried by
+the separate `role:'stage'` block (rendered outside any Sequence, scene-local frames). So a beat renders
+its DELTA on top of the always-present STAGE — not on top of the prior beat. The scene reads continuous
+("cards slide in → rows fill inside → totals appear") because the STAGE holds the settled world, not
+because beats pile up. (`vg-visual-designer` §SCENE-DRIVEN.)
 
-### Two modes per bullet
+### Two modes per beat
 
-The per-bullet `code` (rule 04) chooses one of:
+The per-beat `code` (rule 04) chooses one of:
 
-- **Additive (default)**: just draw your delta. Earlier bullets remain visible
-  underneath; the new bullet stacks on top.
+- **Evolve (default)**: draw your delta on the persistent STAGE (which already shows the settled world).
+  Legacy no-stage scenes: redraw prior settled elements + the delta (self-contained).
 - **Replace**: when the bullet should wipe the prior canvas (scene transitions
   to a new metaphor), the bullet's emitted code is wrapped at build time
   (`build_bundle.py`) in a Fragment of `[__replaceBackdrop, __mainWrap]`:
@@ -54,16 +78,16 @@ The per-bullet `code` (rule 04) chooses one of:
   inter-scene `TRANSITION_FRAMES` (Layer 4) so every transition (sub-scene AND
   scene boundary) shares the same rhythm. Without `__mainWrap`, the new
   content appears instantly at frame 0 of the bullet while the backdrop is
-  still ramping — visible "pop" the user complained about. See rule 04 §
-  "Additive-layering contract" for the canonical pattern.
+  still ramping — visible "pop" the user complained about. See
+  `vg-visual-designer` §SCENE-DRIVEN + `vg-code-transitions` §REPLACE for the pattern.
 
 ### When to use which
 
-| Bullet intent | Mode |
+| Beat intent | Mode |
 |---|---|
-| "Card slides in" / "Rows fill inside card" | Additive |
+| "Card slides in" / "Rows fill inside card" | Evolve (delta on the stage) |
 | "Cards fade, paths render across screen" | Replace |
-| "USE THIS FOR card slides in from below" | Additive if prior content is contained, Replace if it dominates |
+| "USE THIS FOR card slides in from below" | Evolve if prior content is contained, Replace if it dominates |
 | Final "hard cut to black" beat | Replace with full-opacity D.bg in last frames |
 
 ### Old framesTo-windowing model (deprecated)
@@ -128,33 +152,30 @@ Config: `stitch.mode` in `config.yaml`. Order of preference:
 ### Remotion master composition (RECOMMENDED — avoids the entire ffmpeg-stitch class of bugs)
 ```yaml
 stitch:
-  mode: remotion_master
-  crossfade_frames: 12     # passed to <TransitionSeries.Transition fade()> as durationInFrames
+  mode: remotion_master    # the master plays scenes via <Series>; it ignores crossfade_frames
 ```
 
-A single Remotion render produces audio + visuals together. The master
-composition (`remotion/src/MasterComposition.tsx`) registers one Composition
-called `<project>-master` that contains:
+A single Remotion render produces audio + visuals together. The master composition
+(`remotion/src/MasterComposition.tsx`) registers one `<project>-master` Composition that plays the
+scene mp4s through a plain **`<Series>`** (ZERO overlap) under the master `<Audio>` — **NO inter-scene
+fade.** (`TransitionSeries` was tried and **rejected**: it overlaps adjacent scenes by the transition
+duration, so the video ends up shorter than the full-length audio → ~12 frames of drift per transition.)
 
 ```tsx
 <Audio src={staticFile(MASTER_AUDIO_FILE)} />
-<TransitionSeries>
-  {scenes.map((sid, i) => (
-    <>
-      <TransitionSeries.Sequence durationInFrames={tl[sid].durationFrames}>
-        <Video src={staticFile(`out/${sid}.mp4`)} />
-      </TransitionSeries.Sequence>
-      {!isLast && <TransitionSeries.Transition
-        presentation={fade()}
-        timing={linearTiming({ durationInFrames: TRANSITION_FRAMES })} />}
-    </>
+<Series>
+  {scenes.map((sid) => (
+    <Series.Sequence key={sid} durationInFrames={tl[sid].durationFrames}>
+      <Video src={staticFile(`out/${sid}.mp4`)} startFrom={0} endAt={tl[sid].durationFrames} />
+    </Series.Sequence>
   ))}
-</TransitionSeries>
+</Series>
 ```
+The ONLY scene-to-scene fade is the per-scene `<Backdrop>` (Layer 4 below), baked into each scene mp4.
 
 `build_video.py` Step 10 detects `mode: remotion_master`, runs
-`node render_master.mjs <output>` with `PROJECT`, `MASTER_AUDIO_FILE`,
-`VIDEO_FPS/WIDTH/HEIGHT`, and `MASTER_TRANSITION_FRAMES` env vars, and writes
+`node render_master.mjs <output>` with `PROJECT`, `MASTER_AUDIO_FILE`, and
+`VIDEO_FPS/WIDTH/HEIGHT` env vars (the master takes NO transition-frames input), and writes
 the final mp4 atomically. **No ffmpeg concat / xfade / mux step runs.**
 
 **Why this is the recommended mode**:
@@ -163,12 +184,13 @@ the final mp4 atomically. **No ffmpeg concat / xfade / mux step runs.**
   reliably trims; middle ones can leave the timeline longer than expected,
   causing audio-to-video drift by scene N-1).
 - Single render path; no intermediate ffmpeg-stitch artifacts to debug.
-- Inter-scene transition is `<TransitionSeries.Transition fade>` — frame-accurate.
+- The master is a plain **`<Series>`** — scenes play back-to-back with **NO master fade**
+  (`TransitionSeries` was rejected: its ~12-frame/transition overlap drifts audio sync).
 
-**Important — set `fade_frames: 0` when using remotion_master** (same reason
-as crossfade below): the per-scene `<Backdrop>` fade is already redundant when
-the master composition fades between scenes. Stacking both reads as too-dark
-overlap.
+**Keep `fade_frames > 0` here — the per-scene `<Backdrop>` fade is the ONLY transition.**
+The master adds no fade of its own, so nothing stacks (the old "set it to 0" guidance assumed
+a master fade that no longer exists — zeroing it now gives HARD CUTS). Raise/lower `fade_frames`
+to tune the ~`fade_frames`-long dip to `D.bg` at each boundary.
 
 ### MASTER_SCENES filter (single-scene preview)
 
@@ -227,7 +249,7 @@ Scenes are concatenated directly via `filter_complex concat`. The Backdrop fade 
 | Block entrance animation | Inside the bullet body (concrete description) → emitted `code` |
 | Within-block element stagger | The bullet body's described stagger interval; LLM emits matching spring delay |
 | Block-to-block timing within a scene | `audio_anchor` (verbatim phrase from THIS scene's narration — rule 08) |
-| Block-to-block soft cross-fade | The next block's REPLACE backdrop fade-in (≤3 frames). Earlier blocks stay rendered until the backdrop covers them — see rule 04 § "Additive-layering contract" |
+| Block-to-block soft cross-fade | The next block's REPLACE backdrop fade-in (≤3 frames) covers the stage before the new content lands — see `vg-code-transitions` §REPLACE |
 | Scene fade in/out speed | `design.fade_frames` in `config.yaml` |
 | Scene-to-scene stitch | `stitch.mode` in `config.yaml` |
 
@@ -236,7 +258,13 @@ Scenes are concatenated directly via `filter_complex concat`. The Backdrop fade 
 **Black flash between scenes**: Normal with `hard_cut` + Backdrop fade.
 Fix: increase `fade_frames` to 12, or switch to `crossfade` (and zero out `fade_frames`).
 
-**Two blocks on screen at once**: this is **expected** under additive layering — bullet 2 stacking on bullet 1 is the intended behavior. If the second bullet should wipe the first, use the REPLACE pattern (opaque D.bg backdrop as the bullet's first element — see rule 04 § "Additive-layering contract"). Only treat it as a bug if the prior bullet's content is leaking *through* the new bullet's intended REPLACE backdrop, in which case the backdrop's opacity ramp is too slow (≤3 frames is the contract) or the backdrop is missing entirely.
+**Two BEATS on screen at once**: under the scene-driven model this is a BUG (beats are exclusive slots —
+the prior unmounts), EXCEPT the brief `premountFor` window at a boundary (the next beat mounts early at
+opacity 0 — invisible in the render; only DOM QA sees it, and it's excluded there). What SHOULD coexist:
+the persistent `role:'stage'` block (the world) + the active beat's delta on top — that's correct, not a
+stack. If two visible beats genuinely overlap, a beat is double-drawing the stage's world (redraw the
+DELTA only) or a REPLACE backdrop is missing/too slow (opaque `D.bg` `AbsoluteFill`, ramp ≤10 frames).
+Runtime telemetry R7 (duplicate-instance) is the authoritative catch.
 
 **Visual appears before narration mentions it**: audio_anchor pointing to a phrase that occurs earlier in narration than intended.
 Fix: edit the bullet body → pick a phrase from later in the narration (rule 08).

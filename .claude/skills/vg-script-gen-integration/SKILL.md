@@ -1,18 +1,46 @@
 ---
 name: vg-script-gen-integration
-description: "How the script_generation skill output feeds into the video_generation pipeline via script_gen_to_raw.py. Two-step bridge. Use whenever connecting scriptwriter output to the render pipeline, or any request like "script generation integration," "from scriptwriter to pipeline," "bridge skill," "script_gen_to_raw," or "how scriptwriter feeds pipeline.""
+description: "How script_generation output feeds the video_generation pipeline. Routes the TWO output shapes: the overhauled canonical+briefs output (already parser-ready — its <!-- SCENE DESIGN/DESCRIPTION/GLOBAL VISUAL STYLE --> blocks now cross into the renderer MECHANICALLY via source_parser + visual_designer) vs the legacy ailabs-393 prose (needs script_gen_to_raw.py). Use whenever connecting scriptwriter output to the render pipeline, the script-gen→video-gen bridge, the director's-brief carry, script_gen_to_raw, or how scriptwriter feeds the pipeline."
+model: opus
 ---
 
 # Script Generation Integration
 
-The `.claude/skills/script_generation/` skill (the script-writer from ailabs-393) is
-the **upstream** entrypoint for users who want to start from a topic, not a
-hand-written script. Its output format is YouTube-prose with bracketed time
-sections (`[HOOK - 0:00-0:10]`, `[INTRO]`, `[MAIN CONTENT]`, etc.) — that does
-NOT match what `source_parser.py` reads.
+The `.claude/skills/script_generation/` skill is the **upstream** entrypoint for users who
+want to start from a topic, not a hand-written script. There are now **two** output shapes,
+and they route differently — detect which you have FIRST:
 
-This rule documents the **bridge** that makes the integration work without
-touching any existing pipeline code.
+- **Overhauled `script_generation` (current, default).** Emits the **canonical format
+  directly** — `## SCENE N — "Title" (M:SS – M:SS)` headers + pair-block bullets
+  (`what happens` / `text` / `image` / `audio_anchor`) — **plus the rich director's brief**
+  in `<!-- GLOBAL VISUAL STYLE -->`, `<!-- SCENE DESCRIPTION -->`, and `<!-- SCENE DESIGN -->`
+  comment blocks, and an evidenced `<!-- SCRIPT-READY: ... -->` line. **This needs NO prose
+  bridge** — it is already what `source_parser.py` reads. Copy it to
+  `projects/structured_scripts/<name>.txt`, scaffold the project, verify, build.
+- **Legacy prose (ailabs-393 script-writer).** YouTube-prose with bracketed sections
+  (`[HOOK - 0:00-0:10]`, `[INTRO]`, `[MAIN CONTENT]`, `[Visual cue: ...]`). This does NOT
+  match the parser → it needs the `script_gen_to_raw.py` bridge below.
+
+## The director's brief now crosses the bridge MECHANICALLY (fixed 2026-06)
+
+For the overhauled output, the comment blocks are **not decoration** — `source_parser.py`
+extracts them into `Scene.description`, `Scene.design`, and `Scene.global_style` (the global
+style is denormalized onto every scene), and `visual_designer.py` feeds them into the
+per-bullet codegen prompt **and the cache key** (`_scene_brief_block` + the v15 key). Two
+consequences:
+
+- **Do NOT strip the comment blocks when copying the script in** — they are the camera /
+  layout / through-line / world the renderer builds TO. Before the fix the parser dropped
+  every comment and the renderer re-invented the visual (generic output); the brief reached
+  the code only if the in-session author remembered to read it. Now it is DATA.
+- **Editing a brief re-seeds that scene's bullets** (the brief is in the cache key) — the
+  `.txt` is the single source of truth for the look; never re-brief the renderer separately.
+
+The contract for what the brief must contain is owned upstream by `scene-planner`
+("THE SCENE CONTRACT → Phase 2") and `scene-composer`.
+
+This rule documents the legacy prose **bridge** (below) for the ailabs-393 shape, which still
+needs `script_gen_to_raw.py`.
 
 ## When to use this flow
 
@@ -36,7 +64,8 @@ Before running any tool, detect what format the user gave you and route:
 | Input shape | Route |
 |---|---|
 | **YouTube prose** — contains `[HOOK ...]`, `[INTRO ...]`, `[MAIN CONTENT ...]`, `[Section N: ... - M:SS-M:SS]`, `[Visual cue: ...]`, or `[CALL TO ACTION ...]` markers (script_generation skill output shape) | **Phase 2 + 3.** Run `script_gen_to_raw.py` to bridge → run `verify_structured_script.py`. STOP before Phase 4. |
-| **Already canonical** — contains `## SCENE N — "Title" (M:SS – M:SS)` headers + `### Narration` + `### Animation` bullets (rule 01 format) | **Skip Phase 2.** Copy directly to `projects/scripts/<name>.txt`, run `script_gen_to_raw.py --no-densify --no-init-project` ONLY for the project scaffold OR scaffold manually. Run `verify_structured_script.py`. STOP before Phase 4. |
+| **Canonical + briefs (overhauled script_generation — the DEFAULT today)** — `## SCENE N — "Title" (M:SS – M:SS)` headers + pair-block bullets, PLUS `<!-- GLOBAL VISUAL STYLE -->` / `<!-- SCENE DESCRIPTION -->` / `<!-- SCENE DESIGN -->` blocks + an evidenced `<!-- SCRIPT-READY: ... -->` line | **Skip Phase 2 (no prose bridge).** Copy directly to `projects/structured_scripts/<name>.txt` **with the comment blocks INTACT** — `source_parser.py` now reads them into `Scene.description/design/global_style` and the renderer builds to them (don't strip them). Scaffold the project, run `verify_structured_script.py`. STOP before Phase 4. |
+| **Already canonical (legacy, no briefs)** — `## SCENE N — "Title" (M:SS – M:SS)` + `### Narration` + `### Animation` bullets, no comment blocks | **Skip Phase 2.** Copy to `projects/scripts/<name>.txt`, scaffold the project, run `verify_structured_script.py`. The brief fields parse as empty (behavior-preserving — codegen runs as before). STOP before Phase 4. |
 | **Topic only** — no scenes, no visual cues (e.g. "make a video about GPT-6") | **Cannot fully automate Phase 1.** The script_generation skill is interactive and stores prefs in `~/.claude/script_writer.json`; another Claude session can't run that interactive flow on the user's behalf. Two options: (a) ask user to invoke `/script_generation` in their session and paste the output back, OR (b) ask for the missing inputs (audience, tone, length, hook style, channel niche) and write a parser-ready script directly per rule 16, skipping the prose-to-raw bridge. |
 | **Rich script** — frame-based timing (`Frame 0–60`), `### VO:` / `### ANIMATION:` markers, sub-scenes, design-token preamble | **Skip Phase 2 (script_gen_to_raw.py won't handle this).** Apply rule 18 hand-conversion checklist instead. Then `verify_structured_script.py`. STOP before Phase 4. |
 

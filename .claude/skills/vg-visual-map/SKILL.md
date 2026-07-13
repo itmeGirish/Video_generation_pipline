@@ -1,6 +1,7 @@
 ---
 name: vg-visual-map
 description: "Content-type to visual-type map. Every scene type has a canonical implementation pattern, sketch, and code skeleton. Read BEFORE authoring any bullet code. Use whenever choosing which visual to use, designing a scene, or any request like "which visual for this," "content type map," "visual map," "scene design pattern," "canonical visual," or "what animation fits this idea.""
+model: opus
 ---
 
 # Visual Map — Meaningful Scene Design
@@ -92,467 +93,25 @@ Only then open the code.
 
 ---
 
-### TYPE 1 — Single Statistic
-
-**When:** bullet reveals one key number (%, $, ratio, count)
-
-**Viewer must understand:** the magnitude and meaning of this number
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│              86%                                    │
-│         [large, centered]                           │
-│                                                     │
-│    HALLUCINATION RATE                               │
-│    [label below, smaller, muted]                    │
-│                                                     │
-│  ████████████████████████░░░░░  86/100              │
-│  [context bar showing scale]                        │
-└─────────────────────────────────────────────────────┘
-```
-
-**Code skeleton** — replace ALL_CAPS placeholders with actual values from the script bullet:
-```js
-// SCRIPT_VALUE  = the numeric value as a decimal, e.g. 0.73 for "73%"
-// SCRIPT_LABEL  = short uppercase label describing the stat, e.g. 'ERROR RATE'
-// SCRIPT_DISPLAY = the formatted display string, e.g. '73%' or '$4.2B'
-// STAT_COLOR    = D.red (bad/danger), D.green (good/success), D.cyan (neutral)
-const numSize = Math.round(width * 0.22);
-const labelSize = Math.round(width * 0.018);
-const barW = Math.round(width * 0.55);
-const barH = Math.round(height * 0.025);
-
-const pct = SCRIPT_VALUE;
-const barFill = interpolate(frame, [8, 35], [0, pct], {extrapolateRight:'clamp'});
-const numOp = interpolate(frame, [0, 12], [0, 1], {extrapolateRight:'clamp'});
-const labelOp = interpolate(frame, [10, 22], [0, 1], {extrapolateRight:'clamp'});
-const barOp = interpolate(frame, [20, 32], [0, 1], {extrapolateRight:'clamp'});
-
-const numEl = React.createElement('div', {style:{
-  fontSize: numSize, fontFamily: D.font_display, fontWeight: 700,
-  color: STAT_COLOR, opacity: numOp, lineHeight: 1,
-}}, SCRIPT_DISPLAY);
-
-const labelEl = React.createElement('div', {style:{
-  fontSize: labelSize, fontFamily: D.font_mono,
-  color: D.text_dim, opacity: labelOp, letterSpacing: '0.12em',
-  marginTop: Math.round(height * 0.015),
-}}, SCRIPT_LABEL);
-
-const bar = React.createElement('div', {style:{
-  width: barW, height: barH, opacity: barOp,
-  backgroundColor: D.surface, borderRadius: 4,
-  overflow: 'hidden', marginTop: Math.round(height * 0.04),
-  position: 'relative',
-}},
-  React.createElement('div', {style:{
-    width: Math.round(barW * barFill), height: '100%',
-    backgroundColor: STAT_COLOR, borderRadius: 4,
-  }})
-);
-
-const wrap = React.createElement('div', {style:{
-  position:'absolute', inset: 0,
-  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-}}, numEl, labelEl, bar);
-
-return React.createElement(AbsoluteFill, {style:{backgroundColor: D.bg}},
-  __replaceBackdrop, wrap);
-```
-
-**NEVER do:** screen shatter, explosion, spinning rings, heartbeat pulse, shards — these add drama but zero understanding of the number.
-
-**Context bar is mandatory** when showing a percentage — the raw number alone has no scale for the viewer.
-
----
-
-### TYPE 2 — Quote / Testimonial
-
-**When:** bullet surfaces a direct quote from a person
-
-**Viewer must understand:** who said it, what they said, why it matters
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│   "                                                 │
-│                                                     │
-│   Losing access felt like                           │
-│   having a limb amputated.                          │
-│                                                     │
-│   "                                                 │
-│             — Senior Engineer, Hardware Co.         │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- No UI chrome (fake chat windows, browser frames, terminal headers)
-- No brand names — use role + generic employer ("Senior Engineer at a chip company")
-- Quote text large (width * 0.030–0.038), italic, color D.text
-- Attribution small (width * 0.012), non-italic, color D.text_dim
-- Typewriter reveal OR spring fade-in from opacity 0 — both acceptable
-- Opening quotation mark can be oversized (width * 0.08) as decorative element, color D.cyan at 0.15 opacity
-
-**Code skeleton** — replace ALL_CAPS placeholders with actual values from the script bullet:
-```js
-// QUOTE_TEXT = the exact quote from the script bullet, as a string
-// QUOTE_ATTR = attribution line from the script, e.g. '— Jane Smith, Role'
-const quoteSize = Math.round(width * 0.032);
-const attrSize = Math.round(width * 0.013);
-const QUOTE = QUOTE_TEXT;
-const ATTR = QUOTE_ATTR;
-
-// Typewriter reveal
-const CPS = 18; // chars per second at 30fps = chars per 30 frames
-const charsVisible = Math.min(QUOTE.length, Math.floor(frame * CPS / 30));
-const attrDelay = Math.round(QUOTE.length * 30 / CPS) + 10;
-const attrOp = interpolate(frame, [attrDelay, attrDelay + 12], [0, 1], {extrapolateRight:'clamp'});
-
-const quoteEl = React.createElement('div', {style:{
-  fontSize: quoteSize, fontFamily: D.font_display,
-  fontStyle: 'italic', color: D.text, lineHeight: 1.5,
-  maxWidth: Math.round(width * 0.7),
-}}, QUOTE.slice(0, charsVisible));
-
-const attrEl = React.createElement('div', {style:{
-  fontSize: attrSize, fontFamily: D.font_mono,
-  color: D.text_dim, opacity: attrOp, marginTop: Math.round(height * 0.025),
-}}, ATTR);
-
-const wrap = React.createElement('div', {style:{
-  position:'absolute', inset: 0,
-  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-  padding: `0 ${Math.round(width * 0.1)}px`,
-}}, quoteEl, attrEl);
-
-return React.createElement(AbsoluteFill, {style:{backgroundColor: D.bg}},
-  __replaceBackdrop, wrap);
-```
-
----
-
-### TYPE 3 — Ranked Comparison (A vs B vs C)
-
-**When:** bullet compares multiple items by a metric (benchmark, score, cost, speed)
-
-**Viewer must understand:** relative ranking and the gap between items
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│  HALLUCINATION RATE — FRONTIER MODELS               │
-│                                                     │
-│  Model A   ████████████████████████░  86%  ← worst  │
-│  Model B   ████████░░░░░░░░░░░░░░░░░  32%           │
-│  Model C   ████░░░░░░░░░░░░░░░░░░░░░  18%           │
-│  Model D   ██░░░░░░░░░░░░░░░░░░░░░░░   9%  ← best   │
-│                                                     │
-│                              Source — Venue, Year   │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- Bars grow from left — animate fill width using `interpolate(frame, [startF + i*8, startF + i*8 + 25], [0, value])`
-- Stagger rows by 8 frames each
-- Highlight the item being discussed in the narration (use D.red for worst, D.green for best, D.cyan for neutral)
-- Value label right-aligned at bar end
-- Title row always present — tells viewer what they're comparing
-
-**Code skeleton** — replace ALL_CAPS placeholders with actual values from the script bullet:
-```js
-// ROWS = array built from the script's comparison data, e.g.:
-//   {label: 'Item name from script', value: 0.NN, color: D.red/D.green/D.text_dim}
-// CHART_TITLE = uppercase label describing what is being compared
-const rows = ROWS; // e.g. [{label:'...', value:0.NN, color:D.red}, ...]
-const maxBarW = Math.round(width * 0.52);
-const rowH = Math.round(height * 0.09);
-const labelW = Math.round(width * 0.12);
-
-const rowEls = rows.map((r, i) => {
-  const delay = i * 8 + 10;
-  const fill = interpolate(frame, [delay, delay + 22], [0, r.value], {extrapolateRight:'clamp'});
-  const op = interpolate(frame, [delay, delay + 8], [0, 1], {extrapolateRight:'clamp'});
-  return React.createElement('div', {key:i, style:{
-    display:'flex', alignItems:'center', gap: Math.round(width*0.012),
-    opacity: op, height: rowH,
-  }},
-    React.createElement('div', {style:{
-      width: labelW, fontFamily: D.font_mono,
-      fontSize: Math.round(width*0.010), color: D.text_dim, textAlign:'right',
-    }}, r.label),
-    React.createElement('div', {style:{
-      width: maxBarW, height: Math.round(rowH*0.35),
-      backgroundColor: D.surface, borderRadius: 3, overflow:'hidden', position:'relative',
-    }},
-      React.createElement('div', {style:{
-        width: Math.round(maxBarW * fill), height:'100%',
-        backgroundColor: r.color, borderRadius: 3,
-      }})
-    ),
-    React.createElement('div', {style:{
-      fontFamily: D.font_mono, fontSize: Math.round(width*0.010),
-      color: r.color, width: Math.round(width*0.04), textAlign:'left',
-    }}, `${Math.round(r.value*100)}%`)
-  );
-});
-
-const chart = React.createElement('div', {style:{
-  display:'flex', flexDirection:'column', gap: Math.round(height*0.012),
-}}, ...rowEls);
-```
-
----
-
-### TYPE 4 — Step-by-Step Process
-
-**When:** bullet explains HOW something works (algorithm, workflow, chain of events)
-
-**Viewer must understand:** what happens in what order and why
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│   ① INPUT          ② PROCESS        ③ OUTPUT        │
-│   [User query]  →  [Model runs]  →  [Answer]        │
-│                                                     │
-│   Each step appears when narrator describes it      │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- Each step appears ONLY when the narration reaches it — use `findWord()` to align
-- Arrow connectors appear after the step they connect FROM
-- Step boxes use consistent sizing — all same width × height
-- Active step: D.cyan border. Completed steps: D.text_dim border.
-
-**Code skeleton** — replace ALL_CAPS placeholders with actual values from the script bullet:
-```js
-// STEPS = array of steps extracted from the script bullet, each with:
-//   {num: '①'/'②'/etc., title: 'short title', desc: 'one-line description'}
-const steps = STEPS; // populate from script content — do NOT copy example values
-const stepW = Math.round(width * 0.22);
-const stepH = Math.round(height * 0.28);
-const gap = Math.round(width * 0.04);
-const totalW = steps.length * stepW + (steps.length - 1) * gap;
-const startX = (width - totalW) / 2;
-
-const stepEls = steps.map((s, i) => {
-  const delay = i * 18;
-  const op = interpolate(frame, [delay, delay + 15], [0, 1], {extrapolateRight:'clamp'});
-  const y = interpolate(frame, [delay, delay + 15], [30, 0], {extrapolateRight:'clamp'});
-  return React.createElement('div', {key:i, style:{
-    position:'absolute',
-    left: startX + i * (stepW + gap),
-    top: (height - stepH) / 2 + y,
-    width: stepW, height: stepH, opacity: op,
-    border: `1px solid ${D.cyan}66`,
-    backgroundColor: D.surface, borderRadius: 10,
-    display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-    gap: Math.round(height * 0.012), padding: Math.round(width * 0.012),
-  }},
-    React.createElement('div', {style:{fontSize: Math.round(width*0.030), color: D.cyan}}, s.num),
-    React.createElement('div', {style:{fontSize: Math.round(width*0.013), color: D.text, fontFamily: D.font_display, fontWeight:700, textAlign:'center'}}, s.title),
-    React.createElement('div', {style:{fontSize: Math.round(width*0.010), color: D.text_dim, fontFamily: D.font_mono, textAlign:'center', lineHeight:1.4}}, s.desc)
-  );
-});
-```
-
----
-
-### TYPE 5 — Before / After Split
-
-**When:** bullet shows contrast between two states (old vs new, wrong vs right, without vs with)
-
-**Canonical layout:**
-```
-┌──────────────────────┬──────────────────────┐
-│  WITHOUT             │  WITH                │
-│                      │                      │
-│  [state A visual]    │  [state B visual]    │
-│                      │                      │
-│  • consequence 1     │  ✓ benefit 1         │
-│  • consequence 2     │  ✓ benefit 2         │
-└──────────────────────┴──────────────────────┘
-         ↑ divider line animates in from top
-```
-
-**Rules:**
-- LEFT panel: D.error/D.red tint on border (the problem)
-- RIGHT panel: D.success/D.green tint on border (the solution)
-- Divider appears first, then left panel, then right panel (8-frame stagger each)
-- Labels ("WITHOUT" / "WITH") top of each panel, font_mono, textDim
-
----
-
-### TYPE 6 — Timeline
-
-**When:** bullet shows a sequence of events in chronological order
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│  ●──────────●──────────●──────────●                 │
-│  Jan        Mar        Jun        Sep               │
-│  Event A    Event B    Event C    Event D           │
-│                                                     │
-│  [Each node appears as narrator reaches it]         │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- Spine line animates from left to right
-- Nodes pop in with a spring bounce at staggered timing
-- Dates above the spine, event labels below
-- Active/current event uses D.cyan; past events use D.text_dim
-
----
-
-### TYPE 7 — Concept Definition
-
-**When:** bullet introduces or defines a term or idea
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│   CONFABULATION                                     │
-│   [term — large, D.cyan]                            │
-│                                                     │
-│   When a model generates a plausible-sounding       │
-│   answer with no factual basis — not a lie,         │
-│   but a confident invention.                        │
-│   [definition — body size, D.text, max 3 lines]     │
-│                                                     │
-│   ≠ Hallucination (which includes knowing errors)   │
-│   [contrast note — label size, D.text_dim]          │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- Term reveals first (spring scale from 0.85 → 1.0)
-- Definition fades in after (delay 15 frames)
-- Contrast note / example fades in last (delay 28 frames)
-- No decorative background motion — let the text breathe
-
----
-
-### TYPE 8 — Data Table / Matrix
-
-**When:** bullet shows structured data with rows and columns
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│  BENCHMARK RESULTS                                  │
-│  ┌──────────┬──────────┬──────────┬──────────┐     │
-│  │ Task     │ Model A  │ Model B  │ Model C  │     │
-│  ├──────────┼──────────┼──────────┼──────────┤     │
-│  │ Coding   │  94%     │  87%     │  79%     │     │
-│  │ Reasoning│  88%     │  91% ★   │  73%     │     │
-│  │ Recall   │  62%     │  58%     │  71% ★   │     │
-│  └──────────┴──────────┴──────────┴──────────┘     │
-│  ★ = best in category           Source — X, Y 2025 │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- Rows stagger in (8 frames each) so viewer reads one row at a time
-- Best value in each row gets D.green + star marker
-- Header row always visible from frame 0
-- Cell text: font_mono, labelSize
-
----
-
-### TYPE 9 — Narrative Text Card
-
-**When:** bullet is a commentary, insight, or conclusion — no data, pure editorial
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│   ┌─────────────────────────────────────────┐      │
-│   │                                         │      │
-│   │  Same model. Different job.             │      │
-│   │  One needs trust. One rewards speed.    │      │
-│   │                                         │      │
-│   └─────────────────────────────────────────┘      │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- Card centered, width 60-70% of canvas, padding generous
-- Text size: width * 0.022–0.026 (readable at a glance)
-- Card border: 1px solid D.cyan at 30% opacity
-- Background: D.surface (slightly lighter than D.bg)
-- ONE idea per card. If there are two ideas, use TWO bullets.
-- No sub-bullets, no lists — pure prose max 2–3 lines
-
----
-
-### TYPE 10 — Counter / Progress Reveal
-
-**When:** bullet builds toward a number over time (e.g. "86 out of 100 times")
-
-**Canonical layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│     ○○○○○○○○○○  ○○○○○○○○○○  ○○○○○○○○○○             │
-│     ○○○○○○○○○○  ○○○○○○○○○○  ○○○○○○○○○○             │
-│     ○○○○○○○○○○  ○○○○○○○○○○  ○○○○○○○○○○             │
-│     [86 red dots fill in, 14 remain grey]           │
-│                                                     │
-│     86 out of 100 answers fabricated                │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-**Rules:**
-- Grid of N dots where N = denominator (100 for percentages)
-- Red dots fill left-to-right as frame advances
-- Caption below: "X out of N [description]"
-- Filling speed: complete fill by frame ~40 (fast enough to feel dramatic, slow enough to read)
-
-**Code pattern** — replace ALL_CAPS placeholders with actual values from the script bullet:
-```js
-// TOTAL_COUNT   = the denominator from the script (e.g. 100 for "out of 100")
-// FILL_COUNT    = the numerator from the script (e.g. 73 for "73 out of 100")
-// DOT_COLOR     = D.red (bad), D.green (good), D.cyan (neutral)
-// CAPTION_TEXT  = description line from the script, e.g. 'out of 100 responses contained errors'
-const TOTAL = TOTAL_COUNT;
-const FILL = FILL_COUNT;
-const filledSoFar = Math.min(FILL, Math.floor(interpolate(frame, [5, 45], [0, FILL], {extrapolateRight:'clamp'})));
-const cols = 10;
-const dotSize = Math.round(width * 0.018);
-const dotGap = Math.round(width * 0.008);
-
-const dots = Array.from({length: TOTAL}, (_, i) =>
-  React.createElement('div', {key:i, style:{
-    width: dotSize, height: dotSize, borderRadius: '50%',
-    backgroundColor: i < filledSoFar ? DOT_COLOR : D.surface,
-    border: `1px solid ${i < filledSoFar ? DOT_COLOR : D.text_dim}44`,
-    transition: 'none',
-  }})
-);
-
-const grid = React.createElement('div', {style:{
-  display:'grid',
-  gridTemplateColumns: `repeat(${cols}, ${dotSize}px)`,
-  gap: dotGap,
-}}, ...dots);
-```
-
----
+Pick the TYPE that matches the bullet's content, then read its full spec in
+`references/content-types.md` (when-to-use · layout · animation · do/don't):
+
+| TYPE | Use when the bullet is… |
+|---|---|
+| 1 — Single Statistic | ONE number that is the whole point (cost/waste/perf shock; a hook) |
+| 2 — Quote / Testimonial | a verbatim quote from a named real person |
+| 3 — Ranked Comparison | A vs B vs C on one metric — who wins / ranks where |
+| 4 — Step-by-Step Process | how something works, 3–6 ordered steps |
+| 5 — Before / After Split | two states of one thing, real numbers both sides |
+| 6 — Timeline | chronology / history / release order |
+| 7 — Concept Definition | defining one term + its key parts |
+| 8 — Data Table / Matrix | structured rows×cols, or a 2-axis decision grid |
+| 9 — Narrative Text Card | a line that must be *read* (thesis, punchline) — sparingly |
+| 10 — Counter / Progress Reveal | a value building/filling to a final state |
+| 11 — Metaphor-as-World | the bespoke HERO scene — a metaphor made physical, NO template |
+
+**Do NOT invent a visual type outside this set** unless the script body explicitly names a bespoke
+animation (then it's TYPE 11 — the one hero scene, owned by `visual-story-engine`'s mandate).
 
 ## Scene Narrative Arc (how bullets within a scene should build)
 
@@ -612,7 +171,7 @@ These patterns appear in bad authoring. The pipeline validator will flag them.
 
 | Pattern | Why it fails |
 |---|---|
-| **Full-screen text as the visual** (paragraph/sentences/bullet-list of prose filling the frame) | It's a slide, not an animation. The narration already says the words — the visual must SHOW the idea (a chart, metaphor, diagram, number), not reprint it. Max on-screen text = a short headline + a few labels + numbers. |
+| **Text as the visual** (prose/sentences/bullet-list filling the frame · OR a data table/record FLATTENED into a run-on text string · OR a "comparison" drawn as two TEXT panels) | It's a slide, not an animation — the **PPT tell**. The narration already says the words; the visual must SHOW the idea, not reprint it. **MEASURABLE BUDGET — at ANY single frame, simultaneous on-screen text ≈ ONE headline (≤~6 words) + a few labels/numbers; if a viewer has to READ a block to get the point, it's narration wearing a visual's clothes → cut it.** Three concrete forms of this failure: (a) a table/record rendered as a long text STRING ("Plan Price Seats Pro 29 5 Team 49 20 …") — the structure that made it a table is gone, so it's just data-as-prose; (b) a contest ("A vs B", "X beats Y") drawn as two text BLOCKS — instead SHOW the contest as an EVENT: the two answers appear, one wrong (red ✗) one right (green ✓), the winner highlights/pops; (c) a beat whose only motion is text fading/typing in. **The positive rule: every narration sentence must trigger one VISIBLE EVENT** — an object moves/transforms, a value counts, a row highlights, a camera pushes — *not* a line of text appearing. (Real miss: the "TEXT" side of the contest was a 15-token run-on string in a bordered panel → read as a dim paragraph; the fix is to show the text-fed AI ANSWERING WRONG, not to print the table.) |
 | **Text-only "animation"** (the motion is words fading/typing in, nothing else moves) | Animating prose is not a visual. If the only thing happening is text appearing, there is no visual meaning — pick a real content-type from the map above. |
 | **Skeleton / placeholder content** (a document, code panel, chat, table or UI drawn as featureless GRAY BARS / empty blocks / lorem-ipsum lines standing in for the real text) | A muted viewer sees "gray bars in a box" — they CANNOT tell it's a contract / code / a chat / what's being reviewed. Placeholder bars are not content. The artifact must carry REAL legible content: a contract = a title + numbered clause HEADINGS + actual legal sentence fragments; code = real syntax-colored lines; a chat = real message text. A "redline" must strike a REAL word and insert a REAL replacement, not recolor a blank bar. This is the muted-viewer / viewer-sense failure (same class as "colored bars for a conversation"): if the picture only reads as the real thing once you add the narration, it fails. See `vg-code-artifacts` §"real content, not skeleton bars". |
 | Narration sentence printed on screen | Redundant with the audio; wastes the frame. Show the picture the words describe. |
@@ -822,6 +381,23 @@ Ask these three questions before seeding:
 3. **Could you describe the visual in one sentence that matches the narration?**
 
 If any answer is "no" → rewrite the bullet before seeding.
+
+## Quick Reference: "Is my visual NOVEL?" (clarity is necessary, not sufficient)
+
+A visual can be perfectly clear and still be **forgettable** — the brain habituates to patterns it has
+seen before and tunes them out. Clear gets understanding; novel gets *remembered and shared.* For the
+scene that's meant to land (and always for the hero scene), also ask:
+
+1. **Have viewers seen this exact visual a thousand times?** (bars → counter → payoff is the default AI
+   output). If yes, it's clear but generic — push it toward TYPE 11 metaphor-as-world.
+2. **Is there ONE scene in this video people will actually remember?** If every scene is a template,
+   the answer is no — promote one to a bespoke hero scene.
+3. **Could you tell this frame apart from any other channel's video on the same topic?** If another AI
+   would render the identical scene, it isn't distinctive — make it unmistakably THIS video's.
+
+These are the `visual-story-engine` visual-novelty questions, applied at render time. Clarity is the
+floor (the three questions above); novelty is the ceiling. The reliable scenes can be templates; **at
+least one scene must answer all three of these "yes."**
 
 ---
 

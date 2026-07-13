@@ -1,6 +1,7 @@
 ---
 name: vg-quality-tokens
 description: Production-quality gate for DESIGN-TOKEN CONSISTENCY. Scores 0-10 on zero literals (no hex/px/font-name), consistent color identity (each entity keeps its token across the whole video), and on-scale typography. Grounded in video-generation-conventions. Use after a scene renders or while auditing bullet code, when colors drift between scenes, a stray hex/px appears, or type looks inconsistent. One of the 8 visual-quality factors (see vg-visual-quality).
+model: opus
 ---
 
 # Quality Factor 7 — Design-token consistency

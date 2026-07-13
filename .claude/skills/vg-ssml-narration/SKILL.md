@@ -1,6 +1,7 @@
 ---
 name: vg-ssml-narration
 description: "How to write SSML for dramatic, non-flat narration. Auto-emphasis on hero words, breaks on em-dashes, prosody on punchlines. Use whenever narration sounds flat, adding pauses, writing SSML markup, or any request like "SSML," "narration markup," "TTS prosody," "add pauses," "emphasis in narration," or "edge-tts SSML.""
+model: opus
 ---
 
 # SSML Narration

@@ -1,6 +1,6 @@
 # Universal explainer-animation principles (any topic)
 
-The 20 principles every explainer animation must design against — AI, programming, history,
+The 21 principles every explainer animation must design against — AI, programming, history,
 finance, science, business, startups. Topic-agnostic. These are the **content/meaning** layer
 of animation (what the shot must DO), sitting above the motion-physics (`animation_principles.md`)
 and the director/animator split. Grounded in show-don't-tell as the primary language of
@@ -12,7 +12,7 @@ question** to ask of every beat.
 
 ---
 
-## The 20 principles
+## The 21 principles
 
 1. **State change** — every shot must CHANGE something (small→large, whole→broken, A→B). 
    *Ask: "What changed in this shot?" If "nothing" → the shot is weak.*
@@ -25,16 +25,17 @@ question** to ask of every beat.
 8. **Visual hierarchy** — every frame has a primary, a secondary, a background; the eye knows where to look in <0.5s. *Ask: "Where do my eyes go first?"*
 9. **Progressive reveal** — build the diagram part-by-part (1 → 2 → 3 → whole), don't dump it whole. *Ask: "Am I revealing in steps, or all at once?"*
 10. **Character / agent** — a person/robot/mascot/object-with-personality beats a chart for memorability. *Ask: "Can an agent carry this instead of a graph?"*
-11. **Comparison** — learning happens through contrast (before vs after, slow vs fast, old vs new, wrong vs right). *Ask: "What is this AGAINST?"*
+11. **Comparison** — learning happens through contrast (before vs after, slow vs fast, old vs new, wrong vs right). Strongest form: the **SAME object in two states, same framing** — the body visibly changes and the difference IS the argument (felt); two separate side-by-side items are only read. Reserve side-by-side for two genuinely different contenders. *Ask: "What is this AGAINST — and can the contrast live on ONE body?"*
 12. **Accumulation** — if something GROWS, show the growth (1 → 5 → 20 → 50 messages), don't say "it got large." *Ask: "Is the increase shown as it builds?"*
 13. **Reduction** — if something SIMPLIFIES, show it shrink (50 files → 10 → 1), don't say "we optimized." *Ask: "Is the decrease shown happening?"*
 14. **Invisible → visible (the core job)** — animation's whole purpose is to make invisible systems visible (packets, CPU ops, AI reasoning, supply chains, token consumption). If the audience can already see it, animation adds little. *Ask: "What invisible thing am I making visible?"*
-15. **Mute test** — audio off, can a viewer roughly understand? If no, the animation carries too little. *Ask: "Does it read muted?"*
+15. **Mute test → TEXTLESS test (the sharper one)** — muting leaves the on-screen *text* in, so a slideshow of text + light motion still "reads" and sneaks past. The real gate: **delete every WORD on screen — does the physical action still tell the story?** No → it's a PowerPoint; rebuild it as objects under forces, sentences moved to narration (`scene-planner` §"STAGE of OBJECTS under FORCES"). *Ask: "With zero text, does it still explain?"*
 16. **10-second rule** — every 5–10s something MEANINGFUL happens (new question / reveal / transformation / comparison) — meaning, not just movement. *Ask: "What new meaning lands in this 10s?"*
 17. **Narrative question** — each scene answers ONE question (why did this happen? how does it work? what's the problem/solution? what changes?). 5 questions = confusing. *Ask: "What ONE question does this scene answer?"*
 18. **Cognitive load** — the viewer tracks 1 thing (maybe 2), never 5. When the screen crowds → remove / hide / fade / collapse. *Ask: "How many things am I asking them to track?"*
 19. **Motion with purpose** — no motion-for-motion's-sake (spinning icons, bouncing arrows). Every movement teaches. *Ask: "What does this motion explain?"*
 20. **Emotion** — the best explainers make the viewer FEEL (confusion, relief, surprise, pressure, frustration, satisfaction). Learning without feeling = low retention. *Ask: "What does the viewer feel here?"*
+21. **Derive, don't assert** — a load-bearing number is BORN on screen: its operands meet and visibly combine (`A × B = C` builds factor-by-factor, the counter accumulates to it, the total assembles from its parts). A finished stat pasted on screen is trivia the viewer must trust; a derived one is understanding they own. *Ask: "Does the viewer watch this number become true, or just read it?"*
 
 ---
 
@@ -51,6 +52,7 @@ nothing" render):
 □ Is there ONE focus?                                (5, 8, 18)
 □ Is there a COMPARISON?                             (11)
 □ Is GROWTH / REDUCTION visible (if quantity changes)?(12, 13)
+□ Are load-bearing NUMBERS derived on screen (not asserted)? (21)
 □ Is an INVISIBLE system being revealed?             (14)           ← non-negotiable
 □ Can it be understood MUTED?                        (15)           ← non-negotiable
 □ Is motion MEANINGFUL?                              (19)
@@ -61,7 +63,7 @@ nothing" render):
 
 ---
 
-## How this would have caught the claude_code_limits S1 failure (2026-06-10)
+## How this would have caught a real prior S1 failure
 
 The first build of scene 1 was a thin usage-bar + a command on empty canvas. Against this
 scorecard it fails almost every box:
@@ -83,22 +85,22 @@ disproportion felt (emotion) — dense, causal, self-explaining. That is the dif
 
 ## The SCENE-DESCRIPTION template — WHERE / WHAT objects / WHAT moves / WHAT changes
 
-Before the beats, describe each scene like a **film shot**, not a sentence. "Claude reads login.ts"
-tells the animator nothing — *are we in VS Code? a terminal? a diagram?* The viewer's first
+Before the beats, describe each scene like a **film shot**, not a sentence. "<the system> reads a file"
+tells the animator nothing — *are we in an editor? a terminal? a diagram?* The viewer's first
 question is always **"where am I and what am I looking at?"** (this is exactly why earlier scene 1
 felt abstract — no established place). Answer four things per scene; then the animation almost
 designs itself:
 
-1. **LOCATION (WHERE are we?)** — the setting, established + held: e.g. `VS Code workspace` ·
-   `Claude Code terminal` · `Context-window visualization` · `Split-screen Dev A vs Dev B`. Pick ONE
+1. **LOCATION (WHERE are we?)** — the setting, established + held: e.g. `<a workspace>` ·
+   `<a terminal>` · `<a system diagram>` · `<a split-screen A vs B>`. Pick ONE
    and keep it for the scene so the viewer is oriented.
 2. **CAMERA** — `screen-recording style` · `wide` · `close-up` · `top-down`. How we view the location.
-3. **VISIBLE OBJECTS (WHAT exists?)** — the named objects on screen: e.g. `login.ts editor`,
-   `Claude Code terminal`, `Context Window panel`, `usage gauge`. List them — this is what the
+3. **VISIBLE OBJECTS (WHAT exists?)** — the named objects on screen: e.g. `<the primary artifact>`,
+   `<a terminal/console>`, `<the key panel>`, `<a status gauge>`. List them — this is what the
    animator builds.
-4. **ACTION (WHAT moves?)** — the beat sequence: `user types "> fix login bug" → Claude opens
-   login.ts → login.ts flies into the Context Window`. (verbs, flow)
-5. **STATE CHANGE (WHAT changes?)** — Before → After: `Context 2% → 12%`. No state change = no
+4. **ACTION (WHAT moves?)** — the beat sequence: `<actor> issues "<command>" → <system> acts on
+   <artifact> → <artifact> flies into <the container>`. (verbs, flow)
+5. **STATE CHANGE (WHAT changes?)** — Before → After: `<a tracked value>: low → higher` (e.g. a meter 2% → 12%). No state change = no
    animation.
 
 Write this as a scene-setting header, then the beats become the ACTION + STATE CHANGE inside that
@@ -106,11 +108,11 @@ established place. Example:
 
 ```
 SCENE 1
-Location:  VS Code workspace
+Location:  <the app's main workspace>
 Camera:    screen-recording style
-Visible:   login.ts editor · Claude Code terminal (docked below) · usage gauge (top-right)
-Action:    user types "> fix login bug" → Claude scans files → login.ts, auth.ts fly in
-State:     usage gauge 100% → 67% (a third drained)
+Visible:   <primary artifact> · <terminal, docked below> · <status gauge, top-right>
+Action:    <actor> issues "<command>" → <system> acts → <objects> fly in
+State:     <status gauge> full → two-thirds (a third consumed)
 ```
 
 **The 4 questions, every scene:** *WHERE are we? WHAT objects exist? WHAT moves? WHAT changes?* If
@@ -141,7 +143,7 @@ narration?** If a concept can be shown, SHOW it — don't write it.
 
 **The test:** delete every word of on-screen text longer than ~4 words. Is the concept still clear from
 the motion? If no, the scene is text-carried → redesign it as a visual demonstration. (Real failure,
-claude_code_limits S8/S9: a habit checklist + myth/truth columns — read like subtitles; the bars/meter
+a prior build (S8/S9): a habit checklist + myth/truth columns — read like subtitles; the bars/meter
 did the work, the sentences were narration on screen.)
 
 ---
@@ -179,8 +181,8 @@ vg-verification-protocol "VIEWER-SENSE TEST.")
 
 ## The animation-generating script formula — Cause → Effect → Cost (write THIS, not abstract narration)
 
-The biggest authoring mistake: write abstract narration first ("Claude has a context window… it
-re-reads… it uses tokens"), THEN try to invent animation → you get decorative, disconnected motion.
+The biggest authoring mistake: write abstract narration first ("<the system> has a <resource>… it
+re-reads… it consumes <units>"), THEN try to invent animation → you get decorative, disconnected motion.
 Instead, **write every beat so the animation already exists inside it.** The formula:
 
 > **Cause → Effect → Cost** — *someone does something, to something, which visibly changes
@@ -189,17 +191,17 @@ Instead, **write every beat so the animation already exists inside it.** The for
 
 If a beat is written this way, the animation is automatic and REAL. Eight levers make it concrete:
 
-1. **State change** — every line CHANGES something on screen ("Claude forgets the reply" → the reply *fades*, not "Claude has no memory").
+1. **State change** — every line CHANGES something on screen ("<the system> forgets the reply" → the reply *fades*, not "<the system> has no memory").
 2. **Container** — give the idea something that fills/drains (context window, backpack, queue, fuel tank): "user adds a file → the container grows."
-3. **Flow** — things MOVE ("files *flow into* context": `login.ts ──▶ context`), not "Claude reads files."
-4. **Before / After** — Before (context 10%) → action → After (context 60%); the contrast teaches.
+3. **Flow** — things MOVE ("items *flow into* the container": `<item> ──▶ <container>`), not "<the system> reads files."
+4. **Before / After** — Before (`<value>` 10%) → action → After (`<value>` 60%); the contrast teaches.
 5. **VISIBLE COST (the strongest for this domain)** — every action carries its number on screen:
-   `read login.ts → +400 tokens`, `run tests → 3,000 log lines → +6,000 tokens`. Showing the
-   per-action cost is what makes "where did my usage go?" concrete instead of a vibe.
-6. **Living objects** — the SAME objects recur all video (usage meter, context window, conversation
-   history) and become *characters* the viewer knows — never a fresh metaphor per scene.
-7. **Cause → Effect → Cost** — the per-beat chain: `"fix login bug" → reads 3 files → context grows
-   +Xk`; `"try again" → re-reads everything → usage +Yk`. The animation falls out of the chain.
+   `<an action> → +<N> <units>`, `<a bigger action> → <M> results → +<K> <units>`. Showing the
+   per-action cost is what makes "where did my <resource> go?" concrete instead of a vibe.
+6. **Living objects** — the SAME objects recur all video (`<the meter>`, `<the container>`, `<the history>`)
+   and become *characters* the viewer knows — never a fresh metaphor per scene.
+7. **Cause → Effect → Cost** — the per-beat chain: `"<command>" → acts on N items → <container> grows
+   +Xk`; `"<retry>" → re-processes everything → <resource> +Yk`. The animation falls out of the chain.
 8. **Physicalize everything** — abstract → physical object: usage → a draining fuel tank/meter;
    memory → a notebook; context → blocks stacking. Never the abstract word; always the object acting.
 

@@ -1,0 +1,205 @@
+[
+  {
+    "scene": 2,
+    "bullet": 1,
+    "anchor": "started the exact same way",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 2,
+    "bullet": 2,
+    "anchor": "transcribes it",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 2,
+    "bullet": 3,
+    "anchor": "throw the page away",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 2,
+    "bullet": 4,
+    "anchor": "falls off the page",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 3,
+    "bullet": 1,
+    "anchor": "the page goes in",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 3,
+    "bullet": 2,
+    "anchor": "comes out the other side",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 3,
+    "bullet": 3,
+    "anchor": "lost in the pile",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 3,
+    "bullet": 4,
+    "anchor": "which number meant what",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 4,
+    "bullet": 1,
+    "anchor": "forty percent of a page",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 4,
+    "bullet": 2,
+    "anchor": "answers anyway",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 4,
+    "bullet": 3,
+    "anchor": "and it has no idea",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 4,
+    "bullet": 4,
+    "anchor": "charged the wrong price",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 5,
+    "bullet": 1,
+    "anchor": "it's in the grid",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 5,
+    "bullet": 2,
+    "anchor": "watch the columns collapse",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 5,
+    "bullet": 3,
+    "anchor": "which number is Pro's",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 5,
+    "bullet": 4,
+    "anchor": "the layout was the data",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 6,
+    "bullet": 1,
+    "anchor": "what if the ai just looked",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 6,
+    "bullet": 2,
+    "anchor": "tiles that keep the layout",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 6,
+    "bullet": 3,
+    "anchor": "reads the whole picture",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 6,
+    "bullet": 4,
+    "anchor": "it just looked at the page",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 7,
+    "bullet": 1,
+    "anchor": "head to head",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 7,
+    "bullet": 2,
+    "anchor": "forty-eight-point-eight",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 7,
+    "bullet": 3,
+    "anchor": "ten times less",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 8,
+    "bullet": 1,
+    "anchor": "it's stuck",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 8,
+    "bullet": 2,
+    "anchor": "rides the vision-model scaling curve",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 8,
+    "bullet": 3,
+    "anchor": "just a stronger reader",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 9,
+    "bullet": 1,
+    "anchor": "carried the meaning",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 9,
+    "bullet": 2,
+    "anchor": "let the ai look",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  },
+  {
+    "scene": 9,
+    "bullet": 3,
+    "anchor": "the layout was the data",
+    "anchor_mode": "appear",
+    "code": "const A=(...a)=>React.createElement(...a);const op=interpolate(frame,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});return A(AbsoluteFill,{style:{backgroundColor:D.bg,display:'flex',alignItems:'center',justifyContent:'center'}},A('div',{style:{width:Math.round(width*0.18),height:Math.round(height*0.18),borderRadius:Math.round(width*0.01),border:'2px solid '+D.text_dim,opacity:op*0.4}}));"
+  }
+]

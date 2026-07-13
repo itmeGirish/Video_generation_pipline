@@ -21,126 +21,198 @@ export type SceneTimeline = {
 };
 
 export const TIMELINES: Record<string, SceneTimeline> = {
-  "fable-5-power-s01": {
-    "id": "fable-5-power-s01",
-    "durationFrames": 876,
-    "durationSeconds": 29.2,
+  "pixel-rag-v2-s01": {
+    "id": "pixel-rag-v2-s01",
+    "durationFrames": 1027,
+    "durationSeconds": 34.233,
     "fps": 30,
-    "audioFile": "vo-fable_5_power-full.mp3",
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 876,
+        "toFrame": 1027,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "fable-5-power-s02": {
-    "id": "fable-5-power-s02",
-    "durationFrames": 1316,
-    "durationSeconds": 43.867,
+  "pixel-rag-v2-s02": {
+    "id": "pixel-rag-v2-s02",
+    "durationFrames": 276,
+    "durationSeconds": 9.2,
     "fps": 30,
-    "audioFile": "vo-fable_5_power-full.mp3",
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1316,
+        "toFrame": 276,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "fable-5-power-s03": {
-    "id": "fable-5-power-s03",
-    "durationFrames": 1203,
-    "durationSeconds": 40.1,
+  "pixel-rag-v2-s03": {
+    "id": "pixel-rag-v2-s03",
+    "durationFrames": 1581,
+    "durationSeconds": 52.7,
     "fps": 30,
-    "audioFile": "vo-fable_5_power-full.mp3",
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1203,
+        "toFrame": 1581,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "fable-5-power-s04": {
-    "id": "fable-5-power-s04",
-    "durationFrames": 1033,
-    "durationSeconds": 34.433,
+  "pixel-rag-v2-s04": {
+    "id": "pixel-rag-v2-s04",
+    "durationFrames": 1472,
+    "durationSeconds": 49.067,
     "fps": 30,
-    "audioFile": "vo-fable_5_power-full.mp3",
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1033,
+        "toFrame": 1472,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "fable-5-power-s05": {
-    "id": "fable-5-power-s05",
-    "durationFrames": 1280,
-    "durationSeconds": 42.667,
+  "pixel-rag-v2-s05": {
+    "id": "pixel-rag-v2-s05",
+    "durationFrames": 169,
+    "durationSeconds": 5.633,
     "fps": 30,
-    "audioFile": "vo-fable_5_power-full.mp3",
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1280,
+        "toFrame": 169,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "fable-5-power-s06": {
-    "id": "fable-5-power-s06",
-    "durationFrames": 1673,
-    "durationSeconds": 55.767,
+  "pixel-rag-v2-s06": {
+    "id": "pixel-rag-v2-s06",
+    "durationFrames": 2133,
+    "durationSeconds": 71.1,
     "fps": 30,
-    "audioFile": "vo-fable_5_power-full.mp3",
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1673,
+        "toFrame": 2133,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"
       }
     ]
   },
-  "fable-5-power-s07": {
-    "id": "fable-5-power-s07",
-    "durationFrames": 1506,
-    "durationSeconds": 50.2,
+  "pixel-rag-v2-s07": {
+    "id": "pixel-rag-v2-s07",
+    "durationFrames": 1164,
+    "durationSeconds": 38.8,
     "fps": 30,
-    "audioFile": "vo-fable_5_power-full.mp3",
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
     "anchors": {},
     "phases": [
       {
         "id": "scene",
         "fromFrame": 0,
-        "toFrame": 1506,
+        "toFrame": 1164,
+        "enterFrames": 0,
+        "exitFrames": 0,
+        "transitionIn": "hard_cut"
+      }
+    ]
+  },
+  "pixel-rag-v2-s08": {
+    "id": "pixel-rag-v2-s08",
+    "durationFrames": 750,
+    "durationSeconds": 25.0,
+    "fps": 30,
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
+    "anchors": {},
+    "phases": [
+      {
+        "id": "scene",
+        "fromFrame": 0,
+        "toFrame": 750,
+        "enterFrames": 0,
+        "exitFrames": 0,
+        "transitionIn": "hard_cut"
+      }
+    ]
+  },
+  "pixel-rag-v2-s09": {
+    "id": "pixel-rag-v2-s09",
+    "durationFrames": 107,
+    "durationSeconds": 3.567,
+    "fps": 30,
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
+    "anchors": {},
+    "phases": [
+      {
+        "id": "scene",
+        "fromFrame": 0,
+        "toFrame": 107,
+        "enterFrames": 0,
+        "exitFrames": 0,
+        "transitionIn": "hard_cut"
+      }
+    ]
+  },
+  "pixel-rag-v2-s10": {
+    "id": "pixel-rag-v2-s10",
+    "durationFrames": 2089,
+    "durationSeconds": 69.633,
+    "fps": 30,
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
+    "anchors": {},
+    "phases": [
+      {
+        "id": "scene",
+        "fromFrame": 0,
+        "toFrame": 2089,
+        "enterFrames": 0,
+        "exitFrames": 0,
+        "transitionIn": "hard_cut"
+      }
+    ]
+  },
+  "pixel-rag-v2-s11": {
+    "id": "pixel-rag-v2-s11",
+    "durationFrames": 1570,
+    "durationSeconds": 52.333,
+    "fps": 30,
+    "audioFile": "vo-pixel_rag_v2-full.mp3",
+    "anchors": {},
+    "phases": [
+      {
+        "id": "scene",
+        "fromFrame": 0,
+        "toFrame": 1570,
         "enterFrames": 0,
         "exitFrames": 0,
         "transitionIn": "hard_cut"

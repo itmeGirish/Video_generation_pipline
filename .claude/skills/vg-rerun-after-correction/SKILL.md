@@ -1,6 +1,7 @@
 ---
 name: vg-rerun-after-correction
 description: "When a validator flags an error: maps error to file to fix to exact command to re-run, clearing only the right caches. Use whenever a build fails, a validator reports an issue, or any request like "rerun after fix," "clear cache," "fix and rerun," "which flag to use," "pipeline error," or "how to fix this build error.""
+model: opus
 ---
 
 # Re-run After Correction

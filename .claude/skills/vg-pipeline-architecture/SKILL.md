@@ -1,6 +1,7 @@
 ---
 name: vg-pipeline-architecture
 description: "End-to-end pipeline steps from raw script to final .mp4. Know this before touching any step. Use whenever understanding how the pipeline works, tracing a failure to a step, or any request like "pipeline steps," "how does the build work," "architecture overview," or "which step does X.""
+model: opus
 ---
 
 # Pipeline Architecture
@@ -80,11 +81,11 @@ projects/scripts/<name>.txt
     │    All seconds→frames conversions use round() (NOT int() — int truncation
     │    accumulates 1-frame drift per scene; round() drift is ±0.5 frame per
     │    scene which cancels out across the whole video).
-    │  NOTE on framesTo: at RUNTIME (UniversalScene.tsx) every block's
-    │    <Sequence durationInFrames> is set to (sceneEnd - framesFrom), NOT
-    │    (framesTo - framesFrom). Blocks STACK additively to scene end —
-    │    framesTo is used only by validators + audio_anchor sequencing math.
-    │    See rule 04 § "Additive-layering contract" + rule 09 Layer 1.
+    │  NOTE on framesTo: at RUNTIME (UniversalScene.tsx, SCENE-DRIVEN) each BEAT's
+    │    <Sequence durationInFrames> = (framesTo - framesFrom) — its EXCLUSIVE slot
+    │    (prior beat unmounts; beats do NOT stack). The persistent world is the
+    │    separate role:'stage' block (outside any Sequence, scene-local frames).
+    │    See vg-visual-designer §SCENE-DRIVEN.
     │
     │  Writes projects/<name>/scenes/<scene-id>.json     (CANONICAL — owned by project)
     │  Writes projects/<name>/captions/<scene-id>.json   (CANONICAL — word timestamps relative to scene)
@@ -146,11 +147,12 @@ projects/scripts/<name>.txt
     │  ── MODE A: remotion_master (RECOMMENDED — see rule 09 Layer 4) ──────
     │  Single Remotion render produces audio+visuals together. NO ffmpeg.
     │     subprocess: node render_master.mjs <output>
-    │       env: PROJECT, MASTER_AUDIO_FILE, VIDEO_FPS/WIDTH/HEIGHT,
-    │            MASTER_TRANSITION_FRAMES (= stitch.crossfade_frames)
+    │       env: PROJECT, MASTER_AUDIO_FILE, VIDEO_FPS/WIDTH/HEIGHT
     │     The master composition (remotion/src/MasterComposition.tsx) chains
-    │     per-scene mp4s via <TransitionSeries> + master <Audio>. Frame-accurate
-    │     by construction; avoids the ffmpeg chained-xfade drift class of bug.
+    │     per-scene mp4s via a plain <Series> (ZERO overlap, NO master fade) +
+    │     master <Audio>. Frame-accurate by construction; avoids BOTH the ffmpeg
+    │     chained-xfade drift AND TransitionSeries' ~12-frame/transition overlap drift.
+    │     (Only fade is the per-scene Backdrop; stitch.mode is unused by the master.)
     │     Atomic: <output>.mp4.inprogress → health-check → os.replace.
     │
     │  ── MODE B: hard_cut (default) / crossfade (legacy ffmpeg) ──────────
@@ -173,6 +175,29 @@ projects/scripts/<name>.txt
     │    per-bullet midpoint visibility (each ### Animation bullet not black)
     │  Reports issues; does not block (mp4 is already produced).
 ```
+
+## ROADMAP — the master-composition ceiling (cross-scene continuity + master camera)
+
+**Today's architecture:** each scene is rendered to its OWN mp4, then STEP 10 chains the finished mp4s via a
+plain `<Series>` (no overlap, frame-accurate — chosen to kill the xfade/TransitionSeries audio-drift bugs).
+This is correct for sync, but it imposes a hard **ceiling on motion**: because scenes are independent baked
+mp4s, three premium things are **architecturally impossible** in the current pipeline, no matter the skills:
+1. **A protagonist that travels scene→scene** (the page moving out of S1 into S2's shredder) — you can't morph
+   pixels from one finished mp4 into the next. The closest achievable is the **match-move illusion**
+   (`vg-scene-transitions`): author the last frame of scene N and the first of scene N+1 at an identical
+   transform so the cut is invisible. Real continuity needs a shared object timeline.
+2. **A master camera that moves across scenes** (one continuous dolly through the whole video).
+3. **Global controllers** (one particle engine / color engine / lighting rig owning the whole runtime).
+
+**The unlock (a real re-architecture, not a skill edit):** render the whole video as **ONE Remotion
+composition** — a master timeline where each scene is a `<Sequence>` (not a pre-baked mp4), persistent
+objects (the through-line page, the camera, the particle field) live ABOVE the scene sequences and animate
+across boundaries, and audio is one master track. This restores cross-scene morphs, a master camera, and
+global engines — at the cost of re-solving the per-scene render isolation + the audio-sync model that the
+current mp4-chain was built to guarantee. **Sequence it LAST:** the within-scene density work (the other
+skills in this batch) closes ~90% of the "feels like slides" gap and is free; this re-architecture is the
+expensive final 10% for true scene-to-scene continuity. Until then, treat each scene as a self-contained
+shot and use match-move at the seams.
 
 ## File locations
 

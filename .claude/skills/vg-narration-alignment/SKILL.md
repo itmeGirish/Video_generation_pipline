@@ -1,6 +1,7 @@
 ---
 name: vg-narration-alignment
 description: "How visual blocks align to narration via the audio_anchor field. Without it, visuals drift from what is being said. Use whenever visuals are out of sync, audio_anchor is missing, or any request like "audio anchor," "visuals drift," "narration sync," "anchor lookup," "framesFrom," or "Whisper alignment.""
+model: opus
 ---
 
 # Narration Alignment
@@ -72,11 +73,12 @@ block N: framesFrom=Y,   framesTo=duration_frames
 ```
 
 In the scene JSON each block has `framesTo == next.framesFrom` so the
-audio_anchor sequencing math has no gaps and no overlaps. **At runtime,
-however, every block's `<Sequence>` extends to scene end** — blocks STACK
-additively. See rule 09 § "Layer 1" + rule 04 § "Additive-layering contract".
-The `framesTo` field is used by validators and sequencing math, NOT by the
-runtime renderer.
+audio_anchor sequencing math has no gaps and no overlaps. **At runtime each
+BEAT block's `<Sequence>` runs for EXACTLY its `framesFrom→framesTo` window**
+(the prior beat UNMOUNTS — beats do NOT stack; this is the scene-driven/slot
+model, `vg-visual-designer` §SCENE-DRIVEN). The persistent world is carried by
+the separate `role:'stage'` block (rendered outside any Sequence, scene-local
+frames), NOT by beats extending to scene end.
 
 ## What makes a good audio_anchor
 

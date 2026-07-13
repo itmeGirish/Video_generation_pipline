@@ -1,6 +1,7 @@
 ---
 name: vg-layout-quality-gate
 description: "Layout discipline and pre-render quality checklist for per-bullet React code. Use whenever bullet visuals look small or empty, elements clip, canvas utilization is low, or any request like "layout issues," "elements too small," "canvas utilization," "pre-render checklist," "visuals clipping," or "layout discipline.""
+model: opus
 ---
 
 # Layout and Quality Gate
@@ -95,27 +96,19 @@ reserves its space.
 - **Animation transforms** (`transform: 'translate(...)'`, `transform: 'scale(...)'`) — these don't change layout, only visual position.
 - **REPLACE backdrops** (`position:'absolute', inset: 0, backgroundColor: D.bg, opacity: ...`) — they cover the whole canvas, not part of it.
 
-### CAVEAT — flex/grid is INNER fix; cross-bullet stacking needs REPLACE
+### CAVEAT — flex/grid is the INNER fix; the cross-layer risks are STAGE-vs-BEAT and SLOT emptiness
 
-Flex/grid prevents siblings INSIDE one bullet from overlapping. It does NOT
-prevent two whole BULLETS (different bullet indexes) from sitting at the same
-canvas position.
+Flex/grid prevents siblings INSIDE one element from overlapping. It does NOT resolve the two cross-layer
+risks of the **scene-driven** model (`vg-visual-designer` §SCENE-DRIVEN — this supersedes the old
+"additive layering" model, where sequences wrongly extended to scene end):
 
-Under additive layering (rule 04 § "Additive-layering contract"), every bullet's
-`<Sequence>` extends to scene end. If bullet 2 and bullet 3 both place their
-outermost wrapper at canvas-center (e.g. both use a centered `_scnCard`), they
-will visibly stack — bullet 3 paints on top of bullet 2 which is still rendering.
-
-**Decision rule per bullet:**
-
-| Does the bullet's outermost wrapper share canvas region with a prior bullet's? | Action |
-|---|---|
-| No (e.g. cards top, hero bottom, icons above-LEFT — different regions) | Additive (default). They naturally don't overlap. |
-| Yes (every bullet is a centered card, like multi-card "card sequence" scenes) | **MUST be REPLACE** — paint a `D.bg` backdrop at frame 0-3 to hide the prior bullet entirely |
-
-In scene 1 the bullets used different canvas regions so additive worked. In
-scenes 2-10 every bullet was a centered card — additive caused visible
-stacking. Fix: every bullet in those scenes is REPLACE.
+- **STAGE-vs-BEAT double-paint** — the persistent STAGE draws the world; if a BEAT also redraws a cast
+  element the stage already carries, both instances render (the ghost — runtime telemetry R7 catches it).
+  Fix: beats render ONLY their delta; the stage owns persistents.
+- **Empty SLOT** — each beat's `<Sequence>` runs for EXACTLY its `framesFrom→framesTo` window (the prior
+  beat UNMOUNTS — beats do NOT co-render), so a beat authored as a bare delta shows alone on the stage.
+  Fix: the stage carries the settled world; the beat's delta rides on top. (Legacy no-stage scenes: the
+  beat must be self-contained OR paint a full `AbsoluteFill` `D.bg` REPLACE backdrop.)
 
 ### Enforcement
 
@@ -350,7 +343,7 @@ B4  [ADD]     "Benchmark card: question prompt box + GPT response + ⚠ INVENTED
 
 If a bullet fails: fix the `gen_bundle_s*.py` code, reseed, then re-run the walkthrough for that bullet before rendering.
 
-This is the lesson from chat_5_5 scene 3 B7 ("floating checkmarks") and scene 1 B3/B4 ("blinking cursor", "thin lines") — both were caught only after a 25-min render because the walkthrough was skipped.
+This is the lesson from a prior build: scene 3 B7 ("floating checkmarks") and scene 1 B3/B4 ("blinking cursor", "thin lines") — both were caught only after a 25-min render because the walkthrough was skipped.
 
 ---
 
@@ -362,13 +355,23 @@ in a Node stub environment at four post-entrance sample frames (45/65/85/97%
 of the bullet's local duration) and walks the tree to extract every
 `position:'absolute'` element's `(x, y, w, h)`. Then it checks:
 
+> **This section is the single OWNER of the `layout_validator.py` tool** — its commands, flags, and ALL
+> violation classes below. `vg-quality-vchecks` (V9 scoring) references here instead of re-documenting the
+> tool, so the two can't drift. The V9/V-check *definitions* themselves are owned by `vg-verification-protocol`.
+
+- **TEXT_OVERLAP** — a text label's box intersects a figure/bar/another label at the SETTLED frame (the V9
+  bug class). Caps `vg-quality-vchecks` factor 8 at ≤4 until `text_overlap: 0`. Binds `Kit` + estimates
+  text/container boxes, so it runs on ANY scene (Kit terminals, bespoke divs).
+- **INNER_ABSOLUTE_POSITIONING** — a `position:'absolute'` sibling INSIDE a card/row body (flagged per the
+  flex/grid rule earlier in this skill) — the layout engine can't guarantee it won't overlap.
 - **OUT_OF_BOUNDS** — element exceeds 1920×1080 (with 80px slack for
   legitimate over-edge animation). Boxes with `transform: ...` or
   `opacity < 0.05` are skipped (transform-origin makes static box checks
   meaningless).
-- **CROSS_BULLET_OVERLAP** — under additive layering, two elements from
-  different bullets occupy the same canvas region simultaneously. Skips
-  full-canvas backdrops (REPLACE pattern), transformed elements, and
+- **CROSS_BULLET_OVERLAP** — two elements from different bullets occupy the same
+  canvas region simultaneously (in the scene-driven model this is the STAGE-vs-BEAT
+  double-paint; runtime telemetry R7 is the authoritative single-instance check).
+  Skips full-canvas backdrops (REPLACE pattern), transformed elements, and
   low-opacity ghosts (< 20%).
 
 Run standalone:
@@ -385,6 +388,47 @@ The validator catches the bug class where two bullets' visual elements
 overlap because of layout math the author didn't sanity-check
 (stamp-covers-total, label-clips-card-header, hero-cuts-card). Without it,
 you only learn after a full 25-min render.
+
+**Known limit — trajectories, and where the REAL gate lives.** This validator samples a handful of
+frames and skips transform-positioned boxes — a MOVER crossing occupied space mid-flight can pass every
+sampled instant and still overlap on screen. Snapshot checks cannot prove a trajectory safe. The overlap
+GATE is script-side: the contract's `stage.zones` (reserved rects incl. movers' CORRIDORS) verified
+mechanically by `composite_lint.py` at `contract-linter` 3h — overlap is settled before any render
+exists. This validator is the render-side BACKSTOP, necessary but not sufficient on scenes with movers.
+
+---
+
+## 7b. Deterministic DOM geometry QA via Playwright-MCP (run this, don't eyeball frames)
+
+`layout_validator.py` (§7) estimates boxes from the React tree in a Node stub. The **authoritative**
+geometry check reads the **real rendered DOM** of the per-scene composition in the Remotion **Studio**
+via the Playwright MCP — exact `(x,y,w,h)` in composition pixels, so overlap/clip/caption-zone/tiny-text
+are caught with coordinates, NOT guessed from a screenshot. **This is the geometry layer of the per-scene
+verify loop — prefer it over eyeballing ffmpeg frames.** (Frames are still right for *motion* across the
+filmstrip and for *meaning*; this is for *geometry*.)
+
+**Runbook: `remotion/PLAYWRIGHT_MCP_QA.md`** (the full procedure + the verified `browser_evaluate` snippet).
+**⛔ PREMOUNT PHANTOMS:** sequences premount (`premountFor`) — near a bullet boundary the NEXT bullet's
+subtree exists in the DOM at effective opacity 0. Any DOM box-scan MUST skip subtrees whose effective
+opacity ≈ 0 or visibility is hidden (the runbook snippet's `effOp()` does this — keep it if you modify
+the snippet), and prefer sampling away from bullet boundaries. Otherwise the scan reports overlaps from
+elements that are invisible in the render — a verified false-positive class. A `role:'stage'` block
+renders outside sequences (always visible) and is correctly included at every frame.
+The short loop, per scene:
+1. Build the scene so the Studio has its data (`remotion/public/scenes/<sid>.json` + `timelines.ts` exist).
+2. Start the Studio once: `cd remotion && npm run dev` (→ `http://localhost:3000`), leave it running.
+3. `mcp__playwright__browser_navigate` → `http://localhost:3000/<project>-sNN` (composition id = scene id, hyphens).
+4. For EACH bullet, seek to its **settled frame** (~p90 of the bullet's window — midpoints hide overlaps):
+   `browser_evaluate` → `window.remotion_setFrame(<frame>, '<project>-sNN')`, wait ~2s.
+5. `browser_evaluate` the runbook snippet → returns `{scale, texts, violations[]}` in 1920×1080 px.
+   `violations: []` = geometry clean at that frame. Map each violation → its V-check (runbook table:
+   `out_of_bounds`→V7, `text_overlap`→V9, `caption_zone`→V9c, `overflow_wrap`→V10, `tiny_text`→V4,
+   `render_error`→re-author).
+
+**Scope:** the per-scene composition `<project>-sNN` ONLY — **never** `<project>-master` (video-of-videos,
+no element DOM; master + audio = ffmpeg). Caveat: the snippet's scale heuristic finds the 16:9 stage; if
+`scale` looks wrong, set `scale = previewWidthPx/1920` by hand (runbook §Caveats). Frame discipline:
+overlap/clip/fit at the **settled** frame; fill/prominence/motion at `mid`.
 
 ---
 

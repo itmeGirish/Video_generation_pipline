@@ -1,6 +1,7 @@
 ---
 name: vg-pipeline-internals
 description: "Pipeline orchestration internals: how scene JSONs, captions, env vars, and Sequences flow through the build. Read when debugging build or render failures. Use whenever tracing a build failure, understanding bundling, or any request like "debugging render failure," "pipeline internals," "bundle once," "publicDir," "cache invalidation," or "env vars in build.""
+model: opus
 ---
 
 # Pipeline Internals
@@ -125,16 +126,20 @@ propagate — check the env in the subprocess call.
 ## Why `Sequence` uses `premountFor`
 
 ```tsx
-// Actual code in remotion/src/universal/UniversalScene.tsx:
-const seqDur = sceneEnd - b.framesFrom;
+// Actual code in remotion/src/universal/UniversalScene.tsx (SCENE-DRIVEN):
+// a role:'stage' block renders OUTSIDE any Sequence (scene-local frames) — the
+// persistent world; each BEAT gets its own EXCLUSIVE window:
+const seqDur = b.framesTo - b.framesFrom;
 <Sequence from={b.framesFrom} durationInFrames={seqDur} premountFor={fps}>
   <DynamicBlock code={b.code} captions={captionsArr} blockFramesFrom={b.framesFrom} />
 </Sequence>
 ```
 
 Two things to note:
-1. **`durationInFrames` extends to scene end**, NOT to `framesTo`. Blocks
-   stack additively (rule 04 § "Additive-layering contract", rule 09 Layer 1).
+1. **Each BEAT's `durationInFrames` is `framesTo − framesFrom`** — its exclusive
+   slot; the prior beat UNMOUNTS (beats do NOT stack). The persistent world is the
+   separate `role:'stage'` block (scene-local frames), NOT beats extending to scene
+   end. (This is the scene-driven model — `vg-visual-designer` §SCENE-DRIVEN.)
 2. **`premountFor={fps}`** (1 second of frames) tells Remotion to mount the
    component 1 second before its `from`. Without this, complex primitives that
    load fonts or do layout calculation flash on first frame.

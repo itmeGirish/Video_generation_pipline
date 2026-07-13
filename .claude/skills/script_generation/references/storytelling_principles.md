@@ -21,12 +21,12 @@ Design every scene against the 15 parameters below; each has the **review questi
 
 1. **Curiosity gap** — every scene creates a QUESTION (why did this happen? how is this possible?
    what's next? how do we fix it?), not a row of facts. *Ask: "What question is the viewer asking right now?"* — if none, retention drops.
-2. **Open loops** — delay the answer ("4 words drained 30% of usage. But that isn't the real problem."). *Ask: "What unresolved mystery exists right now?"*
-3. **Stakes** — give the fact a consequence ("Claude rereads context — that's why your usage vanished"). *Ask: "Why should the viewer care?"*
-4. **Cause-and-effect chain** — each scene happens BECAUSE of the last (no memory → rereading → context growth → usage drain → expensive retries); the viewer feels "of course." *Ask: "Does Scene B happen because of Scene A?"*
+2. **Open loops** — delay the answer (state the surprising effect, withhold the real cause — "…but that isn't the real problem"). *Ask: "What unresolved mystery exists right now?"*
+3. **Stakes** — give the fact a consequence (tie it to a cost the viewer feels — "…that's why X happened to you"). *Ask: "Why should the viewer care?"*
+4. **Cause-and-effect chain** — each scene happens BECAUSE of the last (cause → effect → a bigger effect → the cost); the viewer feels "of course." *Ask: "Does Scene B happen because of Scene A?"*
 5. **Narrative momentum** — every scene pushes forward (problem → cause → bigger problem → solution), not "topic, then another topic." *Ask: "Why does this scene come NEXT?"*
-6. **Escalation** — things get BIGGER (one message → ten → long chat → retry spiral → half your usage gone). *Ask: "Is this bigger than the previous scene?"*
-7. **Specificity** — concrete beats generic ("one failing test, 40 messages later, half the window gone" beats "a developer debugging"). *Ask: "Can I picture this happening?"*
+6. **Escalation** — things get BIGGER (one → a few → a flood → the tipping point). *Ask: "Is this bigger than the previous scene?"*
+7. **Specificity** — concrete beats generic ("one failing test, forty messages later" beats "a developer debugging"). *Ask: "Can I picture this happening?"*
 8. **Relatability** — the viewer sees themselves ("try again… no, not that… one more attempt"). *Ask: "Has the viewer experienced this?"*
 9. **Mental models** — one carrying metaphor per section (memory→notebook, context→backpack, debt→weight, competition→race). People remember models, not facts. *Ask: "What's the ONE metaphor carrying this section?"*
 10. **Progressive understanding** — knowledge GROWS (mystery → hint → reveal → deeper reveal), not everything at once. *Ask: "What does the viewer know now that they didn't 30s ago?"*
@@ -78,7 +78,7 @@ stake, and no forward pull, it fails as story — and animating it just makes a 
 ## How this orders the rest of script generation
 
 - This (storytelling) is **Step 5.5** and it governs everything downstream.
-- `script-scene-structure` builds the scene list as a retention plan (purpose + loop chain + escalation).
-- `script-content-quality` + `script-retention-engineering` gate curiosity / payoff / emotion.
-- ONLY after the story scores well do `script-animation-bullets` + `explainer_animation_principles.md`
+- `scene-planner` builds the scene list as a retention plan (purpose + loop chain + escalation).
+- `testing-engine` + `teaching-narrative-engine` gate curiosity / payoff / emotion.
+- ONLY after the story scores well do `scene-composer` + `explainer_animation_principles.md`
   turn each beat into motion. **Never the reverse.**

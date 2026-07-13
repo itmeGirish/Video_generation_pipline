@@ -1,6 +1,7 @@
 ---
 name: vg-graphics-assets
 description: "How to use user-supplied graphics (logos, screenshots, diagrams, SVGs) in animation bullets. Use whenever adding images to bullets, or any request like "add an image," "use a logo," "add screenshots," "graphics assets," "staticFile()," "Img element," or "image in animation bullet.""
+model: opus
 ---
 
 # Graphics & assets in scripts
@@ -67,33 +68,48 @@ DO NOT copy the placeholder words above into a project. Replace every `<...>`
 with real values from THIS project's structured script and ensure the file
 actually exists in `projects/<name>/public/`.
 
-## Verification before run
+## VERIFY ASSETS — the 6-check validation protocol (run before render)
 
-Before running the pipeline, verify each referenced asset is on disk:
+An asset is **VALID only if it passes ALL six.** Checks 1–3 + 6 are programmatic; **4 (semantic) and 5
+(legibility) are the ones that catch the costly failures** — an image that *exists and isn't corrupt* but
+shows the **wrong** or an **unreadable** thing (the existence check rubber-stamps it).
 
-```bash
-# List declared asset references in the structured script
-grep -oE '\[asset:[^]]+\]|[a-zA-Z0-9_-]+\.(png|jpg|jpeg|webp|svg|gif)' \
-    projects/structured_scripts/<name>.txt | sort -u
+| # | Check | Method / tool | PASS bar | catches |
+|---|---|---|---|---|
+| 1 | **EXISTENCE** | `grep '\[asset:'` declared vs `ls public/img/` | every `[asset:]` is a file on disk | missing → broken `<Img>` / blind auto-fetch |
+| 2 | **FORMAT + DECODE** | browser-renderable type; video → `canDecode` | PNG/JPG/WebP/SVG; H.264 mp4 | corrupt file · AV1/HEVC silent-black |
+| 3 | **DIMENSIONS** | `PIL Image.size` | ≤ 2× output (≤ 3840px) · not a sliver · aspect not worse than ~1:2 · file ≤ ~5 MB | 4K crash · absurd aspect |
+| 4 | **SEMANTIC** (the hard one) | **VISION** — OPEN the image (Read tool renders it) OR a **CLIP image↔text score** | the subject MATCHES the asset's declared **INTENT** | **"names lie"** — a real photo of the *wrong* thing |
+| 5 | **LEGIBILITY** | view AT the render crop; center-80% safe area; high contrast | the key content is readable at 1080p; **not a fake/skeleton** | a real-but-*unreadable* image (a dense table) |
+| 6 | **LICENSE** (monetized) | `fetch_images.py` → `CREDITS.md` | CC / PD / editorial | copyright |
 
-# List files actually on disk
-ls projects/<name>/public/
-```
+### The SEMANTIC check (check 4) — why it needs VISION, and how
 
-Mismatch → either drop the asset from the bullet or add the missing file.
-A missing asset becomes a broken `<Img>` at render time (visible in the
-final mp4 — `validate_output.py` will flag the bullet's midpoint frame as
-suspicious if the broken image leaves a blank area).
+Existence + dimensions can't see the *content*. To verify "is this image *the right thing*," you must
+compare the **pixels** to the asset's **INTENT** (what the `REAL ASSET:` field / bullet says it must show):
+- **In-session (do this now):** the agent **OPENS the image with the Read tool** (it renders the pixels)
+  and judges it against an explicit intent rubric — *"is this a real pricing table with prominent `$`
+  prices + one clear 'answer' cell? Y/N + why."* A NO = INVALID, even though the file exists.
+- **Automatable (the roadmap gate):** a **CLIP score** — embed the image + the intent string in CLIP's
+  shared space, take the cosine similarity; below a threshold → REJECT. Zero-shot, no training, the
+  standard image-text-alignment measure ([CLIP](https://viso.ai/deep-learning/clip-machine-learning/),
+  [overview](https://www.pingcap.com/article/a-comprehensive-guide-to-openais-clip-model/)). This is the
+  project's highest-ROI open item — a `verify_assets.py` running checks 1–5 (CLIP for 4–5) would gate the
+  build the way `layout_validator` gates layout.
 
-**Auto-fetch (build_video.py Step 2.6):** a missing `[asset:]` no longer
-silently becomes a broken `<Img>`. Before render, the pipeline auto-sources any
-missing image from the web using the bullet description as the search query
-(default Openverse, CC commercial-use), writes it to `projects/<name>/public/`,
-and records license to `CREDITS.md`. If it can't source one, the build HARD-FAILS
-with the manual `fetch_images.py` command. Auto-fetch keeps the top candidate
-blind — for logos/screenshots/charts where the wrong image is costly, pre-place
-the file by hand (it's left untouched if already on disk). Config knobs:
-`assets.auto_fetch` (default true), `assets.source` (default openverse).
+### The 6 failure modes (what "invalid" means)
+`MISSING` (1) · `CORRUPT / UNDECODABLE` (2) · `OVERSIZE / WRONG-ASPECT` (3) · `WRONG-SUBJECT` (4 — the
+real-but-wrong trap) · `ILLEGIBLE / FAKE-SKELETON` (5 — real-but-unreadable) · `UNLICENSED` (6).
+*Real example:* two same-scene photos `<subject_a>.png` + `<subject_b>.png` = **MISSING** (fail 1);
+`ecommerce_page.png` (2148×6571 spec table) = **WRONG-SUBJECT + ILLEGIBLE** (passes 1–3, fails 4 & 5).
+
+### Hand-capture, never blind auto-fetch, for screenshots/logos/charts
+**Auto-fetch (build_video.py Step 2.6):** a missing `[asset:]` is auto-sourced from the web using the
+bullet description (default Openverse, CC commercial-use) → `projects/<name>/public/` → license to
+`CREDITS.md`; if none, the build **HARD-FAILS**. Auto-fetch keeps the top candidate **blind** — it passes
+existence (1) but routinely fails semantic (4). So for **screenshots, logos, charts, real UIs** (where the
+wrong image is costly), **pre-place by hand** (the browser-screenshot method) and run all 6 checks; it's
+left untouched if already on disk. Knobs: `assets.auto_fetch` (default true), `assets.source`.
 
 ## Supported file types
 

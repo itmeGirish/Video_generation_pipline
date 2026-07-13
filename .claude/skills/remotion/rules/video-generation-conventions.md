@@ -65,7 +65,7 @@ the layout scales with the canvas.
 React, frame, fps, width, height, durationInFrames, interpolate, spring, Easing,
 AbsoluteFill, Sequence, Series, Img, staticFile, AnimatedImage, TransitionSeries,
 linearTiming, springTiming, fade, slide, wipe, D, resolveColor, fitText,
-measureText, captions, findWord
+measureText, fillTextBox, Video, Audio, captions, findWord, findWordEnd, Kit, ThreeCanvas
 ```
 
 Rename your own vars (`fadeIn` not `fade`, `wipeIn` not `wipe`, `slideX` not `slide`).

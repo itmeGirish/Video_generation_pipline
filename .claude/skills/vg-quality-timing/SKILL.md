@@ -1,12 +1,18 @@
 ---
 name: vg-quality-timing
 description: Production-quality gate for TIMING — easing & physics. Scores a scene 0-10 on whether motion eases (never linear), uses the right spring preset, times phases as durationInFrames fractions, clamps interpolate, and lands confidently. Grounded in remotion timing.md. Use after a scene renders, when motion feels robotic/mechanical/abrupt or has a dead static tail. One of the 8 visual-quality factors (see vg-visual-quality).
+model: opus
 ---
 
 # Quality Factor 2 — Timing (easing & physics)
 
 Source of truth: `remotion/rules/timing.md` + conventions Motion discipline. Linear motion
 is the clearest "amateur" tell; easing is what makes motion feel intentional.
+
+> ⛔ **Score from the FILMSTRIP, not one frame.** Easing is *temporal* — a single still can't tell linear
+> from eased. Read p10/p30/p50/p70/p90: eased motion ACCELERATES then settles (bigger steps early, tiny
+> at the end); linear moves equal distance every frame. Overshoot = it passes the target then eases back.
+> One frame = you scored layout, not timing. (Strip extraction: `vg-visual-quality` / protocol Layer 1.5.)
 
 ## What production-grade looks like (10)
 - **Every reveal is eased** — `Easing.out(Easing.cubic)` for things ARRIVING (counter landing,

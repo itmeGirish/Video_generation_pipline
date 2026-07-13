@@ -1,6 +1,7 @@
 ---
 name: vg-verification-protocol
 description: "5-layer YouTube production quality gate: pre-render image-asset validation (presence + decode + license + relevance), V1-V13 visual frame inspection incl. V14 image-actually-rendered, A1-A8 animation filmstrip incl. Ken Burns motion for image bullets, audio WPM/coverage + anchor-drift, YouTube T1-T12 technical standards. Run after every render before advancing to next scene. Use whenever verifying a render, validating fetched images, running QA, or any request like "verify the render," "V1-V8 check," "image asset gate," "quality gate," "filmstrip," "audio sync verification," "frame inspection," or "is this scene done.""
+model: opus
 ---
 
 # Verification Protocol — YouTube Production Quality Gate
@@ -15,11 +16,17 @@ LAYER 2   Audio Quality        (after TTS + after final render)
 LAYER 3   YouTube Technical    (final mp4 only — upload gate)
 ```
 
+> **What the layers PROVE — the render EXECUTES the motion-native contract, it doesn't invent.** Layers 1–3
+> verify *broken? · production-grade? · upload-ready?* — but the render executes the **12-layer motion-native
+> contract**, so the SAME loop must prove the **Motion Story Quality Gates** (CLAUDE.md): **`vg-scene-validator`**
+> (render CONFORMS to the contract) · **`vg-quality-animations`** (anti-PPT teeth: SUBJECT-MOVED·text-ratio·density)
+> · **`video-narrative-editor`** (holistic muted read). Pass V-checks but VIOLATE the contract = FAIL MASTER-PASS.
+
 ---
 
 ## Contents
 
-- The per-scene RENDER → VERIFY → FIX loop (mandatory)
+- The verification model — cheap per-scene PROOF (pre-render) + the MASTER battery (post-render)
 - The `verification.md` artifact — MANDATORY written record
 - Scene s01 — <scene-id>
 - 🔊 AUDIO SYNC CHECK — MANDATORY PER SCENE
@@ -32,22 +39,76 @@ LAYER 3   YouTube Technical    (final mp4 only — upload gate)
 
 ---
 
-## The per-scene RENDER → VERIFY → FIX loop (mandatory)
+## The verification model — cheap per-scene PROOF (pre-render) + the MASTER battery (post-render)
 
-Reference: rule 00 Step 4 for the full loop. Summary here for fast lookup.
+**NATIVE flow: there is NO per-scene mp4 render→verify→fix loop.** The one expensive step is the LIVE
+MASTER render (all scene components composed via `<Series>`, ONE render). So the checks below run in TWO
+places: **(1)** CHEAP, per scene, BEFORE the render — the 5-keyframe VISUAL-PROOF filmstrip (step 6b), the
+only per-scene catch; and **(2)** in FULL, on the rendered MASTER's per-scene frames, AFTER the one render
+— the battery that feeds MASTER-PASS. **PROVE every scene cheap before the master; never render a scene
+to its own mp4 to verify it** (`render_scenes.mjs` is an OPTIONAL debug watch, never a gate).
 
-**NEVER render scenes 2-N before scene 1 passes verification.** Hard-won
-from production: a bug missed at scene 1 wastes 30+ min of compounded
-render time later.
+### ⬇ COPY THIS CHECKLIST into your response and tick each box as you go
+
+This is the official "workflow checklist" pattern (Agent Skills best-practices): copy it — per scene for
+the pre-render VISUAL-PROOF, and once on the assembled MASTER for the final battery — so no verify step is
+silently skipped. **Do NOT write MASTER-PASS until every box is ticked.**
 
 ```
-FOR each scene N (1 ascending):
+VERIFY scene N on the MASTER (the cheap pre-render pass is the 6b VISUAL-PROOF) — copy & check off
+- [ ] SAMPLE scene N from the rendered MASTER (its frame range) — NOT a per-scene mp4 render
+- [ ] vg-verification-protocol  — V1–V13, A1–A8 freeze/PSNR, audio-sync drift, V9c caption zone
+- [ ] vg-visual-quality         — 8 gates → /100; MOTION factors 1–4 read from the 5-frame FILMSTRIP; every factor ≥7
+- [ ] vg-quality-audio          — voice · −14 LUFS/TP<−1 · music+duck · sfx · silence · non-silent (GAPs recorded)
+- [ ] video-narrative-editor    — HOLISTIC editorial pass (AFTER mechanics clean): watch the WHOLE scene
+                                   muted end-to-end; clarity·attention·hierarchy·camera·SIMPLIFICATION·mute·
+                                   retention·storytelling; make the CUT + route fixes; SHIP or RE-CUT
+- [ ] vg-output-validation      — coverage ≥90%, visibility 100%, 0 placeholder/error
+- [ ] layout_validator          — python -m storyboard.layout_validator <project> → text_overlap: 0
+- [ ] Playwright-MCP geometry    — PREFERRED for V7/V9/V9c/V10/V4: real DOM bounds at the settled frame,
+                                   not eyeballed pixels. Per-scene composition only (never master).
+                                   How-to owned by vg-layout-quality-gate §7b; runbook remotion/PLAYWRIGHT_MCP_QA.md
+                                   ⚠ GEOMETRY-CLEAN IS NOT A PASS — see the banner below. It only proves
+                                   nothing overlaps/clips; it says NOTHING about meaning/motion/story.
+- [ ] STORY-VERB enacted          — step j: the narration's transformation verb (tear/collapse/flatten/
+                                   shred/merge/grow) is PHYSICALLY enacted on the elements, NOT faked with a
+                                   CSS filter (grayscale/blur), a global opacity fade, or a text label.
+- [ ] BRIEF-FIDELITY              — step k: the render DELIVERS the scene's own SCENE DESIGN promises —
+                                   CINEMATIC camera move · ENVIRONMENT depth · PRIMARY FOCUS prominence/
+                                   single eye-destination · ATTENTION FLOW · through-line protagonist present+acting.
+- [ ] Collected EVERY bug into ONE list → fixed ALL → re-rendered → re-ran this whole list (loop until clean)
+- [ ] Wrote the scene's section to projects/<name>/verification.md WITH real frame evidence
+- [ ] EFFORT recorded: <N> passes; redo factor(s) = <e.g. 2x text-fit, 1x animations>
+- [ ] Per-scene VISUAL-PROOF marker (pre-render) recorded, and the MASTER-PASS line appended WITH EVIDENCE:
+        VISUAL-PROOF: <name>-s0N | composition=PASS narrative=PASS transform=<Δ>%
+        MASTER-PASS: <name> | visual=<NN>/100 audio=<N>/10 transform=<min-Δ>%
+```
+
+⛔ **The gate is HARD on evidence.** `render_gate.sh` blocks the MASTER render (`render_master.mjs`) until
+EVERY scene has its `VISUAL-PROOF:` marker, and blocks `build_video.py` until the script is `SCRIPT-APPROVED`.
+The evidenced `MASTER-PASS` fields (`visual=`/`audio=`/`transform=`) are the proof you actually ran the
+quality + audio + transformation gates on the rendered master; without running them you can't fill them in.
+
+> ⛔ **GEOMETRY-CLEAN IS NOT VERIFIED — the false-confidence trap.** Playwright-MCP `violations: []` and
+> `layout_validator → text_overlap: 0` are the *deterministic geometry layer ONLY*: they prove nothing
+> overlaps, clips, or sits in the caption zone. They say **NOTHING** about whether the picture tells the
+> story. A scene can be 100% geometry-clean and still: show the narration's destruction as a greyscale
+> filter, leave the brief's push-in/depth unbuilt, have no single eye-destination, and fail the mute test
+> — and a human spots all of it in ten seconds. **The easy deterministic check must NEVER stand in for
+> the judgment gates** (`vg-visual-quality` 8-factor filmstrip · `render-validator` mute/
+> consequence · the viewer-sense step i · STORY-VERB step j · BRIEF-FIDELITY step k). Geometry is
+> necessary, not sufficient — run ALL of them, every scene. (Real miss: I scored
+> `violations: []` and treated the scene as verified; the meaning/motion/brief gates were never run, and
+> a human immediately found the visuals don't enact the story.)
+
+```
+FOR each scene N, applied to the RENDERED MASTER (ONE render for all scenes) — the SAME checks the cheap 6b VISUAL-PROOF ran pre-render:
   0. IMAGE ASSETS (pre-render gate — Layer 0.5):
        - every [asset:] in the scene resolves to a real, decodable file
        - each auto-fetched image inspected with the Read tool (relevance)
        - license recorded in a sidecar / CREDITS.md
        - skip if the scene has no [asset:] refs
-  1. RENDER scene N only (single-scene flag)
+  1. SAMPLE scene N's span from the master mp4 (its frame range) — no per-scene mp4 render
   2. VERIFY scene N (run ALL of the checks below — no skipping):
        a. Visual: V1-V13 frame inspection
        a'. V14 — every [asset:] bullet shows the image (not broken-box)
@@ -65,7 +126,7 @@ FOR each scene N (1 ascending):
        g. RHYTHM (dead-air check): for each beat, does the visual keep changing while
           its narration keeps adding meaning? A beat whose visual sits UNCHANGED while
           the narrator delivers several distinct ideas = dead air → FAIL: subdivide that
-          span into evolving sub-beats (script-animation-bullets §Rhythm). Judge by
+          span into evolving sub-beats (scene-composer §Rhythm). Judge by
           meaning vs visual change, not a fixed duration. (Real failure: a hook visual
           held static through three spoken ideas — 8s of one label.)
        h. CROSS-BEAT CONSISTENCY (continuity — the evolve test): a scene is ONE evolving
@@ -76,7 +137,7 @@ FOR each scene N (1 ascending):
           "100%" → "−33%" → "?") JUMPS position or size between beats, or the anchor shifts/
           resizes, it reads as a slideshow → FAIL. Fix: anchor each persistent element to ONE
           fixed position across all beats; evolve only the content/color. (Real failure,
-          claude_code_limits S1 2026-06-10: the top-right status used three different
+          a prior build: the top-right status used three different
           mechanisms — Kit.Tag, then the Pool metric, then a custom div — in three different
           spots, so it jumped around between beats. Also color identity must hold: an entity
           keeps its token every beat.)
@@ -95,8 +156,46 @@ FOR each scene N (1 ascending):
             ambiguous? "Renders without error" is NOT "makes sense."
           If you cannot state, in a viewer's own words, what the frame means and what point it makes,
           the beat FAILS the viewer-sense test → redesign so the picture reads as the real thing.
-          (Real failure, claude_code_limits S3: "you"/"claude" coloured bars — rendered fine, but a
+          (Real failure: "you"/"claude" coloured bars — rendered fine, but a
           viewer can't tell it's a conversation; abstract, made no sense.)
+
+       j. STORY-VERB ENACTMENT TEST (is the transformation SHOWN, or FAKED? — the sharpest meaning gate):
+          the viewer-sense test (i) asks "can I NAME the elements?"; this asks the harder question —
+          **"does the picture physically ENACT the narration's verb, or fake it with a shortcut?"** When
+          the narration's verb is a TRANSFORMATION (tear · collapse · flatten · shred · merge · split ·
+          grow · drain · lose), the elements themselves must visibly DO it across the filmstrip:
+          - ✅ ENACTED: the table's columns literally come apart and the cells reflow into a run-on text
+            line; the answer-cell is visibly ripped out and lost; the meter physically drains.
+          - ❌ FAKED (all CAP the beat — see vg-quality-animations cap #4): the state-change is conveyed by
+            a **CSS filter** (`grayscale()`/`blur()` over a still card), a **global opacity fade**, generic
+            **gray placeholder bars flying off** in place of the real content transforming, or a **text
+            LABEL that NAMES the change** ("step one: page → text") while the thing on screen barely moves.
+          The test: cover the labels and the audio — can you SEE the destruction/transformation happen to
+          the actual content? If the only evidence the transformation occurred is a filter, a fade, or a
+          word, it is FAKED → the beat is NOT READY; re-author so the real artifact physically transforms
+          (vg-code-artifacts "draw the real mechanism" + the consequence-visualization lever in
+          render-validator). (Real miss: "throws the page away and
+          keeps only the words" was rendered as the table fading to grayscale + 7 gray strips sliding off —
+          geometry-clean, named-able, but the parser's destruction of structure is never SHOWN.)
+
+       k. BRIEF-FIDELITY TEST (did the render DELIVER the director's brief? — the missing gate):
+          the scene's `<!-- SCENE DESIGN -->` block authored concrete promises; the render must KEEP them.
+          Open the brief, read these fields, and confirm each is actually IN the pixels (filmstrip for
+          motion, settled frame for layout). A promise the brief makes but the code never builds = FAIL:
+          - **CINEMATIC** (e.g. "push-in on the amber cell", "pull-back", "tilt", "orbit") → is the named
+            camera move present across the strip? A specified push-in with a fixed-scale page = FAIL.
+          - **ENVIRONMENT / RENDER STYLE depth** (e.g. "fg/mg/bg parallax", "page mg, lens fg") → are there
+            real depth layers moving at different rates, or is everything on one flat centred plane?
+          - **PRIMARY FOCUS** (the ranked list) → does the #1 element actually DOMINATE (prominence +
+            a single eye-destination), and does the named villain/hero carry the weight the rank implies?
+            Every element at equal visual weight = FAIL (no hierarchy → viewer doesn't know where to look).
+          - **THROUGH-LINE / protagonist** → is the recurring element present AND acting (not just sitting
+            lit)? A callback object that never reacts to the scene's event = FAIL.
+          If the render contradicts or silently drops a brief field, the beat is NOT READY → re-author to
+          honor it (camera/depth owner: vg-remotion-engineering; prominence: vg-visual-map; through-line:
+          visual-story-engine). The brief is a CONTRACT, not a suggestion — verify it like one. (Real
+          miss: the brief specified push-in + fg/mg/bg depth; the code shipped a
+          flat, fixed-scale, dead-centre page — and NO gate compared the brief to the render.)
 
   ⚠ FRAME SAMPLING: extract verify frames at each bullet's MIDPOINT
     (`framesFrom + (framesTo−framesFrom)/2`), NOT at fixed wall-clock intervals.
@@ -105,42 +204,36 @@ FOR each scene N (1 ascending):
   ⚠ FULL RESOLUTION ONLY: read each verify frame at FULL 1920×1080 (`-q:v 2`), ONE frame
     per Read. NEVER judge overlap/alignment from a downscaled filmstrip/contact-sheet
     (tile=NxM, scale=480) — small tiles HIDE element overlaps and misalignment (real miss,
-    claude_code_limits S1 2026-06-10: a status tag overlapping the command card was invisible
+    a prior build: a status tag overlapping the command card was invisible
     in 480px tiles, caught only at full res). Use a filmstrip ONLY to confirm motion-over-time;
     use full-res single frames to judge layout, overlap, and consistency.
-  3. IF FAIL:
-       - identify failing bullet(s) / factor(s)
-       - for AUDIO SYNC failure: update framesFrom = round(word_start*fps)
-         in scene JSON + remotion/public mirror, re-render scene only
+  3. IF FAIL (route the symptom to its ONE owner — CLAUDE.md BUG ROUTER):
+       - for AUDIO SYNC failure: update framesFrom = round(word_start*fps) in scene JSON + remotion/public mirror
        - for QUALITY-SCORECARD failure: improve the weakest factor per its
-         `vg-quality-*` skill (motion/easing/stagger are the usual culprits), re-author, re-render
+         `vg-quality-*` skill (motion/easing/stagger are the usual culprits), re-author
        - for VISUAL failure: fix React.createElement code OR bullet body
-       - delete bullet cache: rm storyboard/.cache/designs/bullet-s0N-bXX-*.json
-       - re-seed via seed_bullet_cache.py
-       - rm remotion/out/<name>-s0N.mp4
-       - GO TO step 1
+       - delete bullet cache: rm storyboard/.cache/designs/bullet-s0N-bXX-*.json → re-seed via seed_bullet_cache.py
+       - THEN re-prove that scene cheap (6b VISUAL-PROOF) and re-render the MASTER (one master fix re-renders
+         the whole video — the cheap 6b proof is what keeps these re-renders rare)
   4. IF PASS:
-       - WRITE the scene's section to projects/<name>/verification.md
-         (mandatory written record — see "The verification.md artifact" below)
-       - mark scene N PASS in todo list (this enforces honest tracking)
-       - ONLY THEN render scene N+1
+       - WRITE the scene's section to projects/<name>/verification.md (mandatory record — see below)
+       - the master already contains every scene; there is no per-scene render ordering to gate
 ```
 
-A scene is NOT marked PASS in the todo list until its `verification.md`
-section is written with real frame evidence. "Looks right from the code"
-is the absence of a check, not a check.
+A scene is NOT recorded as verified until its `verification.md` section is written with real frame evidence
+(from the master's frames). "Looks right from the code" is the absence of a check, not a check.
 
-Stitching (rule 09) + final mp4 happens ONCE at the end after the last
-scene passes. Never stitch mid-loop.
+There is ONE master render (`render_master.mjs`) — no per-scene mp4 stitch. The full battery runs ONCE on
+that assembled master; the cheap 6b VISUAL-PROOF per scene is what catches problems before that render.
 
 ---
 
 ## The `verification.md` artifact — MANDATORY written record
 
 Every project keeps ONE verification log at **`projects/<name>/verification.md`**.
-It is the durable proof that each scene was inspected — not assumed. The
-per-scene loop appends a section the moment a scene reaches a verdict; the
-final upload report is appended once after stitch.
+It is the durable proof that each scene was inspected — not assumed. Each scene gets its `VISUAL-PROOF`
+marker (pre-render) + a section written from the master's frames; the `MASTER-PASS` line + the final
+upload report are appended once after the master render.
 
 **Rules:**
 - ONE file per project: `projects/<name>/verification.md`. Append per scene; never
@@ -162,8 +255,8 @@ final upload report is appended once after stitch.
 # <name> — Verification Log
 
 Project: <name>   fps: 30   resolution: 1920×1080
-Per-scene RENDER → VERIFY → FIX loop (rule 23). Each scene below was
-inspected from extracted frames, not code.
+Native flow: cheap per-scene VISUAL-PROOF (pre-render) + the MASTER battery (post-render). Each scene
+below was inspected from the master's extracted frames, not code.
 
 ---
 
@@ -188,27 +281,88 @@ Bullets: <N>   Frames read: <N×2 mid+sync> + <N×5 filmstrip>
 
 ### Layer 2 — Audio (scene-level)
 WPM: ___   coverage: ___%   pause literals: none/___   silence >2s: none/___
+Audio quality (vg-quality-audio): voice ___/10 · loudness −14LUFS/TP<−1 pass/fail · music+sfx GAP/___
 
 ### Observations  (one line per bullet — what is ACTUALLY on screen)
 - B1: ___
 
+### Skills invoked  (the INVOCATION track — which skills were actually run for THIS scene; · -separated)
+- author: vg-visual-map · vg-render-code · vg-code-animations · vg-code-artifacts · remotion
+- verify: vg-verification-protocol · vg-visual-quality · vg-quality-audio · vg-output-validation
+
+### Bug ledger  (ONE row per bug fixed this scene — the machine-readable history; `effort=` derives from it)
+| attempt | bug (symptom) | type | sev | owner skill (from BUG ROUTER) | fix applied | min | resolved |
+|---|---|---|---|---|---|---|---|
+| 1 | text overlap (V9) | layout | med | vg-layout-quality-gate | moved footer to top:h*0.82 | 2 | yes |
+| 2 | flat motion (factor 1) | animation | high | vg-code-animations | added overshoot + stagger | 5 | yes |
+| 3 | audio drift +0.8s | audio | low | vg-narration-alignment | fixed framesFrom in JSON+mirror | 3 | yes |
+
 **SCENE VERDICT:** [ ] PASS   [ ] FAIL
-SCENE-PASS: <scene-id>
+VISUAL-PROOF: <scene-id> | composition=PASS narrative=PASS transform=<Δ>%   (pre-render, per scene)
 ```
 
-> The `SCENE-PASS: <scene-id>` line (e.g. `SCENE-PASS: claude_code_limits-s01`) is the
-> machine-readable marker the `render_gate.sh` hook greps for. Add it ONLY when the scene
-> genuinely passed on real frame evidence. Until that exact line exists in this file, the hook
-> HARD-BLOCKS (exit 2) the render of the next scene and the final master render (`render_master.mjs`).
-> On a re-render after a fix, keep the line only if the scene still passes; remove it if it
-> regresses to FAIL.
+> Two machine-readable markers the `render_gate.sh` hook greps for:
+> - **`VISUAL-PROOF: <scene-id> | composition=PASS narrative=PASS transform=<Δ>%`** — one per scene,
+>   PRE-render. The hook HARD-BLOCKS (exit 2) the MASTER render (`render_master.mjs`) until EVERY scene
+>   has one. This is the cheap per-scene catch (step 6b).
+> - **`MASTER-PASS: <name> | visual=<NN>/100 audio=<N>/10 transform=<min-Δ>%`** — one per VIDEO, POST-render.
+>   The evidenced fields are the proof you ran `vg-visual-quality` (visual), `vg-quality-audio` (audio), and
+>   the transformation/SUBJECT-MOVED gate (`transform`) on the rendered master. A bare line with no fields
+>   is a hallucinated pass. On a re-render after a fix, re-prove (6b) + re-run the battery; keep MASTER-PASS
+>   only if it still passes. (Per-scene rework is still logged in the Bug Ledger `effort=` field below.)
+
+### The BUG LEDGER — structured per-bug history (the analytics seed)
+
+The `effort=<N>x-<factor>` field is only a *summary* (pass count + the one dominant factor). The **Bug
+ledger table** above is the structured detail — one row per bug actually fixed, so the pipeline accrues a
+real, queryable production history instead of just a number. Discipline:
+
+- **One row per bug fixed**, each time you re-render after a fix (the row IS the attempt). Fill every column.
+- **`type`** is a fixed vocabulary (so it aggregates): `layout · animation · timing · sequencing ·
+  transitions · text · tokens · images · audio · assets · rendering`.
+- **Each `type` maps to a QUALITY-TRIANGLE pillar** (the top-level triage — every visual bug is one of
+  three engineering domains): **COMPOSITION** ("can the scene physically exist without conflict?" —
+  layout · transitions · rendering) · **DENSITY** ("can the viewer comfortably process it?" — text ·
+  images · sequencing, plus load/crowding symptoms of animation) · **CONSISTENCY** ("does it feel like
+  ONE film, script-world to pixels?" — tokens · assets, plus style/identity drift in any type).
+  `timing`/`audio` are mechanics (sync), outside the triangle. Classify the pillar first, then route:
+  a bug that resists its owner's fix is usually filed under the wrong pillar.
+- **`owner skill`** = the BUG ROUTER's owner for that symptom (CLAUDE.md "BUG ROUTER" — text-overlap →
+  `vg-layout-quality-gate`, flat-motion → `vg-code-animations`, sync-drift → `vg-narration-alignment`…).
+  The ledger and the router share one mapping, so the data is consistent.
+- **`sev`** = `low/med/high` · **`min`** = wall-clock minutes the fix took · **`resolved`** = yes/no.
+- **`effort=` DERIVES from this table:** `N` = the scene's highest `attempt`; `<factor>` = the most
+  frequent (tie → highest-sev) `type`/owner. So the two never disagree — the ledger is the source.
+
+**The INVOCATION track (`### Skills invoked` block):** also record, per scene, the **author + verify skills
+actually run** (·-separated). This is the compliance + *effectiveness* signal — `bug_stats` cross-references
+it with the bug owners to compute **"invoked but STILL bugged"**: a skill that was invoked every scene yet
+keeps owning bugs (`vg-code-animations` 2 bugs / 2 invocations = 1.0/use) means the *skill's guidance isn't
+landing* → fix the **skill**, not just the scene. (A bug owned by a skill that was NOT in the invoked list =
+a skip — the author skill should have been run and wasn't.)
+
+**⛔ COVERAGE — was any MANDATORY skill MISSED? (run it, don't eyeball).** Record the `### Skills invoked`
+block per scene AS YOU GO, then at MASTER-PASS run `python -m storyboard.skill_coverage <project>`: it
+compares the invoked track against the pipeline's non-skippable floor — the per-scene author set
+(`vg-visual-map`·`vg-render-code`·`vg-code-vchecks`·`vg-code-tokens`) + the final gate battery
+(`vg-verification-protocol`·`vg-visual-quality`·`vg-quality-audio`·`vg-output-validation`·
+`video-narrative-editor`·`vg-scene-validator`·`vg-youtube-validation`) — and prints exactly which skills
+were MISSED, per scene and project-wide. A silently-skipped skill is the #1 way output goes flat; this is
+the mechanical catch, and its `SKILL-COVERAGE:` line goes in the record alongside MASTER-PASS. (An empty
+invocation track = coverage cannot be verified = the discipline wasn't followed → fill it.)
+
+**Cross-video analytics:** `python -m storyboard.bug_stats` reads the bug ledger + invocation track from
+every project (via the `effort/` store) and reports: totals by `type`, by `owner skill` + fix-minutes,
+**skill invocation frequency**, and the **effectiveness** (invoked-but-bugged) ranking — *"40% of all bugs
+are layout; `vg-code-animations` is invoked every scene but still owns the most bugs."* That tells you
+exactly which skill/definition to fix upstream — the payoff a bare pass count can't give.
 
 ### Final section — appended once after stitch
 
-After the last scene passes and the final mp4 is stitched, append the
-**Final Upload Report** block (the `YOUTUBE VALIDATION` template in Layer 3
-§"Final Upload Report") to the bottom of the same `verification.md`. That makes
-the one file the complete record: every scene's PASS plus the Layer 3 upload gate.
+After the master render passes the battery, append the **MASTER-PASS** line + the **Final Upload Report**
+block (the `YOUTUBE VALIDATION` template in Layer 3 §"Final Upload Report") to the bottom of the same
+`verification.md`. That makes the one file the complete record: every scene's VISUAL-PROOF, the MASTER-PASS,
+plus the Layer 3 upload gate.
 
 ---
 
@@ -335,891 +489,27 @@ If moving `B[N].framesFrom` earlier would collapse `B[N-1]` below
 
 ---
 
-## LAYER 0.5 — IMAGE ASSET VALIDATION (pre-render gate)
+## The 6 verification layers — run each; HOW-TO detail in references
 
-Runs BEFORE TTS / render — catches missing, broken, off-topic, or unlicensed
-images before you burn 25+ minutes of render time on a scene that renders
-broken-image boxes. Step 2.6 ASSET RESOLUTION auto-fetches missing `[asset:]`
-from Openverse, **but auto-fetch is blind** (top result, no visual inspection).
-Layer 0.5 is what catches the wrong logo / off-topic stock photo before render.
+The checklist above lists WHAT to check; these references hold HOW to run each layer (extract frames,
+compute, thresholds). Invoke this skill, then open the layer reference you're running:
 
-Skip the whole layer only if the scene has zero `[asset:]` refs.
-
-### 0.5.1 — Asset presence (HARD gate)
-
-Every `[asset: <path>]` in the structured script must resolve to a real file:
-
-```bash
-# refs declared in the script
-grep -oE '\[asset:[^]]+\]' projects/structured_scripts/<name>.txt \
-  | sed 's/\[asset: *//; s/\]//' | sort -u > /tmp/refs.txt
-# files actually present
-( cd projects/<name>/public && find img -type f ) | sort -u > /tmp/files.txt
-# anything in refs missing from files → FAIL
-comm -23 /tmp/refs.txt /tmp/files.txt
-```
-
-Any missing path → re-run Step 2.6 or hand-fetch via `storyboard/fetch_images.py`
-(rule 17). Don't render until every reference resolves.
-
-Also confirm each file is non-empty and has valid image magic bytes (a 0-byte
-file or an HTML error page from a failed download silently renders as a broken
-box):
-
-```python
-from pathlib import Path
-import imghdr
-for p in Path('projects/<name>/public/img').glob('*'):
-    if p.suffix.lower() == '.svg':
-        ok = '<svg' in p.read_text(encoding='utf-8', errors='ignore')[:512]
-    elif p.suffix.lower() == '.json':
-        continue  # sidecar
-    else:
-        ok = p.stat().st_size > 0 and imghdr.what(p) is not None
-    if not ok: print(f'BROKEN: {p}')
-```
-
-### 0.5.2 — Image relevance (SOFT — visual inspection of auto-fetched images)
-
-Step 2.6 keeps the **top candidate without looking at it**. Open every
-auto-fetched image with the **Read tool** and judge it visually before render:
-
-| Ask | Reject if |
-|---|---|
-| Is the subject what the bullet asks for? | "control room operator" returned a *building exterior* called Control Tower; "office worker thinking" returned a 1940s archival card-punch photo |
-| Watermark-free? | Visible Shutterstock / Getty preview watermark |
-| Adequate resolution? | < 1280px wide for a hero image |
-| Right orientation? | Portrait when bullet expects landscape (or vice-versa) |
-| On-brand / safe for monetization? | Inappropriate subject; clashing aesthetic |
-
-Off-topic → delete + re-fetch with a refined query, or pre-place by hand (rule 17).
-A skipped relevance check is the single most common image failure in production.
-
-### 0.5.3 — License compliance (HARD gate — monetized channel)
-
-Every kept image must have its license + attribution recorded:
-
-```bash
-# every image should have a sidecar (written by fetch_images.py)
-for f in projects/<name>/public/img/*.{jpg,jpeg,png,webp,svg,gif}; do
-  [ -f "${f%.*}.json" ] || echo "NO LICENSE SIDECAR: $f"
-done
-```
-
-Then fold the kept sidecars into `projects/<name>/CREDITS.md` for the YouTube
-description. License must be one of: CC commercial-use (BY / BY-SA), public
-domain, Pexels License, or editorial-context logo/trademark. **No license
-recorded → don't ship.** Replace or remove the image.
-
-### 0.5.4 — V14 (post-render) — image actually rendered
-
-After render, on each `[asset:]` bullet's midpoint frame, the image area must
-NOT be:
-
-- solid `D.bg` (the broken-image fallback area)
-- a tiny browser broken-link icon
-- letterboxed empty stripes (means `objectFit:cover` wasn't set on the `<Img>`)
-
-Failure is almost always a wrong `staticFile()` path — usually the missing
-`public/` prefix (rule 17: `publicDir = projects/<name>/`, so the call is
-`staticFile('public/img/x.jpg')`, NOT `staticFile('img/x.jpg')`). Fix the
-bullet code, re-seed, re-render.
-
-### 0.5.5 — Image motion (handled by A4 + A5)
-
-Image bullets are NOT a new motion check — they reuse the existing animation
-layer:
-
-- **A4 freeze**: a static image >3s = FAIL. A correctly-authored Ken Burns
-  (`scale 1.0 → 1.08` over the bullet duration) auto-passes A4 because every
-  frame differs from the last.
-- **A5 PSNR**: image bullets must show non-trivial frame-to-frame motion;
-  Ken Burns / Logo pop / Push-in keep PSNR well above the freeze threshold.
-
-So confirm A4 + A5 ran for every `[asset:]` bullet — if A4 fires on an image
-bullet, the motion wasn't authored. Fix the bullet code (add the Ken Burns
-`interpolate(frame, [0, durationInFrames], [1.0, 1.10])` per rule 17).
-
-### 0.5.6 — Record in `verification.md`
-
-Add this block per scene, ABOVE the Layer 1 V-table:
-
-```markdown
-### Layer 0.5 — Image assets
-| Asset | Present | Decodes | On-topic | License | V14 rendered | A4 motion |
-|---|---|---|---|---|---|---|
-| img/amazon_logo.png  | ✅ | ✅ | ✅ Wikimedia AMZN logo            | ✅ PD     | ✅ | ✅ logo pop  |
-| img/win_senior.jpg   | ✅ | ✅ | ✅ developer, dual monitors      | ✅ Pexels | ✅ | ✅ Ken Burns |
-| img/cta_managing.jpg | ✅ | ✅ | ⚠ generic stock — accept         | ✅ Pexels | ✅ | ✅ Ken Burns |
-```
-
-A scene with any ❌ in 0.5.1 / 0.5.2 / 0.5.3 / V14 is **FAIL** — fix before
-advancing to the next scene.
-
----
-
-## LAYER 1 — VISUAL QUALITY
-
-> **Source of truth for visual correctness = the `remotion` skill.** When a check below
-> fails, verify the fix against the remotion rule that defines the correct behavior —
-> don't invent a fix. Map:
-> - text overflow / clipping → `remotion/rules/measuring-text.md` (`fitText()`)
-> - image sizing / aspect / fit → `remotion/rules/images.md`
-> - fonts not loading / wrong glyphs → `remotion/rules/fonts.md`
-> - composition dimensions / fps → `remotion/rules/compositions.md` + `calculate-metadata.md`
-> A visual that violates a remotion rule keeps failing this layer until fixed at the source.
-
-### 1.1 Muted-Viewer Test (run BEFORE authoring any bullet code)
-
-> *Watch the video with audio off. Can a viewer understand every scene without hearing a word?*
-
-For every bullet, write one line:
-**"If audio is muted and only this frame is on screen, the viewer sees: ___"**
-
-Apply the kill-list. Any bullet that matches → fix before rendering:
-
-| Kill condition | Real example | Fix |
+| Layer | Checks | Detail file |
 |---|---|---|
-| "black canvas with small stamp in center" | Stamp 32% wide on black | `width: Math.round(w*0.76)`, font `w*0.032` |
-| "single word / phrase, 85% black void" | "WHY?" on black | Font `Math.round(w*0.14)` + subtitle row |
-| "bordered card with nothing inside" | Red box, zero text | Title label + body text INSIDE the element |
-| "left half only" or "right half only" | One panel, other side black | Both panels in ONE bullet; inactive at opacity 0.25 |
-| "floating symbols with no context" | Checkmarks with no labels | Add title, entity name, stat |
-| "prior bullet's visuals bleeding through" | Old content behind new card | `React.createElement(AbsoluteFill, ...)` not plain div |
-| "abstract shape with no narrative" | Thin diagonal lines | Add headline text stating the topic |
-| "empty workspace / blinking cursor" | Cursor on black | Replace with content card showing the topic |
-
-**No bullet is authored until it passes this test.**
-
----
-
-### 1.2 Canvas Utilization Standards
-
-Every bullet's main content must fill ≥60% of 1920×1080:
-
-| Element | Minimum size | Code |
-|---|---|---|
-| Stamp / verdict badge | `w*0.72` wide, `h*0.22` tall | `width:Math.round(w*.72)+'px'` — NEVER auto |
-| Single hero word | font `w*0.14` | fills ~26% canvas height |
-| Info card (single) | `w*0.80` × `h*0.68` | flex column, centered |
-| Two-panel layout | Each panel `w*0.44` × `h*0.68` | row flex, 4% gap |
-| Bar chart | container `w*0.88` × `h*0.72` | bars fill container |
-| 2×2 grid | Each cell `w*0.40` × `h*0.30` | spans 6%→94% width, 18%→88% height |
-| Full REPLACE | `AbsoluteFill` | mandatory for scene resets |
-
-Multi-element coverage — every layout must meet:
-- `min element top` ≤ 20% canvas height
-- `max element bottom` ≥ 80% canvas height
-- `min element left` ≤ 8% canvas width
-- `max element right` ≥ 88% canvas width
-
----
-
-### 1.3 Typography Standards
-
-```
-Stamp / verdict title:    Math.round(width * 0.030)   → ~58px @ 1920w
-Section headline:         Math.round(width * 0.024)   → ~46px
-Card title:               Math.round(width * 0.015)   → ~29px
-Body / explanation text:  Math.round(width * 0.011)   → ~21px
-Label / caption:          Math.round(width * 0.008)   → ~15px  ← floor
-```
-
-- Key labels / verdicts: `D.text`, `D.amber`, or `D.cyan` — NEVER `D.text_dim`
-- `D.text_dim` = decorative secondary only (source citations, scene numbers)
-- All font sizes: `Math.round(width * 0.0XX)` — never raw px, rem, or em
-
----
-
-### 1.4 Visual–Narration Sync
-
-Goal: narrator says X → visual for X appears ON SCREEN at that exact frame.
-
-| Rule | Detail |
-|---|---|
-| 2–4 verbatim words per anchor | From THIS scene's narration only |
-| No decimal anchors | `"seventy-seven point eight"` — Whisper splits decimals |
-| No unit anchors | `"thirty-six percent"` — Whisper merges as `36%.` |
-| No `<pause>` spans | Anchor must be from one side of any `<pause Xs>` break |
-| Exact narration form | Write anchor as it appears in the narration text |
-| Good anchor examples | `"the needle"`, `"coin flip"`, `"watch it"` |
-
-Drift check after render — **MANDATORY for every scene before sign-off. Run with Whisper-form substitutions (twelve↔12, fifty↔50, scratchpad↔scratch pad, multi-step↔multi -step) to find the anchor even when transcription differs from the source word.**
-
-1. `framesFrom ÷ fps` = visual fire time
-2. Find anchor in `projects/<project>/captions/<sid>.json` → `start_seconds`
-3. Drift = fire_time − anchor_time
-
-| Drift | Verdict | Action |
-|---|---|---|
-| −0.5s to +1.5s | ✅ PASS | Continue |
-| +1.5s to +2.0s | ⚠ WARN | **MANDATORY FIX** — set `framesFrom = round(word.start * fps)` in scene JSON + mirror, re-render. Do NOT advance to next scene with a WARN drift. |
-| > +2.0s | ❌ FAIL | Same as WARN — set `framesFrom = round(word.start * fps)`, re-render |
-| < −1.0s | ⚠ WARN — fires before topic | Either move framesFrom forward, OR confirm this is the first-bullet PASS-FIRST exemption (scene opens with this visual before any spoken word) |
-
-**Watch for the constraint case:** if moving B[N] framesFrom earlier collapses B[N-1] below `MIN_BLOCK_SECONDS` (default 1.0s), then either:
-- Accept the +1.5–2.0s WARN on B[N] (document why — B[N-1] needs minimum visible time)
-- Add an earlier anchor in the script that fires B[N-1] sooner
-- Combine B[N-1] and B[N] into one bullet
-
-**This MUST run after every render — do not skip. The pre-S2 production bug was: B5 multi-step proofs +1.83s WARN and B7 default setting +1.76s WARN slipped through because the verifier's anchor-matching was loose with hyphenation. Strengthen the matcher to try multiple word-form variants before declaring "anchor not found".**
-
----
-
-### 1.5 Animation Quality Standards
-
-Every bullet must have visible animation at midpoint frame (`framesFrom + duration/2`):
-
-| Spring intent | Config | Use for |
-|---|---|---|
-| `heavy` | `{damping:15, stiffness:80, mass:2}` | Stamps, dramatic reveals — visible through frame 80+ |
-| `smooth` | `{damping:200}` | Ambient text reveals, subtle fades |
-| `bouncy` | `{damping:8}` | Hero numbers, punchline words |
-| `snappy` | `{damping:20, stiffness:200}` | Cards, badges, UI labels |
-
-- Stagger: 8–15 frames per item — `spring({frame: frame - i*10, ...})`
-- Phase timing: always `durationInFrames * 0.30 / 0.60 / 0.90` fractions, never hard frame counts
-- Prohibited: screen shatter, explosion, word scatter, spinning orbits, heartbeat rings
-
----
-
-### 1.6 Pacing Standards
-
-| Metric | Target | Fail |
-|---|---|---|
-| Visual changes per 60s scene | 8–12 bullets | < 6 = too static; > 15 = too chaotic |
-| Longest single visual hold | ≤ 12s | > 15s without change |
-| REPLACE bullets per scene | 1 (first bullet) | 0 = additive stacking; > 3 = fragmented |
-| Scene transitions | `crossfade_frames: 12` | Hard cuts feel cheap |
-
----
-
-### 1.7 Post-Render Frame Inspection — V1–V8
-
-Extract midpoint + sync frames per bullet:
-
-```python
-import json, subprocess, os
-from pathlib import Path
-fps = 30
-scene = '<scene-id>'          # e.g. 'my-project-s01'
-project = '<project_name>'    # e.g. 'my_project'
-blocks = json.loads(Path(f'projects/{project}/scenes/{scene}.json').read_text('utf-8'))
-os.makedirs('c:/tmp/verify', exist_ok=True)
-for b in blocks:
-    for label, fr in [
-        ('mid',  (b['framesFrom'] + b['framesTo']) // 2),
-        ('sync',  b['framesFrom'] + 10),
-    ]:
-        t = fr / fps
-        out = f'c:/tmp/verify/{scene}_b{b["bulletIndex"]+1}_{label}.jpg'
-        subprocess.run(['ffmpeg','-y','-i', f'remotion/out/{scene}.mp4',
-            '-ss', str(t), '-frames:v','1','-q:v','2', out], capture_output=True)
-    print(f'B{b["bulletIndex"]+1}: mid={(b["framesFrom"]+b["framesTo"])//2}f')
-```
-
-| # | Check | Pass | Fail |
-|---|---|---|---|
-| V1 | Not black | ≥40% non-background pixels | Tiny element, empty card, black void |
-| V2 | No bullet overlap | B[N] gone at B[N].framesTo; B[N+1] fresh | Two bullets visible simultaneously |
-| V3 | Tokens only | All colors from `D.*` | Raw hex literal in bullet code |
-| V4 | Readable text | Body ≥ `w*0.009`; headline ≥ `w*0.022` | Fine print; `D.text_dim` on key label |
-| V5 | Canvas ≥60% | Main visual fills majority of frame | Stamp content-sized; empty card interior |
-| V6 | Content matches | Visual matches bullet body description | Wrong chart, placeholder, missing text |
-| V7 | No clipping | All elements inside canvas bounds | Card cut at bottom; text off right edge |
-| V8 | Animation visible | Midpoint ≠ frame 0 | Static image; spring done before midpoint |
-| **V9** | **No INTERNAL element overlap** (new — protocol gap that allowed B2 scratchpad covering dial labels and B3 "MAX EFFORT" label hidden behind red bar to slip through verification) | Text labels not covered by colored rectangles; hero text fits within designed gap between adjacent elements; ADDITIVE static elements remain fully visible (not covered by new panel) | Label inside bar's bounding rect; hero font wider than gap; scratchpad covers prior-bullet dials in ADDITIVE |
-| **V10** | **Text fits container width** (new — checks rendered text isn't wrapping unintentionally or escaping `whiteSpace:nowrap`) | All single-line text labels render on one line; multi-line text doesn't exceed container height | "openai: reasoning_effort" wrapping to 2 lines inside w*0.22 pill |
-| **V11** | **Bullet duration vs animation timeline** (new — pre-render gate: compare planned animation frame timeline to actual `framesTo − framesFrom`) | All animation phases (entry, hold, exit) complete within `framesTo − framesFrom` | Bullet 72f long but "FOR THE SAME ANSWER" appears at frame 64 (8 frames visible) — animation cut short |
-| **V12** | **Not a text-only frame** (new — guards the gap where V1/V5/V8 all PASS for a screen of fading-in prose; a text slide is not a video) | The frame SHOWS the idea with a non-text visual (chart, metaphor, diagram, number, image); on-screen text is only a short headline + a few labels + numbers | The frame is mostly sentences/paragraphs/a prose bullet-list; OR the only animation is words fading/typing in with nothing else moving; OR a narration sentence is reprinted on screen → rule 21 Prohibited Patterns |
-| **V13** | **Primary-focus prominence** (new — every bullet has ONE primary visual that conveys the script's point; that element must dominate the canvas, not the secondary context elements) | Primary element occupies ≥50% of canvas height; viewer can read its content at arm's length on a phone screen | Scratchpad squeezed to bottom 20% of canvas while context dials take 50% — viewer cannot read the scratchpad content; in ADDITIVE bullets, prior-state elements should shrink/move to give the new visual the stage |
-| **V15** | **The sentence test — visual EXPLANATION not visual noise** (new — catches the gap V12/A4 miss: a frame that MOVES, is non-text, and fills the canvas but represents nothing the narrator says). For each bullet, name the narration sentence/clause it explains and confirm the on-screen visual literally depicts it. | You can state "this bullet explains: '<exact narration sentence>'" AND the visual is a play-by-play of that sentence (e.g. "task splits into 3 agents → they work → results merge" for "breaks into subtasks and assigns to agents") | You cannot name the sentence; OR the visual is generic mood ("futuristic city / floating AI brain / neon particles / code rain / spinning server rack / stock office footage") that looks technical but maps to no clause → rule 21 sentence test. Moving + rich + non-text does NOT exempt it. |
-
----
-
-### 1.8 V9 — Internal Element Overlap Check
-
-V2 catches **bullet-to-bullet** overlap. V7 catches **canvas-edge** clipping.
-Neither catches **element-to-element overlap WITHIN a bullet** — and that gap is
-why labels hidden behind bars (B3) and scratchpads covering dial labels (B2)
-slipped through verification in the 2026-05 ai_thinking_levels production.
-
-**Pre-render code-level check:** for each bullet, list every element's bounding
-rectangle `(left, top, right, bottom)` derived from its style props. Two
-elements overlap if both X ranges and Y ranges intersect.
-
-```python
-# pseudocode for verify_<scene>.py
-elements = parse_bullet_elements(bullet_code)  # extract (id, x1, y1, x2, y2, kind)
-for a, b in itertools.combinations(elements, 2):
-    if a.kind == 'text' and b.kind == 'bar' and intersects(a, b):
-        fail(f'{a.id} text label inside {b.id} bar — will be hidden')
-    if a.kind == 'static_prior' and b.kind == 'new_panel' and intersects(a, b):
-        fail(f'ADDITIVE {b.id} covers prior settled {a.id}')
-```
-
-**Post-render pixel check:** at p50 frame, extract OCR text from regions where
-labels should appear. If declared label text is not OCR-extractable, the label
-is covered or clipped.
-
-**Hard rule for ADDITIVE bullets:** static elements from the prior bullet's
-settled state must occupy a region the new bullet's animated panels do not
-overlap. The bullet author MUST verify these regions are disjoint BEFORE seed.
-
-**Sub-check V9b — decorative UI elements (dots, icons, LEDs, rings) must not
-cover text labels.** In the 2026-05 ai_thinking_levels render a red "REC dot"
-indicator (added for per-frame motion to defeat freeze detection) was
-positioned at `left: px + w*0.010` — directly on top of the
-"INTERNAL SCRATCHPAD — INVISIBLE TO CALLER" header text, which started at the
-panel's flex-container left edge after `padding: h*0.015`. Result: viewers
-saw "RNAL SCRATCHPAD — INVISIBLE TO CALLER" with the first 4 characters
-covered by a glowing red disc.
-
-**Sub-check V9c — reserve `h*0.88–1.0` for the caption box.** The renderer
-overlays whisper-driven captions at the bottom of every frame (centered, big
-white text on dark background). Any bullet element positioned with
-`bottom: < h*0.10` or `top: > h*0.88` WILL collide with the caption. The S3B5
-production bug was: "SAME MECHANISM · THREE NAMES" overlay positioned at
-`bottom: h*0.04` — i.e. at `top: h*0.92`, directly inside the caption zone —
-causing the caption "for good reasons. Medium" to slice through the
-overlay text in every B5 frame.
-
-Rule: no bullet element may have `top > h*0.88` OR `bottom < h*0.10`. If the
-bullet's content needs more vertical space, either shrink the elements above
-or push them up. The footer/punchline overlay belongs at `top: h*0.82–0.86`
-maximum, with at least h*0.04 padding above the caption zone.
-
-Rule: any pulsing/cycling indicator (dot, LED, ring) MUST be positioned in a
-region that is **NOT** occupied by any text element. Allowed regions:
-- Outside the panel entirely (above/below/beside)
-- Inside a dedicated indicator column (e.g. far right of header, after the
-  token counter)
-- Inline as part of a flex row using `gap: Nps` so the dot pushes text right
-- A vertical strip on the panel edge that contains no labels
-
-If you need per-frame motion AND every text region is occupied, prefer:
-- A scanning gradient line traversing the panel (no text collision)
-- Border opacity pulse on the panel itself
-- Background gradient shift (very subtle)
-
-Never position a decorative element at fixed `(x, y)` without verifying it
-falls in a text-free pixel region.
-
----
-
-### 1.9 V10 — Text-Fits-Container Check
-
-Pre-render code check: for every text element with `whiteSpace: 'nowrap'`,
-estimate rendered width (`chars × fontSize × 0.55`) and assert it's < container
-width. For multi-line text, estimate lines × lineHeight and assert it's <
-container height.
-
-```python
-def text_fits(label, font_size_px, container_width_px, nowrap=True):
-    est_width = len(label) * font_size_px * 0.55
-    if nowrap and est_width > container_width_px:
-        return False, f'"{label}" needs ~{est_width:.0f}px but container {container_width_px:.0f}px'
-    return True, None
-```
-
-Common failure: `openai: reasoning_effort` (24 chars) at font `w*0.016`
-(=30px @ 1920w) needs ~400px but pill container `w*0.22` (=422px) is barely
-enough — wraps in practice due to padding. Fix: shrink font or widen container.
-
----
-
-### 1.10 V11 — Bullet Duration vs Animation Timeline
-
-The script may plan a bullet at 12s with 7 staggered animation phases. The
-audio_anchor system may give that bullet only 2.4s because the next anchor
-fires soon. Result: late-phase animations (e.g. "FOR THE SAME ANSWER" at
-frame 64) never appear because the bullet ends at frame 72.
-
-**Pre-render check:**
-
-```python
-for b in scene:
-    duration_f = b['framesTo'] - b['framesFrom']
-    # extract latest spring/interpolate keyframe in the bullet code
-    last_phase = extract_last_animation_frame(b['code'])
-    if last_phase > duration_f - 12:  # need 12f tail buffer
-        warn(f'B{i}: bullet only {duration_f}f but last phase at {last_phase}f — {duration_f - last_phase} frames visible')
-```
-
-Fix options when this fails:
-- Rewrite bullet to fit available duration (shorten stagger, drop late phases)
-- Add an intermediate anchor in the script to give the bullet more time
-- Accept and document (only if the late phase is truly secondary)
-
----
-
-## LAYER 1.5 — ANIMATION VALIDATION
-
-V8 proves animation existed at one moment. This layer proves it **moves correctly,
-settles on time, and holds cleanly** across the full bullet duration.
-
-> **Source of truth for animation correctness = the `remotion` skill.** Each check here
-> verifies behavior the remotion rules define — when one fails, fix against that rule:
-> - A4 freeze / element not moving → `remotion/rules/animations.md` (must be `useCurrentFrame()`-driven, no CSS)
-> - A5 motion magnitude / A7 spring settlement → `remotion/rules/timing.md` (interpolate clamping, spring configs)
-> - A6 REPLACE / scene transitions → `remotion/rules/transitions.md`
-> - staggered / sequenced reveals → `remotion/rules/sequencing.md`
-> - text typewriter / reveal effects → `remotion/rules/text-animations.md`
-> A4/A5/A6 failures are almost always a remotion-rule violation in the authored code —
-> read the matching rule before re-authoring.
-
----
-
-### A1 — Filmstrip Extraction (5 frames per bullet)
-
-Extract frames at 10 / 30 / 50 / 70 / 90% of every bullet's duration:
-
-```python
-import json, subprocess, os
-from pathlib import Path
-fps = 30
-scene   = '<scene-id>'
-project = '<project_name>'
-blocks  = json.loads(Path(f'projects/{project}/scenes/{scene}.json').read_text('utf-8'))
-os.makedirs('c:/tmp/filmstrip', exist_ok=True)
-for b in blocks:
-    d = b['framesTo'] - b['framesFrom']
-    print(f'B{b["bulletIndex"]+1}  [{b["framesFrom"]}–{b["framesTo"]}f  dur={d}f]')
-    for p in [0.10, 0.30, 0.50, 0.70, 0.90]:
-        fr  = b['framesFrom'] + int(d * p)
-        out = f'c:/tmp/filmstrip/{scene}_b{b["bulletIndex"]+1}_p{int(p*100):02d}.jpg'
-        subprocess.run(['ffmpeg','-y','-i', f'remotion/out/{scene}.mp4',
-            '-ss', str(fr/fps), '-frames:v','1','-q:v','2', out], capture_output=True)
-```
-
-Read frames in order: `p10 → p30 → p50 → p70 → p90`.
-
----
-
-### A2 — Per-Frame Animation Checks
-
-| Frame | What to check | Pass | Fail |
-|---|---|---|---|
-| **p10** | Animation started — element in motion, not settled | Partially entered / partial opacity / bar at ~15% | Already at final position OR invisible |
-| **p30** | Significant motion — clearly different from p10 | Noticeably closer to final position | Same as p10 (spring finished too fast) |
-| **p50** | Element visible and well-formed | On-screen, content readable | Still off-screen, black, or transparent |
-| **p70** | Settling — nearly at final position | Slight difference from p50 | Still in heavy motion (too slow) |
-| **p90** | Complete — settled, held, readable | Same or nearly same as p70 | Still moving (jitter / underdamped) |
-
-**Key invariant:** `p10 ≠ p30 ≠ p50` (motion present) AND `p70 ≈ p90` (settled by 70%)
-
----
-
-### A3 — Animation Type Filmstrip Signatures
-
-#### Entrance / slide-in
-```
-p10: element ~30% off-edge, partially entered
-p30: element ~70% traveled, slight overshoot if bouncy
-p70: at final position ± tiny jitter
-p90: locked at final position, fully visible
-```
-
-#### Fade-in (opacity 0→1)
-```
-p10: opacity ~0.1–0.2
-p30: opacity ~0.4–0.5
-p50: opacity ~0.7–0.8
-p70+: opacity 1.0
-```
-
-#### Bar chart (height 0→target)
-```
-p10: bars at ~15% final height (stubs visible)
-p30: bars at ~55% height
-p50: bars at ~85% height
-p70+: bars at full height, labels visible
-```
-
-#### Staggered list
-```
-p10: first 1–2 items visible
-p30: first 3–4 items visible
-p50: ~half of all items visible
-p70+: all items visible
-```
-
-#### Typewriter
-```
-p10: first few characters
-p30: ~30% of text
-p50: ~55% of text
-p90: full text
-```
-
-#### Stamp scale-in
-```
-p10: stamp at ~25% scale (visible but tiny)
-p30: stamp at ~80% scale
-p50+: full scale, centered, readable
-```
-
-#### Counter count-up
-```
-p10: number at ~10% of target
-p30: ~40–50% of target
-p70+: final value, held
-```
-
----
-
-### A4 — Freeze Detection
-
-Finds bullets where animation stops too early — leaving a long static hold:
-
-```powershell
-ffmpeg -i remotion/out/<scene-id>.mp4 `
-    -vf "freezedetect=n=-60dB:d=2.0" `
-    -f null - 2>&1 | Select-String "freeze_start|freeze_end|freeze_duration"
-```
-
-Map freeze times to bullets using `framesFrom/framesTo ÷ fps` from scene JSON.
-
-**FAIL:** freeze > 3.0s inside a bullet that is not the final hold frame.
-
-Fix: switch spring from `snappy` (settles ~18f) to `heavy` (settles ~80f), or add a
-second-phase animation (pulse, count-up, secondary stagger) to keep screen alive.
-
----
-
-### A5 — Motion Magnitude (PSNR check)
-
-Confirms motion is VISIBLE between p10 and p70 — not just mathematically different:
-
-```python
-import subprocess, json
-from pathlib import Path
-fps   = 30
-scene = '<scene-id>'
-project = '<project_name>'
-blocks  = json.loads(Path(f'projects/{project}/scenes/{scene}.json').read_text('utf-8'))
-for b in blocks:
-    d  = b['framesTo'] - b['framesFrom']
-    t1 = (b['framesFrom'] + int(d * 0.10)) / fps
-    t2 = (b['framesFrom'] + int(d * 0.70)) / fps
-    subprocess.run(['ffmpeg','-y',
-        '-ss', str(t1), '-i', f'remotion/out/{scene}.mp4', '-frames:v','1', 'c:/tmp/_a.png',
-        '-ss', str(t2), '-i', f'remotion/out/{scene}.mp4', '-frames:v','1', 'c:/tmp/_b.png'],
-        capture_output=True)
-    r = subprocess.run(['ffmpeg','-i','c:/tmp/_a.png','-i','c:/tmp/_b.png',
-        '-lavfi','psnr','-f','null','-'], capture_output=True, text=True)
-    line = next((l for l in r.stderr.split('\n') if 'average' in l), 'no output')
-    print(f'B{b["bulletIndex"]+1} p10→p70: {line.strip()[:70]}')
-```
-
-| PSNR | Motion | Verdict |
-|---|---|---|
-| < 25 dB | Heavy motion | ✅ Clearly visible |
-| 25–35 dB | Moderate | ✅ Visible |
-| 35–45 dB | Subtle | ⚠ May feel static |
-| > 45 dB | Near-identical | ❌ FAIL — animation done too early |
-
----
-
-### A6 — REPLACE Transition Check
-
-Run only for REPLACE bullets — identified by `AbsoluteFill` present in the bullet's `code`
-field (ADDITIVE bullets keep prior content intentionally; checking them gives false fails).
-
-```python
-import json, subprocess, os
-from pathlib import Path
-fps = 30; scene = '<scene-id>'; project = '<project_name>'
-blocks = json.loads(Path(f'projects/{project}/scenes/{scene}.json').read_text('utf-8'))
-os.makedirs('c:/tmp/replace', exist_ok=True)
-replace_bullets = [b for b in blocks if 'AbsoluteFill' in b.get('code', '')]
-if not replace_bullets:
-    print('No REPLACE bullets found — skip A6')
-for b in replace_bullets:
-    if b['framesFrom'] == 0:
-        print(f'B{b["bulletIndex"]+1} is scene-start REPLACE — no prior content to check')
-        continue
-    for offset, label in [(1,'before'), (5,'mid'), (12,'after')]:
-        fr  = b['framesFrom'] + offset
-        out = f'c:/tmp/replace/{scene}_b{b["bulletIndex"]+1}_t{label}.jpg'
-        subprocess.run(['ffmpeg','-y','-i', f'remotion/out/{scene}.mp4',
-            '-ss', str(fr/fps), '-frames:v','1','-q:v','2', out], capture_output=True)
-    print(f'B{b["bulletIndex"]+1} REPLACE transition at frame {b["framesFrom"]}')
-```
-
-| Frame offset | Expected | Fail |
-|---|---|---|
-| +1 | Prior content still visible (fade just started) | All black → opacity ramp too fast |
-| +5 | Backdrop partially covering old content (mix) | Old content fully gone → too fast; old still visible → backdrop broken |
-| +12 | New content clear, old fully hidden | Old content bleeding through → used plain `div` instead of `AbsoluteFill` |
-
-**ADDITIVE bullets**: skip A6 entirely — prior content remaining on screen is correct behavior.
-
----
-
-### A7 — Spring Settlement Safety Check (pre-render, code-level)
-
-| Config | Settles by frame | Safe for bullet duration ≥ |
-|---|---|---|
-| `snappy` — `{damping:20, stiffness:200}` | ~18–22f | 25f (0.8s) |
-| `smooth` — `{damping:200}` | ~20–25f | 30f (1.0s) |
-| `bouncy` — `{damping:8}` | ~60–80f | 100f (3.3s) |
-| `heavy` — `{damping:15, stiffness:80, mass:2}` | ~80–100f | 120f (4.0s) |
-
-If `framesTo − framesFrom < settlement_frame` for the chosen config → animation cut mid-bounce.
-Use `snappy`/`smooth` for short bullets (< 60f). Reserve `bouncy`/`heavy` for long windows (> 3s narration).
-
----
-
-### A8 — Animation Summary Table (fill per scene)
-
-| Bullet | p10≠p30 | p70≈p90 | p50 visible | freeze <3s | REPLACE clean | Verdict |
-|---|---|---|---|---|---|---|
-| B1 | | | | | — | |
-| B2 | | | | | | |
-| B3 | | | | | — | |
-| BN | | | | | | |
-
-✅ = pass  ❌ = fail  — = not applicable
-
----
-
-## LAYER 2 — AUDIO QUALITY
-
-### 2.1 Narration Quality — Listen Test
-
-Listen to `projects/<project>/audio/vo-*.mp3` alone. Must pass all:
-
-| Check | Pass | Fail | Fix |
-|---|---|---|---|
-| Pacing | Varied — short punchy sentences land as punches | Monotone drone | Aggressive punctuation; short sentences; em dashes |
-| Hero words | Key numbers / verdicts feel punchy via rhythm | Key words buried in long flat sentences | Move hero word to end: "The answer? Four." |
-| No pause literals | Audio never says "pause zero point three s" | Literal `pause` spoken | `ssml_compiler._convert_author_pauses` must run before `_escape` |
-| No clipping | Every sentence completes naturally | Words cut off mid-sentence | Check scene boundary + `window_to_sec` |
-| WPM | 130–160 WPM | < 120 (sluggish) or > 180 (rushing) | `audio.rate: '+N%'` in config.yaml — formula: `round((150/actual_wpm-1)*100)%` |
-| No long silences | No gap > 2s | 3–5s dead air | Narration pacer bug Class 19 — verify `MAX_DISPLAY_SECONDS=2.0` |
-
-WPM appears in build log step 4:
-```
-audio: 565.37s (16961 frames)
-WPM: 134 (target 150)    ← must be 130–160
-```
-
----
-
-### 2.2 Audio Technical Standards
-
-```bash
-ffprobe -v quiet -print_format json -show_streams projects/<project>/out/<project>.mp4
-```
-
-| Check | Required | Fail |
-|---|---|---|
-| Codec | AAC (`aac`) | Any other codec — silent YouTube failure |
-| Sample rate | 48000 Hz | Non-standard → YouTube re-encode |
-| Channels | 2 stereo | Mono → left-ear-only on mobile |
-| Bitrate | ≥ 192 kbps | < 192 → audible artifacts |
-| Loudness target | −14 LUFS (I), −1 TP, LRA 11 | Mismatch → YouTube compression kills dynamics |
-
-Loudness check:
-```bash
-ffmpeg -i projects/<project>/out/<project>.mp4 \
-    -af loudnorm=print_format=summary -f null - 2>&1 \
-    | grep "Input Integrated\|Input True Peak\|Input LRA"
-```
-
----
-
-### 2.3 Narration Coverage
-
-```bash
-python storyboard/validate_output.py projects/<project>/ --extract
-```
-
-| Coverage | Verdict |
-|---|---|
-| ≥ 90% | ✅ PASS |
-| 80–90% | ⚠ WARN — TTS imperfection acceptable |
-| < 80% | ❌ FAIL — scene boundary error or SSML issue |
-
-Any `ERROR` line in validate_output output = FAIL (error overlay visible in video).
-Any `placeholder blocks` count > 0 = FAIL (generic placeholder card in video).
-
----
-
-### 2.4.5 — Layer 2.5 Mid-Bullet Audio Coherence (new)
-
-Layer 2.1 anchor-drift check confirms that visual N fires at the moment its
-anchor word is spoken. It does NOT check what happens between anchors — i.e.
-whether the visual still relates to the spoken audio 5/10/15 seconds INTO the
-bullet's playback.
-
-Bullets that play for > 8 seconds with no visual change drift from the audio.
-In the 2026-05 ai_thinking_levels render this caused two glaring failures:
-
-| Bullet | Duration on screen | Visual | Audio actually said |
-|---|---|---|---|
-| B2 | 11.6s | scratchpad (anchor: "thousands of hidden") | "thousands of hidden... → ... The answer? Identical to..." |
-| B4 | **22.5s** | identical-answer cards (anchor: "identical output") | "identical output → Cloud calls it effort → OpenAI calls reasoning → Google calls thinking → expose the same lever" |
-
-The B4 case is severe: 22.5s of one visual while audio covers 5 different
-topics. A muted viewer sees the right thing; a sound-on viewer hears
-audio-visual desync.
-
-**Coherence check:**
-
-```python
-# per-bullet, sample audio every 3 seconds; assert the active visual
-# is still relevant to spoken word.
-for b in scene:
-    start, end = b['framesFrom']/fps, b['framesTo']/fps
-    for t in range(int(start), int(end), 3):
-        spoken = words_in_window(captions, t, t+3)
-        # 'topical match' = anchor word OR any noun in bullet headline appears in spoken
-        if not topical_match(spoken, b['audio_anchor'], b['headline']):
-            warn(f'B{i}: at {t:.0f}s, spoken {spoken!r} no longer matches visual {b["audio_anchor"]!r}')
-```
-
-**Threshold:** if a bullet is on screen > 8s and topical_match drops for > 5s
-of continuous audio, flag for either:
-- Adding intermediate script anchor (preferred — splits the bullet)
-- Mid-bullet visual morph using `frame > X` state transitions inside the
-  bullet code (less invasive but harder to author)
-
----
-
-### 2.4 The 4 Quality Levers
-
-| Lever | Test | Fix |
-|---|---|---|
-| **Drama** | Listen alone — does it hold attention full duration? | Shorter, punchier sentences |
-| **Clarity** | Watch muted — does each visual tell the story alone? | Run muted-viewer test (1.1) |
-| **Sync** | Watch with audio — do visuals change at the spoken key word? | Tighten audio_anchors; fix drift > 1s |
-| **Pacing** | Count visual changes in first 60s — ≥ 8? | Split large bullets into 2–3 sub-bullets |
-
----
-
-## LAYER 3 — YOUTUBE TECHNICAL STANDARDS
-
-Run only after Layers 1, 1.5, and 2 pass. This is the upload gate.
-
-```bash
-ffprobe -v quiet -print_format json -show_streams -show_format \
-    projects/<project>/out/<project>.mp4
-```
-
-### Technical Checks
-
-| # | Check | Required | FAIL | WARN |
-|---|---|---|---|---|
-| T1 | Resolution | 1920×1080 px, 16:9 | ≠ 1920×1080 | — |
-| T2 | Frame rate | 30 fps | ≠ 30 fps | — |
-| T3 | Video codec | H.264, profile High, level ≥4.0 | codec ≠ h264 | — |
-| T4 | Video bitrate | ≥ 8 Mbps | — | < 5 Mbps → blocking on text/animation |
-| T5 | Audio codec | AAC | ≠ aac | — |
-| T6 | Audio channels | 2 stereo | < 2 channels | — |
-| T7 | Audio bitrate | ≥ 192 kbps | — | < 192 kbps |
-| T8 | Sample rate | 48000 Hz | — | 44100 Hz |
-| T9 | Duration match | ≤ 3s drift vs expected | > 3s = dropped scene | — |
-| T10 | First frame | Not black | Pure black | — |
-| T11 | Last frame | Not black | Pure black | — |
-| T12 | Faststart | moov atom at file start | moov at end | — |
-
-Fix commands:
-```bash
-# Re-mux with faststart + correct audio (lossless video copy, fast)
-ffmpeg -i input.mp4 -c:v copy -c:a aac -ar 48000 -ac 2 -b:a 192k \
-    -movflags +faststart output.mp4
-
-# Re-encode video at target bitrate (T4 WARN)
-ffmpeg -i input.mp4 -c:v libx264 -profile:v high -level 4.0 \
-    -b:v 8M -maxrate 10M -bufsize 20M -c:a copy \
-    -movflags +faststart output.mp4
-```
-
----
-
-### Side Artifacts
-
-| Artifact | File | Requirement | Why |
-|---|---|---|---|
-| SRT captions | `out/<project>.srt` | ≥ 50 entries | Auto-captions have errors on technical terms |
-| Chapters | `out/chapters.txt` | Starts at `0:00`, one line per scene | Reduces drop-off on 7+ min videos |
-| Thumbnail | `out/thumbnail.jpg` | 1280×720 px, < 2 MB, 16:9 | YouTube picks a random (often black) frame if missing |
-
-```bash
-# Check captions
-python -c "c=open('projects/<project>/out/<project>.srt').read(); print('SRT entries:', c.count('-->'))"
-
-# Extract thumbnail at the thumbnail-moment timestamp from the script strategy block
-ffmpeg -i projects/<project>/out/<project>.mp4 -ss <timestamp> \
-    -frames:v 1 -q:v 1 projects/<project>/out/thumbnail.jpg
-
-# Chapters are auto-generated during the normal build at:
-#   projects/<project>/out/<project>.chapters.txt
-# Re-run the full build if chapters file is missing.
-```
-
----
-
-### Final Upload Report (fill out before uploading)
-
-```
-YOUTUBE VALIDATION — <project>.mp4
-Duration: M:SS    File size: X.X MB    WPM: NNN
-
-LAYER 1 — VISUAL
-  Muted-viewer walkthrough:     [ ] PASS
-  Canvas ≥60% all bullets:      [ ] PASS
-  V1–V8 all scenes:             [ ] PASS
-  Pacing ≥8 changes/min:        [ ] PASS
-
-LAYER 1.5 — ANIMATION
-  Filmstrip A1–A2 (motion + settle):  [ ] PASS
-  Freeze detection A4 (<3s):          [ ] PASS
-  PSNR motion A5 (<45dB):             [ ] PASS
-  REPLACE transitions A6:             [ ] PASS
-
-LAYER 2 — AUDIO
-  WPM 130–160:                  [ ] PASS  (actual: ___)
-  No pause literals:            [ ] PASS
-  No long silences (>2s):       [ ] PASS
-  Narration coverage ≥90%:      [ ] PASS  (actual: ___)
-  AAC stereo 48kHz ≥192kbps:    [ ] PASS
-
-LAYER 3 — TECHNICAL
-  T1  1920×1080:                [ ] PASS
-  T2  30 fps:                   [ ] PASS
-  T3  H.264 High:               [ ] PASS
-  T4  Bitrate ≥8 Mbps:          [ ] PASS  (actual: ___ Mbps)
-  T5–T8 Audio specs:            [ ] PASS
-  T9  Duration match:           [ ] PASS  (drift: ___s)
-  T10 First frame not black:    [ ] PASS
-  T11 Last frame not black:     [ ] PASS
-  T12 Faststart:                [ ] PASS
-  SRT captions:                 [ ] PASS  (___ entries)
-  Chapters file:                [ ] PASS
-  Thumbnail 1280×720:           [ ] PASS
-
-VERDICT:  [ ] UPLOAD-READY   [ ] NEEDS FIXES
-```
+| 0.5 Image assets | presence (HARD) · relevance · license (HARD) · V14 rendered | `references/layers-visual.md` |
+| 1 Visual V1–V13 | muted test · canvas fill · typography · sync · V7–V8 frame inspection · V9 overlap · V10 fit · V11 timeline | `references/layers-visual.md` |
+| 1.5 Animation A1–A8 | filmstrip · per-frame · signatures · A4 freeze · A5 PSNR · A6 REPLACE · A7 spring · A8 summary | `references/layers-animation-audio-youtube.md` |
+| 2 Audio | listen test · −14 LUFS / TP<−1 · coverage · 2.5 mid-bullet coherence · 4 quality levers | `references/layers-animation-audio-youtube.md` |
+| 3 YouTube technical | T1–T12 · side artifacts · final upload report | `references/layers-animation-audio-youtube.md` |
+
+Audio-sync (Layer 2 drift) detail is kept inline above — the most-run check. `vg-visual-quality` scores the
+8 production gates separately.
 
 ---
 
 ## Where this fits in the pipeline
 
-```
-build_video.py
-    ├─ Step 3     per-bullet code authored ............... run 1.1 muted-viewer BEFORE
-    ├─ Step 9     render scenes .........................
-    ├─ Step 9.5   visual_qa.py (brightness) ............. automatic
-    ├─ Step 10    stitch + mux .........................
-    └─ Step 10.5  validate_output.py ................... automatic
-
-After each scene render:
-    Layer 1   (1.7 V1–V8)           → frame inspection
-    Layer 1.5 (A1–A8)               → filmstrip + freeze + PSNR
-    Layer 2   (2.1–2.4 audio)       → listen + coverage check
-    After final stitch:
-    Layer 3   (T1–T12 + artifacts)  → ffprobe + srt + chapters + thumbnail
-```
+`build_video.py`: Step 3 author (run 1.1 muted-viewer BEFORE) · Step 9 render · Step 9.5 visual_qa
+brightness (auto) · Step 10 stitch+mux · Step 10.5 validate_output (auto). **After each scene render:**
+Layer 1 (V1–V13 frames) → Layer 1.5 (A1–A8 filmstrip+freeze+PSNR) → Layer 2 (audio listen+coverage) →
+steps i/j/k (viewer-sense · story-verb · brief-fidelity). **After final stitch:** Layer 3 (T1–T12 + artifacts).

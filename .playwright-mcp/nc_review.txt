@@ -1,0 +1,235 @@
+[01] 0:00 – 0:09
+   N: A blurry screenshot just beat clean, perfect text. / At reading comprehension. / 
+   C: a cyan screenshot frame snaps around it with a soft shutter flash
+
+[02] 0:09 – 0:17
+   N: Not by a rounding error. / By eighteen percent. / 
+   C: a counter starts climbing · then +18% slams in green · a "+18.1% across 6 benchmarks" label settles beneath it
+
+[03] 0:17 – 0:22
+   N: For years, every AI that reads the web has started the same way. / 
+   C: a row of identical pages floods in behind the hero page · they keep multiplying
+
+[04] 0:22 – 0:27
+   N: It throws the page away and keeps only the words. / 
+   C: the page's words peel off into a line of plain text · its layout greys out
+
+[05] 0:27 – 0:35
+   N: A team at Berkeley asked a question that sounds almost stupid. / Among them, the researcher who built Apache Spark. / What if you never turned it into text? / What if the AI just looked at it?
+   C: a violet lens blinks open and settles over it · the amber cell glows through it
+
+[06] 0:35 – 0:44
+   N: Look at what "throwing the page away" actually means. / When an AI reads the web, it almost never sees the web.
+   C: it begins riding right · the desk recedes into depth · a red intake machine slides in at the right edge, teeth idling
+
+[07] 0:44 – 0:54
+   N: It sees this. / A parser, quietly turning every page into a wall of plain text. / 
+   C: out the other side spools a strip of plain mono text · it stacks into a grey "wall of text" block, labelled text/plain
+
+[08] 0:54 – 0:59
+   N: Your chatbot does this. / Your agents do this. / 
+   C: each feeds the same machine and emerges as the same grey text-wall, stacking up · the tags pulse
+
+[09] 0:59 – 1:04
+   N: The whole retrieval pipeline starts right here. / 
+   C: the grey text-walls stack into a tall pile · an arrow loops every tag back through the same red machine
+
+[10] 1:04 – 1:14
+   N: And for a plain article, that's completely fine. / Words in, words out. Nothing lost.
+   C: it emerges as clean text · a green tick stamps "ok" · the article and its text sit side by side, matching
+
+[11] 1:14 – 1:27
+   N: But the web isn't plain. / It's tables. Charts. Columns. Layout. / Structure that means something.
+   C: each glows with its structure (rows/columns lit cyan) · our hero page slides to the front of the line toward the machine
+
+[12] 1:27 – 1:40
+   N: And the moment a page has structure, / this is exactly where it quietly breaks.
+   C: a red ⚠ ignites on its table · the amber answer-cell flickers nervously · it holds at the teeth, about to enter
+
+[13] 1:40 – 1:50
+   N: Here's the pipeline behind almost every text search. / Five steps. / Watch our page go through it.
+   C: the hero page enters at the left and docks at HTML, tags wrapping it in angle brackets · the rail pulses, ready
+
+[14] 1:50 – 2:02
+   N: At step two, the parser doesn't photograph the page. / It transcribes it. / Picture to words.
+   C: push in — the page's content converts into a single running line of mono text · the visual page dissolves into that text line
+
+[15] 2:02 – 2:09
+   N: But a transcription has to make a choice about a table. / 
+   C: the red parser-blade hovers over the grid, deciding · the table's rows tense, anticipating the cut
+
+[16] 2:09 – 2:16
+   N: Flatten it into a line of numbers. / Or drop it entirely.
+   C: rows slide apart · the column headers float free · cells detach and collapse into a loose run of numbers with no grid · a faint "or — dropped" ghost flickers where the table was
+
+[17] 2:16 – 2:28
+   N: Then the text gets chopped into chunks, by a fixed size. / Not by meaning. By a token count.
+   C: a ruler-blade chops it at fixed intervals · it falls into a stack of equal-length mono strips · one chunk splits the old table's row mid-number
+
+[18] 2:28 – 2:42
+   N: And the rows and columns — the thing that told you which number meant what — / are just gone.
+   C: a ghost of the original grid tries to reassemble over the pile and fails — the cells no longer line up · the amber answer-cell scatters loose among the strips, dim and lost
+
+[19] 2:42 – 2:55
+   N: So what the model finally gets to read isn't a page anymore. / It's a pile of disconnected strips.
+   C: the strips breathe faintly · the scattered amber cell flickers somewhere in the middle
+
+[20] 2:55 – 3:06
+   N: How much actually gets lost? / 
+   C: a question mark pulses over it · the strips lift slightly as if weighed · a measuring bracket draws around the pile, waiting for a number
+
+[21] 3:06 – 3:18
+   N: On a single page, a standard parser can throw away more than forty percent of it. / 
+   C: the strips visibly shrink to ~60% of their volume as the number lands · a label settles: "discarded by the parser"
+
+[22] 3:18 – 3:28
+   N: Forty percent. / Gone before the model reads a single word. / 
+   C: the ghosts flicker, unreadable · the amber answer-cell is among them, greyed out
+
+[23] 3:28 – 3:37
+   N: And here's the part that should worry you. / Your agent doesn't know it's missing. / 
+   C: it shows no doubt — a calm "done" tick, oblivious to the greyed-out table behind it · the ghost table looms unread behind the confident bubble
+
+[24] 3:37 – 3:45
+   N: It answers from a table it never actually saw. / The answer was right there. It just got shredded first.
+   C: but the agent's reply lands on the WRONG value — a red ✗ slams · and the blazing answer is crushed dark and buried in the strips, untouched
+
+[25] 3:45 – 3:56
+   N: And it isn't random which pages suffer. / It's the ones you care about most.
+   C: each highlights its structure (rows/cols glow cyan) · they stack into one representative table at center
+
+[26] 3:56 – 4:08
+   N: The pricing table. The spec sheet. The comparison grid. / The exact pages people build search for in the first place.
+   C: labels tag its rows and columns · it reads perfectly · a cyan frame says "what's on the page"
+
+[27] 4:08 – 4:22
+   N: Now watch. / Left is the real table. / Right is what the model actually receives.
+   C: on the right, the parser's output writes in — mono run-on lines, no grid · the right panel tilts slightly off-balance
+
+[28] 4:22 – 4:29
+   N: Rows collapse. / Headers float off on their own. / 
+   C: the rows collapse together, losing their boundaries · a column header detaches and floats up alone, unmoored
+
+[29] 4:29 – 4:36
+   N: And a price ends up sitting right next to the wrong product. / 
+   C: a red cable lashes the mismatch together · the wrong price locks to the wrong thing · that result ships straight to a shopper, who clicks buy
+
+[30] 4:36 – 4:48
+   N: So on these structured pages, text retrieval scores about forty-two out of a hundred. / 
+   C: a faint scale 0–100 draws behind it, the score sitting below midline · the right panel sinks and dims under the weak score
+
+[31] 4:48 – 5:00
+   N: Hold onto that number. / Forty-two. / We're going to come back to it.
+   C: the split holds — left whole, right garbled · the left table's edge begins to shimmer cyan, hinting at the tile to come
+
+[32] 5:00 – 5:11
+   N: The question the Berkeley team actually asked sounds almost reckless. / What if you skipped the shredder completely? / Don't parse the page. Screenshot it.
+   C: a browser frame draws in and renders the full page — table, chart, amber cell — like a screen capture · a cyan label: "render, don't parse"
+
+[33] 5:11 – 5:18
+   N: Render the page the way a browser would. / 
+   C: four station labels settle beneath — RENDER · TILE · RETRIEVE · READ · the RENDER node lights
+
+[34] 5:18 – 5:24
+   N: Then slice that picture into tiles. / 
+   C: the grid cuts the image into clean rectangular tiles that lift slightly apart · the TILE node lights as they settle
+
+[35] 5:24 – 5:38
+   N: And now the table isn't split by a token limit. / It's one tile. / It stays whole.
+   C: that tile pulses cyan, uncut and unflattened · a tiny "1 table = 1 tile" tag lands
+
+[36] 5:38 – 5:52
+   N: When you ask a question, the system pulls the few tiles that look relevant. / Visually. Not by keyword.
+   C: a few tiles (including the table tile) glow and lift toward the front · the irrelevant tiles dim and recede into depth · the lifted tiles line up for the reader
+
+[37] 5:52 – 6:05
+   N: Then a vision model reads them straight off the pixels. / Rows, columns, the chart — exactly as you'd see them.
+   C: as it passes, the rows and columns light up read correctly · the amber answer-cell reads clearly · a green tick: "read as seen"
+
+[38] 6:05 – 6:15
+   N: Nothing was ever transcribed. / So nothing was ever lost.
+   C: a side-by-side ghost of S3's strip-pile appears, then dissolves — the contrast lands
+
+[39] 6:15 – 6:25
+   N: Does looking actually beat reading? / Watch them both answer one real question. / 
+   C: text RAG digs through its strips and snaps back the WRONG plan — a red ✗ slams on · PixelRAG looks at the page and lands the RIGHT plan — a green ✓ blooms
+
+[40] 6:25 – 6:37
+   N: And it's not a one-off. / Across six question-answering benchmarks, the screenshot system won every single one.
+   C: each flips cyan toward the right page · a "6 / 6" tally lands on the PixelRAG side · the right page glows, the left dims
+
+[41] 6:37 – 6:44
+   N: Remember that forty-two on tables? / 
+   C: the TEXT bar draws in and fills to 42.5 (red), counter ticking · it sits below the midline, weak
+
+[42] 6:44 – 6:50
+   N: PixelRAG scores almost forty-nine. / 
+   C: it climbs to 48.8 (cyan), counter ticking · it clearly overtakes the red · a gap marker shows "+6.3" · the cyan glows, the red desaturates
+
+[43] 6:50 – 7:02
+   N: Overall, eighteen percent more accurate. / 
+   C: the whole right page brightens · a "more accurate" label settles · the bars hold, the gap obvious
+
+[44] 7:02 – 7:14
+   N: And it's not just smarter. / It's cheaper. / Up to ten times fewer tokens for an agent to get its answer.
+   C: the TEXT bar is long (red), the PIXEL bar one-tenth the length (cyan) · a "10×" tag snaps onto the short cyan bar · both metrics now favor the right page
+
+[45] 7:14 – 7:25
+   N: More accurate, and ten times cheaper. / That combination almost never happens.
+   C: a "+18% · 10× cheaper" banner lands · the divider glows · the whole-page side blooms cyan
+
+[46] 7:25 – 7:37
+   N: But the benchmark isn't the part that should make you sit up. / 
+   C: two empty reading desks rise — left rimmed red, right rimmed cyan, a shadowed library behind each · a time-slider draws along the bottom (gen 1 · 2 · 3)
+
+[47] 7:37 – 7:52
+   N: Think about every search system you've ever built. / The day a better model ships, you rebuild it. / New parser, re-chunk everything, re-index the whole thing.
+   C: its whole library feeds the shredder, becomes strips, restacks — a full rebuild · the slider ticks to gen 2 and it tears down and rebuilds again, identically · a weary loop-arrow circles the desk
+
+[48] 7:52 – 8:04
+   N: Text RAG stays flat. / You have to drag it forward by hand, every single time.
+   C: it holds dead-flat across gen 1→3 · each generation a hand-crank nudges it — it never rises on its own · the left desk dims, tired
+
+[49] 8:04 – 8:18
+   N: PixelRAG doesn't. / The index is just pixels. Pictures of pages. / It never changes.
+   C: the slider ticks, but the right library holds perfectly still · a calm "unchanged" lock settles on it
+
+[50] 8:18 – 8:26
+   N: When a smarter vision model arrives, you don't re-index anything. / You just swap the reader. / 
+   C: the old lens lifts away and a sharper one drops in · the library underneath stays untouched
+
+[51] 8:26 – 8:33
+   N: And every answer gets better. / For free. / 
+   C: the lens sharpens from blurry to crisp · more amber answer-cells ignite across the same unchanged pages · the right graph climbs on its own, no hand-crank
+
+[52] 8:33 – 8:45
+   N: The lead author's point is blunt: text RAG stays flat, while PixelRAG rides the model's scaling curve. / Every other search you build gets dumber the day a better model ships. / This one gets smarter while you sleep.
+   C: the wall blazes with amber answers, the lens crisp, the curve peaking · the left desk sits dim and exhausted, still mid-rebuild · a quote line settles low: "rides the curve"
+
+[53] 8:45 – 8:56
+   N: So back to the screenshot that beat the text. / 
+   C: the cyan tiles settle and fuse back into a single whole page (table + chart) — the morph closes · it holds, quiet, the amber cell still dim
+
+[54] 8:56 – 9:08
+   N: It wasn't magic. / It was the layout. / 
+   C: the amber answer-cell re-ignites in its row, lit and intact (the callback payoff) · a soft "layout = structure = meaning" tag settles
+
+[55] 9:08 – 9:16
+   N: For thirty years we taught machines to read the web like a fax. / 
+   C: the page thins to a single grey transcribed line, the rest discarded · everything that wasn't words is gone
+
+[56] 9:16 – 9:24
+   N: Strip the page down to words, and throw the rest away. / 
+   C: the page reassembles, whole again · it sits intact, the loss undone
+
+[57] 9:24 – 9:38
+   N: But the rest wasn't decoration. / The columns, the rows, where a number sits on the page — / that was the data.
+   C: each pulse stamps a small "= data" tag · the whole page glows as one piece of information, not a container for it
+
+[58] 9:38 – 9:50
+   N: PixelRAG's bet is just this. / Stop transcribing the web. / Let the model see it. / 
+   C: the shredder icon, far in the background, powers down and goes dark · the page and lens hold, calm and complete
+
+[59] 9:50 – 10:00
+   N: The answer was on the page the whole time. / We were just shredding it before anyone could read it. / Before your next build, ask what else you're throwing away before the model ever sees it. / Subscribe — I dig up the research that quietly changes how you build.
+   C: the thesis line settles beneath — "THE LAYOUT WAS THE DATA" · a small "subscribe" prompt fades in low-right · then a final hold

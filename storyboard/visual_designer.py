@@ -92,8 +92,59 @@ def _bullet_cache_key(scene: Scene, bullet_idx: int, design_tokens: dict) -> str
     h.update(f"{bullet_idx}|{b.time_from_sec}-{b.time_to_sec}".encode("utf-8"))
     h.update(f"{b.headline}|{b.body}".encode("utf-8"))
     h.update(json.dumps(design_tokens, sort_keys=True).encode("utf-8"))
-    h.update(b"prompt-v14-per-bullet")  # bump when prompt template changes
+    # The scene's director's brief now feeds the codegen (the Phase-1→Phase-2 bridge), so
+    # it is part of the cache identity: editing the camera / layout / through-line in the
+    # script must re-seed the bullet. getattr keeps old pickled/!brief scenes working.
+    h.update(getattr(scene, "global_style", "").encode("utf-8"))
+    h.update(getattr(scene, "description", "").encode("utf-8"))
+    h.update(getattr(scene, "design", "").encode("utf-8"))
+    # The compiled SHOT-SHEET IR (the bullet's `motion:` op·topology·params·token) is a
+    # first-class semantic input (Motion-Native Scene Contract layer 10): editing the IR
+    # alone must re-seed the bullet. getattr/json keeps pre-IR scenes (ops=None) stable.
+    h.update(json.dumps(getattr(b, "ops", None), sort_keys=True).encode("utf-8"))
+    # JSON render-contract path: the bullet's RAW structured object feeds the codegen prompt
+    # verbatim (sentence roles/durations/pauses/emphasis) — so it is cache identity too.
+    # None for .txt scripts → the hash input is stable for the whole legacy corpus.
+    h.update(json.dumps(getattr(b, "raw", None), sort_keys=True, default=str).encode("utf-8"))
+    h.update(b"prompt-v18-per-bullet")  # bump when prompt template changes (v18: + raw JSON contract block)
     return h.hexdigest()[:16]
+
+
+def _stage_cache_key(scene: Scene, design_tokens: dict) -> str:
+    """Cache key for the scene's STAGE (the persistent world component, scene-driven
+    architecture). Identity = the scene's narration + director's brief + tokens: any
+    edit to what the stage must depict re-seeds it. Bullet-level fields are NOT part
+    of the key — beats modulate the stage; they don't define it."""
+    h = hashlib.sha256()
+    h.update(scene.narration.encode("utf-8"))
+    h.update(json.dumps(design_tokens, sort_keys=True).encode("utf-8"))
+    h.update(getattr(scene, "global_style", "").encode("utf-8"))
+    h.update(getattr(scene, "description", "").encode("utf-8"))
+    h.update(getattr(scene, "design", "").encode("utf-8"))
+    h.update(b"stage-v1-per-scene")
+    return h.hexdigest()[:16]
+
+
+def lookup_stage(scene: Scene, design_tokens: dict) -> str | None:
+    """Return the scene's cached STAGE code (persistent world, rendered on scene-local
+    frames outside any bullet Sequence), or None when the scene has no seeded stage.
+    Optional by design: scenes without a stage render exactly as before (back-compat).
+    Never spawns any LLM — cache-only, like bullets."""
+    key = _stage_cache_key(scene, design_tokens)
+    cache_file = CACHE_DIR / f"stage-s{scene.number}-{key}.json"
+    if not cache_file.exists():
+        return None
+    parsed = json.loads(cache_file.read_text(encoding="utf-8"))
+    code = str(parsed.get("code", "")).strip()
+    if not code:
+        raise RuntimeError(
+            f"scene {scene.number}: stage cache file has empty 'code' — re-seed the stage"
+        )
+    if "React.createElement" not in code and "React.Fragment" not in code:
+        raise RuntimeError(
+            f"scene {scene.number}: cached stage code has no React.createElement — re-seed"
+        )
+    return code
 
 
 # ─── prompt builders kept ONLY so callers / tooling can render the same
@@ -453,12 +504,57 @@ def _narration_for_bullet(scene: Scene, bullet_idx: int) -> str:
     return " ".join(assigned) if assigned else scene.narration
 
 
+def _scene_brief_block(scene: Scene) -> str:
+    """The Phase-1 director's brief for this scene, formatted for the codegen prompt.
+    Returns '' for conversion-path scripts that carry no brief (the prompt then reads
+    exactly as before — behavior-preserving). This is what stops the per-bullet author
+    re-inventing the camera / layout / through-line the script already decided."""
+    gs = getattr(scene, "global_style", "")
+    desc = getattr(scene, "description", "")
+    des = getattr(scene, "design", "")
+    if not (gs or desc or des):
+        return ""
+    parts = ["## DIRECTOR'S BRIEF — honor this; do NOT invent a different look\n"
+             "(the script already decided the world, camera, layout, and through-line — build TO it)"]
+    if gs:
+        parts.append(f"\n### GLOBAL VISUAL STYLE (every scene inherits this)\n{gs}")
+    if desc:
+        parts.append(f"\n### THIS SCENE — description (environment · transformation · final image)\n{desc}")
+    if des:
+        parts.append(f"\n### THIS SCENE — design (location · cinematic camera · layout · "
+                     f"through-line state · primary focus)\n{des}")
+    return "\n".join(parts) + "\n"
+
+
+def _raw_contract_block(bullet) -> str:
+    """JSON render-contract path: the bullet's ORIGINAL structured object, verbatim, for the
+    LLM codegen — 'parse for the machine, JSON-direct for the LLM's creative step'.
+    Carries what the flattened BODY line loses: per-sentence roles/durations/pauses/emphasis.
+    Empty string for .txt scripts (raw=None) → prompt unchanged for the legacy corpus."""
+    raw = getattr(bullet, "raw", None)
+    if not raw:
+        return ""
+    contract = json.dumps(raw, indent=2, ensure_ascii=False, default=str)
+    return f"""
+## RENDER CONTRACT (this bullet's structured JSON — read it DIRECTLY; it is richer than BODY)
+Use these fields mechanically: `narration[].emphasis_word` → the Emphasize target ·
+`narration[].pause_after_ms` ≥ 400 → a HOLD (mandated stillness) · `narration[].role`
+(breath = stillness, release/takeaway = let it land) · `narration[].duration_ms` → the real
+frame budget per sentence · `visual_intent` → the choreography hint · `what_happens` → the
+beat sequence in order. Values on screen come ONLY from this contract and the narration.
+```json
+{contract}
+```
+"""
+
+
 def _make_bullet_prompt(scene: Scene, bullet_idx: int) -> str:
     bullet = scene.animation[bullet_idx]
     bullet_narration = _narration_for_bullet(scene, bullet_idx)
+    brief = _scene_brief_block(scene)
     return f"""SCENE {scene.number} — "{scene.title}"
 
-## Words the narrator speaks DURING this visual (your on-screen text MUST come from these words)
+{brief}## Words the narrator speaks DURING this visual (your on-screen text MUST come from these words)
 {bullet_narration}
 
 ## Full scene narration (for CONTEXT ONLY — do NOT pick audio_anchor from here; pick from the OPENING WORDS section above)
@@ -469,6 +565,34 @@ def _make_bullet_prompt(scene: Scene, bullet_idx: int) -> str:
 bullet {bullet_idx + 1} of {len(scene.animation)} — window {bullet.time_from_sec:.0f}-{bullet.time_to_sec:.0f}s
 HEADLINE: {bullet.headline}
 BODY: {bullet.body}
+{_raw_contract_block(bullet)}
+
+## HOW TO EXECUTE THE MOTION DIALS IN THE BODY (this is your motion spec — build exactly this)
+The BODY is a STORY beat plus director dials. Translate each to motion (the bindings above build it):
+- event / change / result — event = the setup state; change = the motions in NARRATION ORDER
+  (the verbs ARE the motion, separated by the dot); result = the end state. Build the change
+  clauses in the order written; NEVER reorder them.
+- sync — the ONE payoff phrase the viewer remembers. Land the payoff on findWord(that phrase);
+  the earlier change clauses fire on their own earlier narration words (findWord per clause), so
+  the motion breathes word-by-word with the voice.
+- intensity (low | medium | impact | climax | wonder) — the EMPHASIS amplitude; apply to the
+  PAYOFF element only:
+    low    = small, subtle, no glow, short
+    medium = normal (the default if no intensity is given)
+    impact = a sharp HIT — overshoot pop + flash, bouncy/heavy spring, brief hold
+    climax = the scene's BIGGEST move — max scale + hero glow + camera push-in + HOLD the final frame
+    wonder = slow, expansive — soft glow + camera pull-back + long hold
+  A climax/wonder beat must clearly out-emphasize the medium beats around it (no flat hierarchy).
+- animation_pattern (optionally followed by a direction word) — HOW the change clauses flow:
+    morph    = ONE continuous transform, no cuts        domino   = causal chain, each starts as the prior lands
+    cascade  = same action across elements, in a wave   together = all on the same frame
+    assemble = pieces converge into one whole           compare  = two sides in parallel, then emphasize the winner
+    escalate = each step bigger than the last           conveyor = continuous travel through fixed stations
+    bloom    = radiate outward from a center
+  direction word (for bloom/cascade): from-center = radial outward (discovery) · left-to-right =
+  ordered by x (progress) · all-at-once = same frame (force) · scattered = seeded-random (organic).
+- The scene's through-line / callback object (e.g. an amber answer-cell) is the DEFAULT camera +
+  emphasis anchor — keep it lit whenever it is present on screen; never let it go dim.
 
 ## HARD RULE — USE NARRATION_TEXT FOR ALL ON-SCREEN TEXT
 The constant `NARRATION_TEXT` is automatically prepended to your code and contains

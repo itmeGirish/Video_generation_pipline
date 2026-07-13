@@ -1,6 +1,7 @@
 ---
 name: vg-youtube-validation
 description: "Final YouTube upload standards check: resolution, codec, bitrate, frame rate, audio, captions, thumbnail, chapters. The technical gate (T1–T12) lives in rule 23 Layer 3 — this file points there and documents what YouTube does to non-compliant videos. Use whenever checking if a video is upload-ready, or any request like \"YouTube upload check,\" \"is this ready to upload,\" \"ffprobe validation,\" \"codec check,\" \"bitrate,\" \"upload standards,\" or \"T1 to T12 gate.\""
+model: opus
 ---
 
 # YouTube Output Validation — Rule 22

@@ -1,6 +1,7 @@
 ---
 name: vg-visual-designer
 description: "How per-bullet React.createElement code is authored in-session and seeded into the cache. NO subprocess to claude CLI. Use whenever authoring bullet code, seeding the cache, debugging a BLOCK RUNTIME ERROR, or any request like "author bullet code," "visual designer," "per-bullet codegen," "seed cache," "write the React code," or "DynamicBlock.""
+model: opus
 ---
 
 # Visual Designer (per-bullet authoring + cache lookup)
@@ -39,7 +40,7 @@ the viewer sees) + an `audio_anchor`/`anchor_mode`. Your job is **translation, n
 turn each beat into a `Kit` composition; the physics is applied automatically.
 
 0. **Read the scene's DIRECTOR'S BRIEF first — it is the source; the bullets only execute it.**
-   Each scene opens with TWO blocks (produced by `script-scene-design`): a prose
+   Each scene opens with TWO blocks (produced by `scene-composer`): a prose
    **`<!-- SCENE DESCRIPTION -->`** (Environment · Situation · Viewer Realization · Emotional Journey
    · Visual Transformation · Final Image) and a **`<!-- SCENE DESIGN -->`** field block — plus ONE
    `<!-- GLOBAL VISUAL STYLE -->` at the TOP of the script. **Derive the whole scene from these, then
@@ -60,7 +61,7 @@ turn each beat into a `Kit` composition; the physics is applied automatically.
    - **REFERENCE ASSETS / `image: [asset: img/x.png]`** — that's a REAL screenshot. PRESERVE its layout
      / typography / spacing / tool-call rows; **animate ONLY the changes** on top. Never redraw or
      invent the UI. If the file is missing, build an ACCURATE vector from documented real details (the
-     `✻` prompt box, `⏺`/`⎿` rows) — never a fake (see `script-research` §"The REAL interface",
+     `✻` prompt box, `⏺`/`⎿` rows) — never a fake (see `research-engine` §"The REAL interface",
      `vg-graphics-assets`). A `REFERENCE:` line naming real software with no asset present = author the
      accurate vector, flag it, do NOT improvise a generic terminal.
    - **CINEMATIC INTENT** — realize it in the code: CAMERA (push-in = scale-up the focal group over the
@@ -80,7 +81,7 @@ turn each beat into a `Kit` composition; the physics is applied automatically.
    one. Research the real look first (real prompt box, real tool-call format, how usage/limits are
    actually shown); never fabricate UI the product doesn't have (e.g. a top "usage bar" Claude Code
    has no such thing). A viewer who uses the tool spots a fake instantly (see
-   `script-research` §"The REAL interface"). **VISUAL METAPHOR / OBJECTS** name the persistent objects
+   `research-engine` §"The REAL interface"). **VISUAL METAPHOR / OBJECTS** name the persistent objects
    to reuse (don't invent a new one per scene); **PRIMARY FOCUS / ATTENTION FLOW** set the eye path.
    Then read the WHERE (location) and the named objects (visible) and build that setting as
    the scene's persistent frame — e.g. a Claude Code terminal, a usage gauge, a split-screen. Hold
@@ -88,37 +89,21 @@ turn each beat into a `Kit` composition; the physics is applied automatically.
    their state (each beat's `Visual Action` + `State Change`). This orients the viewer ("where am
    I?") — the #1 fix for "abstract" visuals.
 
-   **CONSISTENT SCENE-DESIGN DNA = the 5 PRINCIPLES (carry these across every scene — do NOT copy
-   scene 1's literal layout).** What's constant is the PRINCIPLES, not the picture. Each scene gets
-   its OWN scene-appropriate recognizable interface — S1 = a code editor + Claude Code terminal,
-   S2 = a usage/status dashboard, S3 = a conversation/context view, S7 = a split-screen, etc. — and
-   ALL of them obey these five (the reference is how scene 1 did it):
-   1. **Real recognizable interface** — a dark panel with a title bar + 3 traffic dots, answering
-      "where am I?" (follows `location:`). Not floating title-text + shapes on empty bg.
-   2. **Dense, frame-filling** — the panel + living object fill the frame; never ≥half empty beige.
-   3. **Living object** — the usage tank / context pile / terminal, same form + position each scene.
-   4. **Action + cause→effect** — something HAPPENS in the panel that visibly drives the living object.
+   **CONSISTENT SCENE-DESIGN DNA = 5 PRINCIPLES (carry the PRINCIPLES across every scene — do NOT
+   copy scene 1's literal layout).** Each scene gets its OWN recognizable interface (S1 code editor +
+   terminal, S2 usage dashboard, S3 conversation view, S7 split-screen), all obeying:
+   1. **Real recognizable interface** — a dark rounded PANEL (title bar + 3 traffic dots + a
+      `<context> — my-app` mono label) on light `D.bg` + `Kit.DotGrid`, as primary container. Answers
+      "where am I?" (follows `location:`). NOT floating title-text + shapes on empty bg.
+   2. **Dense, frame-filling** — panel + living object fill the frame; never ≥half empty beige (the
+      scene-2-sparse failure, fails E9). Thin content → chrome + readout rows + tank fill the space.
+   3. **Living object** — usage tank / context pile / terminal, SAME form + position every scene
+      (tank ≈ right third; terminal/panel ≈ left).
+   4. **Action → cause→effect→COST** — something HAPPENS in the panel that visibly drives the living
+      object; render the VISIBLE COST (token stamps `+400`, `+6,000`, `−47%` are explanation, not decoration).
    5. **Color identity** — green=remaining · red=consumed · amber=draining · cyan=input · violet=context.
-   Concretely, every scene shares:
-   - light `D.bg` + `Kit.DotGrid`, and a **dark rounded interface PANEL** (`D.text`, `borderRadius`,
-     a title bar = 3 traffic dots + a `<context> — my-app` mono label) as the primary container —
-     the recognizable "app/interface" chrome. NOT floating title-text + shapes on empty background.
-   - the recurring **living objects** (usage fuel-tank, Claude Code terminal, context pile/backpack)
-     drawn the SAME way every scene, at consistent positions (tank ≈ right third; terminal/panel ≈
-     left).
-   - **DENSE, frame-filling** — the panel + living object fill the frame; never leave ≥half the
-     canvas as empty beige (that's the scene-2-sparse failure; fails E9). If a scene has only a
-     little content, the interface chrome + readout rows + the tank fill the space.
-   - color identity held: green=remaining · red=consumed/waste · amber=draining · cyan=your input ·
-     violet=context/time.
-   A scene that renders as a title + a couple of floating shapes on empty bg = INCONSISTENT → rebuild
-   it to the panel+living-object DNA before advancing.
-
-   Also honor the beat's framework parameters (the script writes these explicitly):
-   **Cause→Effect→Cost** (render the actor doing the thing → the visible result → the **VISIBLE COST**
-   — token stamps like `+400`, `+6,000`, `−47%` are part of the explanation, render them, not
-   decoration) and **living objects** (the usage gauge / context pile recur across scenes — same form,
-   same colors). Then per bullet:
+   A scene that renders as a title + a few floating shapes on empty bg = INCONSISTENT → rebuild to the
+   panel+living-object DNA before advancing. Then per bullet:
 
 1. **Timing (mechanical, already done):** the build set `framesFrom` from the bullet's
    `audio_anchor` (+ appear/through/land). Sequence the beats across `[0, durationInFrames]` —
@@ -236,26 +221,45 @@ the Remotion bundler. **Never edit the build-time mirror — edit the canonical.
 ]
 ```
 
-## Additive-layering contract (CRITICAL — read before authoring)
+## SCENE-DRIVEN layering contract (CRITICAL — read before authoring)
 
-**Each bullet's `<Sequence>` extends from its `framesFrom` to the end of the
-scene** (set in `UniversalScene.tsx`). Blocks STACK visually in array order:
-bullet 1 keeps rendering while bullet 2 paints ON TOP, then bullet 3 on top of
-that, and so on.
+> ⚠ **CORRECTED 2026-07-10 (scene-driven migration — the unit of authorship is the SCENE,
+> not the bullet).** `UniversalScene.tsx` renders TWO layers:
+> - **THE STAGE** (a `role:'stage'` block, seeded per scene via a `{"scene":N,"stage":true,
+>   "code":…}` bundle entry): the scene's PERSISTENT WORLD — the settled composite (zones +
+>   cast at homes + atmosphere) plus the scene's RUNNING MECHANISMS (the contract's
+>   `stage.process` → `cycle`). It renders OUTSIDE any Sequence on SCENE-LOCAL frames
+>   (0 → scene end): the world persists across every beat and a mechanism loop NEVER resets
+>   phase at a bullet boundary. Authored ONCE per scene.
+> - **THE BEATS**: each bullet's `<Sequence>` owns its exclusive `framesFrom → framesTo`
+>   window ON TOP of the stage, and renders ONLY its MODULATION — spotlight a station,
+>   change a rate, land the payoff. Beat-local frame restarting at 0 is correct for
+>   entrance timing; anything persistent or cycling belongs in the stage.
+>
+> **Division:** STAGE = the world + what always runs · BEAT = what this narration window
+> changes. A beat that redraws the world double-paints over the stage; a scene whose world
+> lives in its beats has no continuity (the legacy per-beat-restaging failure).
 
-This matches how scripts naturally describe a scene:
+**LEGACY — a scene with NO seeded stage** falls back to the slot contract: each bullet's
+Sequence is exclusive (the prior bullet UNMOUNTS), so each bullet must render the FULL
+visual state during its slot — settled priors + its delta. Two ways to satisfy it:
 
-> "Two scorecards slide in" → "ACT benchmark rows fill" → "REASON benchmark rows fill"
-> The script intends the rows to appear INSIDE the cards drawn by bullet 1.
+1. **Author self-contained** — shared `mk*` helpers per scene; each bullet calls the
+   helpers with settled params for prior elements, then animates its delta.
+2. **Compose at seed time (compose-at-seed-time)** — author deltas + wrap at bundle
+   merge: prior bodies as IIFEs with `frame` shadowed to a large settled constant, own
+   body live. All timing must be CLAMP'd interpolates/springs so priors settle cleanly:
+   ```js
+   return React.createElement(React.Fragment, null,
+     ((frame)=>{ /* bullet 1 body */ })(100000),   // settled
+     ((frame)=>{ /* bullet 2 body */ })(100000),   // settled
+     ((frame)=>{ /* own body     */ })(frame));    // live
+   ```
 
-Without additive layering, each bullet would have to redraw every persistent
-element from prior bullets — easy to forget, brittle, and produces
-mid-scene "the cards disappeared" bugs.
+### What every bullet must do under slot-based layering
 
-### What every bullet must do under additive layering
-
-- **Default (additive)**: just draw your own delta. The previous bullets'
-  visuals are still on screen underneath; you stack on top.
+- **Default (continuing the scene)**: redraw prior settled elements (via helpers or
+  seed-time composition) + animate only your delta. A bare delta = empty scene.
 - **Replace (whole-canvas transition)**: when the bullet's intent is "the
   scene transitions to a new metaphor and the prior visuals should disappear"
   (e.g. cards fade out → new card materializes), the FIRST element your code
@@ -416,15 +420,6 @@ Fix ALL violations before running the render. A `extract_error` violation means 
    ranges (`[anchor] X-Yf  <headline>`); compare the budget against your
    spring/typewriter durations BEFORE submitting the bundle.
 
-### Why this design
-
-The previous architecture played each block in its own `[framesFrom, framesTo)`
-window with no overlap — when block N+1 started, block N's visuals vanished.
-That meant every author had to redraw cumulative state in every bullet, which
-was brittle (one missing redraw → an entire 5-second hold of empty cards in
-the middle of a scene). The additive-stack design pushes the responsibility
-to the renderer so authors can express the script's intent directly.
-
 ## Runtime contract for the LLM-emitted `code`
 
 The function body runs every frame inside a Remotion `<Sequence>`. These
@@ -486,39 +481,16 @@ it's "make the bullet body more concrete":
    generic visual; concrete body (`8 cyan tentacles spring out from center, each
    with a tool icon at the tip`) → bespoke visual.
 2. Re-author this bullet in the active session (you), re-seed via `seed_bullet_cache.py`.
-3. If you (Opus 4.7) authored a thin layout, the right answer is to re-read the bullet
+3. If you (Opus 4.8) authored a thin layout, the right answer is to re-read the bullet
    body, look for missed concrete details, and rewrite — not to switch models.
 
 There is no rate limit to manage anymore — the pipeline is pure cache lookup.
 `DESIGNER_PARALLELISM` now controls disk-read parallelism only (default 8).
 
-## Model selection (which Claude does authoring vs. routing)
+## Model — Opus 4.8 for everything
 
-The pipeline does NOT pin a model in config — there's no subprocess to feed.
-The acting Claude Code session's model is what authors each bullet:
-
-- **Opus 4.7** — Step 2 authoring, Step 10.5 quality check, any correction rewrite.
-- **Sonnet 4.6** — running `seed_bullet_cache.py`, running `build_video.py`,
-  watching logs. Delegated to Sonnet via subagent (NOT a manual `/model` switch).
-- **Haiku 4.5** — status polls and file-existence checks (subagent).
-
-**Enforcement is via subagents, not discipline.** When you finish authoring bullets,
-do NOT run `python storyboard/seed_bullet_cache.py` directly from the Opus session —
-that pays Opus rates for command execution. Instead spawn a Sonnet subagent using:
-
-```
-Agent(
-  subagent_type: "general-purpose",
-  model: "sonnet",
-  description: "...",
-  prompt: "..."
-)
-```
-
-The recipe is in `SKILL.md` § "ENFORCEMENT". The `Agent` tool's `model` parameter
-is the actual enforcement — verified working in Claude Code 2026-05 (Sonnet
-billed as Sonnet, isolated context window). Manual `/model` switching is
-documented as a fallback. NOTE: file-based custom subagents at
-`.claude/agents/<name>.md` were tested and are NOT supported by this Claude Code
-build — only the 5 builtin subagent types resolve. Stick with the inline-model
-pattern on `general-purpose`.
+All authoring, the Step 10.5 quality check, and every correction rewrite run on **Opus 4.8** (the
+acting session). Do NOT delegate seeding / build / log-watching to Sonnet/Haiku subagents — run them
+here on Opus; the pipeline is pure cache lookup with no rate limit to manage (`DESIGNER_PARALLELISM`
+controls disk-read parallelism only, default 8). File-based custom subagents (`.claude/agents/*.md`)
+are not supported by this build regardless.

@@ -77,6 +77,52 @@ Then check these failure modes (each one cost real time on prior projects):
   ⑩ ADDITIVE bullet's prior elements should NOT animate again
     Re-mount with opacity:1 at their settled position, no entry spring
 
+  ⑪ FRAME ONE POPULATED — bullet 1 opens with the stage visible at frame 0,
+    first hero motion underway ≤~15f. No blank-canvas wait, no slow fade
+    from nothing (scene 1's open IS the hook). `vg-code-sequencing` §FRAME ONE
+
+  ⑫ DERIVE key numbers, never assert — the beat's load-bearing value arrives
+    via Kit.FormulaChips / Kit.Counter / Kit.StackedLedger (operands → result).
+    A pasted static stat chip on first appearance = FAIL. `vg-code-artifacts`
+
+  ⑬ INSTRUMENTS RE-DIAGNOSE — any Gauge/MeterBar/RefCard on stage is wired to
+    the scene driver and visibly flips value+state+verdict at thresholds.
+    An instrument that never re-reads the world is decoration. `vg-code-artifacts`
+
+  ⑭ NO STALE ELEMENT — no load-bearing element pixel-identical across ≥2 beat
+    boundaries; each held element RE-REACTS per beat (value update / state
+    change / dim-lift with focus). `vg-quality-animations` §STALE-ELEMENT
+
+  ⑮ COMPARISON = the SAME object in two states, same framing (default idiom);
+    two side-by-side items only for two genuinely different contenders.
+
+  ⑯ CONNECTORS REGISTER — any line/beam/arrow's endpoints DERIVE from the
+    layout variables of the two elements it connects (never guessed canvas
+    fractions; flex-placed endpoints must be computed). Pairing comes from
+    the contract; one link fires at a time; the target REACTS on landing.
+    `vg-code-motion-bank` §P11 CONNECTOR REGISTRATION
+
+  ⑰ NO TEXT-RICH BEAT — the bullet's `headline` is machine metadata: NEVER
+    draw it on the frame. On-screen words = the opt-in `text` field +
+    instrument readings ONLY. A quantity is an instrument's reading, never a
+    floating chip. A beat that needs a caption to be understood has a WORLD
+    problem — fix the mechanism (make it RUN — `cycle`), don't caption it.
+    `vg-code-text` §HEADLINE IS NOT ON-SCREEN TEXT · linter 3g
+
+  ⑱ SCENE-DRIVEN — author the STAGE once per scene ({"scene":N,"stage":true,
+    "code":…} in the bundle): the persistent world + running mechanisms on
+    scene-local frames (cycles never reset at beat boundaries). Bullets
+    render ONLY their modulation/delta on top — a bullet that redraws the
+    world is double-painting. Legacy (no stage): bullets self-contained.
+    `vg-visual-designer` §SCENE-DRIVEN layering contract
+
+  ⑲ TAG THE CAST — every world-object/instrument's top-level element carries
+    'data-cast-id': '<contract cast id>' (+ 'data-state' when stateful).
+    The RuntimeProbe measures tagged boxes during every render; telemetry_rules
+    verifies them against the contract (zones · corridors · overlap ·
+    accumulation · HOME drift). Untagged = unmeasurable = invisible to
+    Rendering Intelligence. `vg-code-artifacts` §THE TELEMETRY CONTRACT
+
 Full pre-authoring rules in CLAUDE.md (loaded into context).
 Full post-render verification: invoke `vg-verification-protocol`
   (.claude/skills/vg-verification-protocol/SKILL.md)

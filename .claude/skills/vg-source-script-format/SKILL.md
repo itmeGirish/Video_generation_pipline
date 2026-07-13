@@ -1,9 +1,36 @@
 ---
 name: vg-source-script-format
-description: "The exact format for video source scripts (.txt files). This is the ONLY input to the pipeline. Use whenever checking script format, understanding what source_parser.py expects, diagnosing a parse error, or any request like "what format does the script need," "how to write the source file," "parser format," or "structured script format.""
+description: "The exact format for video source scripts — the JSON render contract (.json, canonical machine handover; schema docs/render-contract.schema.json) and the .txt authoring formats. Use whenever checking script format, understanding what source_parser.py expects, diagnosing a parse error, or any request like "what format does the script need," "how to write the source file," "parser format," or "structured script format.""
+model: opus
 ---
 
 # Source Script Format
+
+## ⭐ JSON RENDER CONTRACT — the canonical MACHINE handover (preferred for pipeline-generated scripts)
+
+The script pipeline hands over `projects/structured_scripts/<name>.json` — the **render contract**
+(schema: `docs/render-contract.schema.json`). `source_parser.py` branches on the `.json` extension and
+maps it 1:1 onto the same `SourceScript/Scene/AnimationBullet` dataclasses, so everything downstream
+(TTS · Whisper anchors · frames · codegen · master · verify) is format-agnostic. Run:
+`python storyboard/build_video.py projects/structured_scripts/<name>.json`.
+
+Why JSON: the contract carries what the `.txt` flattened into ignored comments — per-sentence
+`role/duration_ms/pause_after_ms/emphasis_word`, `visual_intent`, structured briefs — and the design is
+**"parse for the machine, JSON-direct for the LLM"**: the mechanical spine consumes the parsed dataclasses
+(exact values, deterministic), while the codegen prompt receives each bullet's RAW JSON object verbatim
+(`AnimationBullet.raw` → the RENDER CONTRACT block in `visual_designer._make_bullet_prompt`). Guarantees
+enforced at parse (HARD): every bullet carries its own narration sentences; `audio_anchor` must be verbatim
+in its OWN bullet's narration (raises on drift); `pause_after_ms ≥ 400` emits the same `<pause Xs>` tag the
+TTS pipeline already handles. The JSON's `script_ready` field carries the literal `SCRIPT-READY:` line, so
+`render_gate.sh` greps it unchanged. The `.txt` formats below remain fully supported for human-written /
+conversion-path scripts.
+
+**SCENE-DRIVEN fields (schema `stage:` per scene):** a scene may carry `stage: {composite, process[]}` —
+the persistent world (the settled final-frame composite with reserved zones) + the mechanisms that run the
+scene's whole span. Render-side this becomes the scene's seeded STAGE block (`role:'stage'`, scene-local
+frames — cycles never reset at beat boundaries), authored ONCE per scene and seeded via the bundle entry
+`{"scene": N, "stage": true, "code": …}`; bullets then author ONLY their modulation/delta. Scenes without
+`stage` follow the legacy self-contained-bullet contract (`vg-visual-designer` §SCENE-DRIVEN).
 
 There is ONE flow — raw input → canonical structured output → pipeline reads from canonical:
 
@@ -35,44 +62,15 @@ the structured folder.
 That path is being phased out. New work writes to `projects/structured_scripts/<name>.txt`.
 Never write conversion output to `projects/<name>/source.txt`.
 
-## Auto-conversion of raw scripts
+## Getting a raw script INTO this format → owned by `vg-script-conversion`
 
-Scripts in `projects/scripts/` come in MANY shapes — different preambles,
-different dash conventions, different bullet styles, sometimes totally
-different headers. `build_video.py` runs `script_converter.py` automatically
-when given a Layout B path. The converter is **two-stage**:
-
-1. **Regex pass (fast, free):** strips preamble, normalizes em-dashes,
-   fixes bullet headers. Handles ~80% of scripts.
-2. **LLM pass (fallback):** if the regex output has no `## SCENE N` headers
-   or lost scenes, calls Claude with strict instructions to convert ANY
-   structure into the canonical format. Cached by hash — runs once per
-   unique script.
-
-```
-
-```
-projects/scripts/<name>.txt              (raw, with preamble + format quirks)
-              │
-              ▼  script_converter.py — strips preamble, normalizes em-dashes,
-              │   fixes bullet headers, removes engagement-move lines
-              ▼
-projects/structured_scripts/<name>.txt   (clean, parser-ready, single source of truth)
-```
-
-The converted file is written to `projects/structured_scripts/` and reused on
-subsequent runs (re-converts only if the raw script changed).
-
-Run the converter standalone:
+This skill owns the **FORMAT** (what canonical looks like, above + below). The **conversion** of any raw
+`projects/scripts/*.txt` into it is owned by **`vg-script-conversion`** (regex MODE A · movie-script MODE B) —
+don't duplicate the converter mechanics here. The one fact this skill asserts: the converter is **regex-only,
+deterministic, no LLM subprocess** (the old LLM fallback was removed); if regex can't recover the `## SCENE`
+headers it RAISES → hand-convert per `vg-script-conversion`. Run it standalone:
 ```bash
-# Regex normalization (default). If regex can't recover ## SCENE headers it
-# raises — the LLM fallback was REMOVED alongside the claude CLI subprocess.
-# Hand-convert per rule 18 if regex fails.
 python storyboard/script_converter.py projects/scripts/<name>.txt --out projects/structured_scripts/<name>.txt
-
-# `--llm` flag still exists in the parser but the codepath now raises
-# RuntimeError pointing at rule 18. Treat it as deprecated / no-op.
-# python storyboard/script_converter.py projects/scripts/<name>.txt --llm  # → raises
 
 # Same as default but explicit (no behavioural difference now)
 python storyboard/script_converter.py projects/scripts/<name>.txt --regex-only --out projects/structured_scripts/<name>.txt
@@ -207,9 +205,9 @@ working; new scripts (`layoffs_2026.txt`) use pair-block.
 
 Only `audio_anchor` / `anchor_mode` are PARSED from a bullet; the rest of the body is the
 free-form brief the code author reads. A good bullet names every production factor so the
-render code isn't guessed — written by `script-animation-bullets` as labeled lines:
+render code isn't guessed — written by `scene-composer` as labeled lines:
 `location:` + `visible:` (on the scene's FIRST bullet — the WHERE and the named on-screen objects
-that establish the setting, so the render author orients the viewer; see `script-animation-bullets`
+that establish the setting, so the render author orients the viewer; see `scene-composer`
 §scene-setting) · `what happens:` (a plain **numbered beat sequence** of what the viewer sees — *the
 animation described as story*; this is the core) · `text:` (on-screen labels) · `image:` (`[asset:]`/`none`) ·
 `transition:` (`[REPLACE]`/ADD in the headline) · `audio_anchor` + `anchor_mode` · optional `hint:`
@@ -221,7 +219,7 @@ nothing mechanically and everything in brief quality.
 
 ## Scene-blueprint template format (the standard authoring template)
 
-The current standard template (used by `claude_code_limits.txt`) wraps the **legacy**
+The current standard template wraps the **legacy**
 `### Narration` / `### Animation` blocks inside a rich, human-readable **scene blueprint** —
 the spatial/cinematic design of each scene. It parses on the LEGACY path (it has
 `### Narration` + `### Animation`, so `source_parser.py` does NOT treat it as pair-block).
@@ -281,7 +279,7 @@ So: **only `### Animation` bullets and `### Narration` `>` lines drive the pipel
 dividers and blueprint fields are design scaffolding — they cost nothing mechanically and
 everything in brief quality.
 
-### CURRENT convention — PAIR-BLOCK with comment-blueprint blocks (preferred; e.g. `fable_5_harness.txt`)
+### CURRENT convention — PAIR-BLOCK with comment-blueprint blocks (preferred)
 
 New scripts carry the blueprint in **HTML comment blocks** and use **pair-block** beats (narration
 coupled into each bullet, no `### Narration` / `### Animation` headers). A scene looks like:
@@ -315,9 +313,9 @@ coupled into each bullet, no `### Narration` / `### Animation` headers). A scene
 bullet's `>` lines in order. Therefore **both blueprint blocks are valid, free design scaffolding that
 parses cleanly** — and the new fields (SCENE DESCRIPTION, SCENE PURPOSE, PACE, REFERENCE, CINEMATIC,
 spatial ENVIRONMENT) are all inside comments, so they NEVER break the parse. They exist to drive the
-per-bullet code author (`vg-visual-designer` step 0). Full field spec: **`script-scene-design`**
+per-bullet code author (`vg-visual-designer` step 0). Full field spec: **`scene-composer`**
 (§"GLOBAL VISUAL STYLE" · §"SCENE DESCRIPTION" · §"SCENE DESIGN field block"); the scene LIST/arc lives
-in `script-scene-structure`. Anchor rule for pair-block: each `audio_anchor` is a
+in `scene-planner`. Anchor rule for pair-block: each `audio_anchor` is a
 verbatim phrase from its OWN bullet's `>` line (drift-proof by construction).
 
 ### Anchor rule on this format (IMPORTANT — it's scene-scoped, not beat-scoped)
@@ -341,8 +339,8 @@ the design contract:
 - **BEAT Text / ON-SCREEN TEXT** → ≤3 words or one number; never put the narration on screen.
 - **ATTENTION FLOW / PRIMARY FOCUS** → the eye path; keep the frame from clogging.
 
-Authoring the blueprint itself is `script-scene-structure` §"Per-scene BLUEPRINT"; the beat
-fields map 1:1 from `script-animation-bullets`.
+Authoring the blueprint itself is `scene-planner` §"Per-scene BLUEPRINT"; the beat
+fields map 1:1 from `scene-composer`.
 
 ## Optional blocks
 

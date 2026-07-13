@@ -118,10 +118,11 @@ from storyboard.bullet_linter import lint_bullets, print_lint_report
 from storyboard.visual_designer import design_script
 from storyboard.ssml_compiler import compile_narration
 from storyboard.narration_pacer import pace_scenes
-from storyboard.visual_qa import run_qa
 from storyboard.validate_pipeline import validate as validate_pipeline
 from storyboard.validate_output import validate_output
 from storyboard.fetch_images import fetch_one as fetch_image_one
+from storyboard.sfx_emitter import emit_for_project
+from storyboard.audio_mixer import mix_audio_layer
 
 # ─── ARGS ───
 parser = argparse.ArgumentParser(description=(
@@ -227,6 +228,26 @@ if input_path.is_file() and input_path.suffix == ".txt":
         else:
             print(f"      using cached conversion at {SOURCE_FILE.relative_to(ROOT)}")
     print(f"      project: '{PROJECT}'")
+elif input_path.is_file() and input_path.suffix == ".json":
+    # Layout (c): JSON RENDER CONTRACT — the canonical machine handover from the script
+    # pipeline (docs/render-contract.schema.json). Already structured: NO converter runs.
+    # source_parser.parse() branches on the .json extension; everything downstream of the
+    # parser (TTS/anchors/codegen/master/verify) is format-agnostic.
+    PROJECT             = input_path.stem
+    PROJECT_DIR         = ROOT / "projects" / PROJECT
+    STRUCTURED_DIR      = ROOT / "projects" / "structured_scripts"
+    PROJECT_DIR.mkdir(parents=True, exist_ok=True)
+    STRUCTURED_DIR.mkdir(parents=True, exist_ok=True)
+
+    SOURCE_FILE  = STRUCTURED_DIR / f"{PROJECT}.json"
+    CONFIG_FILE  = PROJECT_DIR / "config.yaml"
+    if input_path != SOURCE_FILE:
+        # Copy into the canonical location (atomic-ish; contract is small)
+        SOURCE_FILE.write_text(input_path.read_text(encoding="utf-8"), encoding="utf-8")
+        print(f"      copied render contract → {SOURCE_FILE.relative_to(ROOT)}")
+    else:
+        print(f"      using render contract at {SOURCE_FILE.relative_to(ROOT)}")
+    print(f"      project: '{PROJECT}'")
 elif input_path.is_dir():
     # Layout (a): project directory
     PROJECT_DIR  = input_path
@@ -234,7 +255,7 @@ elif input_path.is_dir():
     SOURCE_FILE  = PROJECT_DIR / "source.txt"
     CONFIG_FILE  = PROJECT_DIR / "config.yaml"
 else:
-    print(f"ERROR: '{input_path}' is neither a directory nor a .txt script file"); sys.exit(1)
+    print(f"ERROR: '{input_path}' is neither a directory nor a .txt/.json script file"); sys.exit(1)
 
 AUDIO_DIR    = PROJECT_DIR / "audio"
 OUT_DIR      = PROJECT_DIR / "out"
@@ -333,6 +354,14 @@ LOUDNORM         = bool(config["audio"].get("loudnorm", True))
 # heavy gating (heavy denoise warbles synthetic speech). Set audio.denoise:false
 # to disable.
 DENOISE          = bool(config["audio"].get("denoise", True))
+# Sound-design layer (vg-sound-design): mix a ducked MUSIC bed + the sfx_emitter SFX
+# cues onto the narration before the master render. OFF by default — with no music
+# file AND audio.sfx:false the mixer no-ops and the plain narration is used. Missing
+# sound files are skipped; any mix failure falls back to narration (never breaks a build).
+MUSIC_PATH       = config["audio"].get("music")           # path to a music bed mp3 (optional)
+MUSIC_GAIN_DB    = float(config["audio"].get("music_gain_db", -20.0))
+SFX_ENABLED      = bool(config["audio"].get("sfx", False))
+SFX_DIR_CFG      = config["audio"].get("sfx_dir")          # default: projects/<name>/assets/sfx/
 TTS_SR, TTS_BR   = (22050, "96k") if ENGINE == "piper" else (24000, "48k")
 OUTPUT_NAME      = config["output"]
 PROJECT_PREFIX   = re.sub(r"[^a-z0-9]", "-", PROJECT.lower()).strip("-")
@@ -1025,6 +1054,39 @@ def _norm(w: str) -> str:
     return DIGIT_WORDS.get(s, s)
 
 
+def _contraction_variant(text: str) -> str:
+    """Contracted twin of `text` for transcript matching (bug Class 21).
+
+    Whisper often transcribes clearly-spoken 'here is' as \"here's\" — one
+    token, which `_norm` collapses to 'heres'. The script-side tokens
+    ['here','is'] then NEVER exact-match at the true position, and the
+    shrinking-prefix boundary pass can instead hit the same words verbatim
+    inside a LATER scene (pixel_rag 2026-07-04: scene 2 'Here is the whole
+    map' matched scene 8's 'So here is the rule' at t=319.5s → scenes 2-7
+    collapsed to ~0.2s each). Boundary matching therefore tries BOTH the
+    as-written opening and this contracted variant and takes the earliest hit.
+    """
+    subs = [
+        (r"\b(here|there|that|what|it|she|he|who|where|how)\s+is\b", r"\1's"),
+        (r"\b(you|we|they)\s+are\b", r"\1're"),
+        (r"\b(you|we|they|i)\s+will\b", r"\1'll"),
+        (r"\b(you|we|they|i)\s+have\b", r"\1've"),
+        (r"\bdo\s+not\b", "don't"),
+        (r"\bdoes\s+not\b", "doesn't"),
+        (r"\bdid\s+not\b", "didn't"),
+        (r"\bis\s+not\b", "isn't"),
+        (r"\bare\s+not\b", "aren't"),
+        (r"\bwill\s+not\b", "won't"),
+        (r"\bcannot\b", "can't"),
+        (r"\blet\s+us\b", "let's"),
+        (r"\bi\s+am\b", "i'm"),
+    ]
+    out = text
+    for pat, rep in subs:
+        out = re.sub(pat, rep, out, flags=re.IGNORECASE)
+    return out
+
+
 def find_phrase(words: list, phrase: str, start_idx: int = 0) -> int:
     """Exact match. Returns word index or -1.
     Phrase is normalized via `normalize_for_match` before tokenizing — so
@@ -1096,22 +1158,61 @@ def find_phrase_fuzzy(words: list, phrase: str, start_idx: int = 0,
 print(f"[6/10] Locating scene boundaries...")
 scene_start_word_idx: list[int] = []
 search_from = 0
+
+# Proportional-position sanity gate (bug Class 21). A WRONG-but-exact prefix
+# match (a later scene reusing the opening's words verbatim) used to bypass
+# every fallback. Any boundary match — exact or fuzzy — whose timestamp
+# deviates from the proportionally-scaled script position by more than this
+# window is rejected, letting the next pass / scaled fallback take over.
+_script_total_sec = 0.0
+for _s in scenes_raw:
+    if _s.window_to_sec and float(_s.window_to_sec) > _script_total_sec:
+        _script_total_sec = float(_s.window_to_sec)
+    if _s.window_from_sec and float(_s.window_from_sec) > _script_total_sec:
+        _script_total_sec = float(_s.window_from_sec)
+BOUNDARY_MAX_DEV_SEC = max(30.0, 0.15 * total_sec)
+
 for sc in scenes_raw:
     # Clean narration before tokenizing for boundary detection:
     # Single normalization helper handles <pause Xs> markers, decimals, hyphens.
     # Same rules as audio_anchor matching — guarantees consistent behavior.
+    # Class 21: also try the CONTRACTED variant ("here is"→"here's") — Whisper
+    # contracts spoken copulas; _norm strips the apostrophe so tokens align.
     opening_words = normalize_for_match(sc.narration).strip().split()[:SCENE_BOUNDARY_WORDS]
+    _alt_words = normalize_for_match(_contraction_variant(sc.narration)).strip().split()[:SCENE_BOUNDARY_WORDS]
+    variants = [opening_words] + ([_alt_words] if _alt_words != opening_words else [])
+    if _script_total_sec > 0:
+        _expected_t = (float(sc.window_from_sec) / _script_total_sec) * total_sec
+    else:
+        _expected_t = float(sc.window_from_sec)
+    def _sane(idx: int) -> bool:
+        return 0 <= idx < len(all_words) and abs(all_words[idx]["start"] - _expected_t) <= BOUNDARY_MAX_DEV_SEC
     found = -1
-    # Pass 1: exact match, decreasing prefix length SCENE_BOUNDARY_WORDS → 2 words
-    for span in range(len(opening_words), 1, -1):
-        idx = find_phrase(all_words, " ".join(opening_words[:span]), search_from)
-        if idx >= 0:
-            found = idx; break
+    # Pass 1: exact match, decreasing prefix length SCENE_BOUNDARY_WORDS → 2 words,
+    # over BOTH opening variants — earliest hit wins at each span length.
+    _max_span = max(len(v) for v in variants)
+    for span in range(_max_span, 1, -1):
+        cands = []
+        for v in variants:
+            if len(v) >= span:
+                idx = find_phrase(all_words, " ".join(v[:span]), search_from)
+                if idx >= 0:
+                    cands.append(idx)
+        if cands:
+            found = min(cands); break
+    if found >= 0 and not _sane(found):
+        print(f"      scene {sc.number}: REJECTED exact match at t={all_words[found]['start']:.1f}s "
+              f"(expected ~{_expected_t:.1f}s ± {BOUNDARY_MAX_DEV_SEC:.0f}s — likely a later scene's words); trying fuzzy")
+        found = -1
     # Pass 2: fuzzy match (handles digit/word mismatches like "twenty twenty-six" vs "2026")
     if found < 0:
-        idx = find_phrase_fuzzy(all_words, " ".join(opening_words), search_from, min_ratio=SCENE_BOUNDARY_MIN_RATIO)
-        if idx >= 0:
-            found = idx
+        fz = []
+        for v in variants:
+            idx = find_phrase_fuzzy(all_words, " ".join(v), search_from, min_ratio=SCENE_BOUNDARY_MIN_RATIO)
+            if idx >= 0 and _sane(idx):
+                fz.append(idx)
+        if fz:
+            found = min(fz)
             print(f"      scene {sc.number}: fuzzy-matched opening (Whisper drift)")
     # Pass 3: time-based fallback. When phrase matching cannot find the scene
     # boundary in the transcript, fall back to a proportional-position estimate.
@@ -1439,6 +1540,24 @@ for i, sc in enumerate(scenes_raw):
         else:
             print(f"        [interp] {framesFrom}-{framesTo}f  {head}  (anchor missed; linear-interpolated from neighbors)")
 
+    # SCENE-DRIVEN: prepend the scene's STAGE block when one is seeded — the persistent
+    # world component rendered on scene-local frames (UniversalScene renders role:'stage'
+    # OUTSIDE bullet Sequences, so mechanism cycles never reset at beat boundaries).
+    # Scenes without a seeded stage render exactly as before (back-compat).
+    from storyboard.visual_designer import lookup_stage as _lookup_stage
+    _stage_code = _lookup_stage(sc, design_tokens)
+    if _stage_code:
+        blocks_out.insert(0, {
+            "framesFrom": 0,
+            "framesTo": duration_frames,
+            "code": _stage_code,
+            "audio_anchor": "",
+            "anchor_mode": "appear",
+            "source_headline": "[STAGE]",
+            "role": "stage",
+        })
+        print(f"        [stage ] 0-{duration_frames}f  persistent world (scene-driven)")
+
     blocks_json = json.dumps(blocks_out, ensure_ascii=False, indent=2)
     # Canonical: project-owned scene JSON. The project folder is the source of truth.
     blocks_path = PROJECT_SCENES_DIR / f"{sid}.json"
@@ -1623,10 +1742,12 @@ else:
     print(f"[8.6] Layout validator skipped (--skip-layout)")
 
 
-# ─── 9. RENDER (per scene, silent, resume-safe) ───
-print(f"[9/10] Rendering {len(scene_ids)} scenes...")
+# ─── 9. (NATIVE) NO per-scene render — the LIVE master composes the scene components ───
+# There is no per-scene mp4 render and no stitch: render_master.mjs (step 10) composes the
+# live scene components in ONE render. (The cheap per-scene catch is Visual Proof, the
+# agent's pre-render gate — CLAUDE.md step 6b.)
+print(f"[9/10] Native flow — no per-scene render; the LIVE master composes {len(scene_ids)} scene components in ONE render (step 10).")
 REMOTION_DIR = ROOT / "remotion"
-RENDER_OUT   = REMOTION_DIR / "out"
 
 # Auto-stub projects/<name>/scenes/index.ts for the @project-scenes webpack alias.
 # build_video.py renders via UniversalScenePreview reading remotion/public/scenes/*.json,
@@ -1640,15 +1761,6 @@ if not (PROJECT_SCENES_DIR / "index.ts").exists():
         encoding="utf-8",
     )
     print(f"      auto-stubbed {PROJECT_SCENES_DIR / 'index.ts'} for webpack @project-scenes alias")
-
-env = {
-    **os.environ,
-    "PROJECT": PROJECT,
-    "PYTHONIOENCODING": "utf-8",
-    "VIDEO_FPS": str(FPS),
-    "VIDEO_WIDTH": str(config["video"]["width"]),
-    "VIDEO_HEIGHT": str(config["video"]["height"]),
-}
 
 # mp4 health check — defends against silently-skipping a corrupt scene
 # rendered by a prior killed build. ffprobe must report a positive duration
@@ -1670,138 +1782,63 @@ def _mp4_is_healthy(path: Path, min_size_bytes: int = 100_000) -> bool:
         return False
 
 
-# Determine which scenes need rendering (resume logic)
-# If --scene N given, force re-render that scene only.
-to_render = []
+# ─── master-render process management (Class N+13: render hangs forever) ───
+# The master render is the ONE long step (~minutes/scene). A bare subprocess.run with
+# no timeout blocks the session FOREVER if node/Chromium deadlocks; and on Windows,
+# killing only the node parent leaves orphan chrome-headless-shell children rendering.
+def _kill_render_tree(proc) -> None:
+    """Windows tree-kill: taskkill /F /T takes node AND its Chromium children."""
+    try:
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                       capture_output=True, creationflags=_NOWIN)
+    except Exception:
+        pass
+
+
+def _log_tail(log_path: Path, n: int = 2000) -> str:
+    try:
+        return log_path.read_text(encoding="utf-8", errors="replace")[-n:]
+    except Exception:
+        return "(no render log)"
+
+
+def _run_master_render(cmd: list, env: dict, n_scenes: int, label: str) -> tuple[int, Path]:
+    """Run render_master.mjs with a bounded ceiling + tree-kill. Returns (returncode, log_path).
+    Ceiling = render_timeout_per_scene_s (config [render] section, or env
+    RENDER_TIMEOUT_PER_SCENE_S) × scene count — configurable, never a bare wait."""
+    per_scene = float(os.environ.get(
+        "RENDER_TIMEOUT_PER_SCENE_S",
+        (config.get("render", {}) or {}).get("render_timeout_per_scene_s", 600),
+    ))
+    ceiling = max(600.0, per_scene * max(1, n_scenes))
+    log_path = OUT_DIR / f"render_master_{label}.log"
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(log_path, "w", encoding="utf-8", errors="replace") as lf:
+        proc = subprocess.Popen(
+            cmd, cwd=str(REMOTION_DIR), env=env,
+            stdout=lf, stderr=subprocess.STDOUT, text=True,
+            creationflags=_NOWIN | subprocess.CREATE_NEW_PROCESS_GROUP,
+        )
+        try:
+            rc = proc.wait(timeout=ceiling)
+        except subprocess.TimeoutExpired:
+            print(f"RENDER STUCK — no exit after {ceiling:.0f}s ({label}); killing render tree")
+            _kill_render_tree(proc)
+            sys.exit(124)
+        except KeyboardInterrupt:
+            print(f"KeyboardInterrupt — killing render tree ({label})")
+            _kill_render_tree(proc)
+            sys.exit(130)
+    return rc, log_path
+
+
+# Single-scene preview (--scene N) renders that ONE scene via the live master + MASTER_SCENES (step 10).
 target_scene_ids = scene_ids
 if args.scene is not None:
     if args.scene < 1 or args.scene > len(scene_ids):
         print(f"ERROR: --scene {args.scene} out of range (1..{len(scene_ids)})"); sys.exit(1)
     target_scene_ids = [scene_ids[args.scene - 1]]
-    print(f"      --scene {args.scene} → only rendering {target_scene_ids[0]} (forced)")
-    out_file = RENDER_OUT / f"{target_scene_ids[0]}.mp4"
-    if out_file.exists():
-        out_file.unlink()
-    to_render = list(target_scene_ids)
-else:
-    for sid in scene_ids:
-        out_file   = RENDER_OUT / f"{sid}.mp4"
-        scene_json = PROJECT_SCENES_DIR / f"{sid}.json"
-        # Resume-skip ONLY when: file exists, source JSON unchanged, AND the
-        # mp4 itself is structurally valid (ffprobe-readable, non-trivial size).
-        # The third check defends against a prior build that was killed mid-write —
-        # without it the skip path would silently propagate a corrupt mp4 into stitch.
-        if (
-            out_file.exists()
-            and scene_json.exists()
-            and out_file.stat().st_mtime >= scene_json.stat().st_mtime
-            and _mp4_is_healthy(out_file)
-        ):
-            print(f"      -- {sid} already rendered ({out_file.stat().st_size // 1024 // 1024} MB), skipping")
-        else:
-            if out_file.exists():
-                # Always unlink — if it's stale (older than JSON) it's wrong;
-                # if it's unhealthy (truncated) it would silently fail stitch.
-                out_file.unlink()
-            to_render.append(sid)
-
-# Bundle once, render all pending scenes in a single node call.
-# Exit-code contract with render_scenes.mjs:
-#   0 → all requested scenes rendered + size-validated
-#   1 → fatal error (bundle failed, etc) — abort entire build
-#   2 → partial failure (per-scene retries exhausted on >=1 scene). Other
-#       scenes succeeded; we surface the failure list and abort stitch
-#       (no point assembling a video missing scenes).
-#
-# Process-management on Windows (rule 10 Class 8 follow-up):
-# - shell=False so cmd.exe doesn't wrap node — Ctrl+C otherwise leaves orphan
-#   node.exe + chrome.exe processes consuming GBs of RAM.
-# - CREATE_NEW_PROCESS_GROUP so the node child has its own console group;
-#   parent's Ctrl+C does NOT auto-kill the child (we kill the tree
-#   explicitly in the except block).
-# - taskkill /F /T on KeyboardInterrupt walks the child PID tree and reaps
-#   node + every Chromium it spawned. /T = tree, /F = force.
-# Verified pattern: Python subprocess docs + MSDN GenerateConsoleCtrlEvent.
-if to_render:
-    print(f"      rendering {len(to_render)} scenes: {to_render}")
-    _CREATE_NEW_PROCESS_GROUP = (
-        subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
-    )
-    proc = subprocess.Popen(
-        ["node", "render_scenes.mjs"] + to_render,
-        cwd=str(REMOTION_DIR), env=env,
-        creationflags=_NOWIN | _CREATE_NEW_PROCESS_GROUP,
-    )
-
-    def _kill_render_tree():
-        """Force-kill node + every Chromium it spawned. /T = tree, /F = force."""
-        if sys.platform == "win32":
-            subprocess.run(
-                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
-                capture_output=True, creationflags=_NOWIN,
-            )
-        else:
-            proc.kill()
-        try:
-            proc.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            pass
-
-    # ── Parent-side render ceiling (rule 10 hang class) ──
-    # render_scenes.mjs has an internal 120s no-frame-progress watchdog, but if node
-    # deadlocks BETWEEN scenes, or the watchdog's cancel() leaves an orphaned Chromium
-    # holding the event loop, the bare proc.wait() would block this session FOREVER.
-    # A wall-clock ceiling guarantees a stuck render is force-killed instead of eating
-    # the whole session. Sized PER SCENE so a legitimately long batch never false-trips;
-    # override with config build.render_timeout_per_scene_s or env RENDER_TIMEOUT_PER_SCENE_S.
-    _per_scene_s = float(
-        os.environ.get("RENDER_TIMEOUT_PER_SCENE_S")
-        or _build_cfg.get("render_timeout_per_scene_s", 900)   # 15 min/scene default — very generous
-    )
-    _render_ceiling_s = max(900.0, _per_scene_s * len(to_render))
-    try:
-        rc = proc.wait(timeout=_render_ceiling_s)
-    except subprocess.TimeoutExpired:
-        print(f"\n      RENDER STUCK — no exit after {_render_ceiling_s/60:.0f} min "
-              f"({len(to_render)} scene(s) @ {_per_scene_s/60:.0f} min ceiling each). "
-              f"Killing render tree (node + Chromium)...")
-        _kill_render_tree()
-        print(f"      tree killed. Completed scenes are kept; re-run to resume the rest.")
-        print(f"      If renders are legitimately slower, raise build.render_timeout_per_scene_s "
-              f"or RENDER_TIMEOUT_PER_SCENE_S.")
-        sys.exit(124)   # convention: 124 = timed out
-    except KeyboardInterrupt:
-        print(f"\n      Ctrl+C — killing render tree (node + Chromium)...")
-        _kill_render_tree()
-        print(f"      tree killed; re-run to resume from where it stopped.")
-        sys.exit(130)   # POSIX convention: 128 + SIGINT(2) = 130
-
-    class _R:
-        returncode = rc
-    r = _R()
-    if r.returncode == 1:
-        print(f"      RENDER FAILED (fatal)"); sys.exit(1)
-    if r.returncode == 2:
-        print(f"      RENDER PARTIAL — some scenes failed retries (see render_scenes.mjs log).")
-        print(f"      Re-run to retry only the missing scenes; aborting stitch.")
-        sys.exit(2)
-    # Post-render integrity check — guards against the rare 0-exit-code
-    # render that wrote a corrupt mp4 (e.g. ffmpeg muxer sync issue not
-    # caught by Remotion's size guard). Fails fast with a named scene list.
-    bad = [sid for sid in to_render if not _mp4_is_healthy(RENDER_OUT / f"{sid}.mp4")]
-    if bad:
-        print(f"      RENDER PRODUCED CORRUPT mp4 for: {bad}")
-        print(f"      delete {RENDER_OUT}/<sid>.mp4 for those scenes and re-run")
-        sys.exit(1)
-
-
-# ─── 9.5 VISUAL QA (post-render sanity check) ───
-run_qa(
-    scene_ids=target_scene_ids if args.scene is not None else scene_ids,
-    scenes_dir=PROJECT_SCENES_DIR,
-    render_out=RENDER_OUT,
-    fps=FPS,
-)
+    print(f"      --scene {args.scene} → single-scene preview of {target_scene_ids[0]} (live master, MASTER_SCENES)")
 
 # ─── 10. FINAL ASSEMBLY (Remotion master composition) ───
 # Single-scene mode: render scene N + corresponding audio in ONE Remotion render
@@ -1819,9 +1856,8 @@ if args.scene is not None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     sscene_full_audio = AUDIO_DIR / config["audio"]["full_audio_filename"]
     print(f"\n[single-scene final assembly] master composition with MASTER_SCENES={sid}")
-    r = subprocess.run(
+    rc, rlog = _run_master_render(
         ["node", "render_master.mjs", str(preview_inprogress.resolve())],
-        cwd=str(REMOTION_DIR),
         env={
             **os.environ,
             "PROJECT": PROJECT,
@@ -1830,15 +1866,13 @@ if args.scene is not None:
             "VIDEO_WIDTH": str(config["video"]["width"]),
             "VIDEO_HEIGHT": str(config["video"]["height"]),
             "MASTER_SCENES": sid,
-            "MASTER_TRANSITION_FRAMES": "0",  # one scene → no inter-scene transition
             "PYTHONIOENCODING": "utf-8",
         },
-        capture_output=True, text=True,
-        creationflags=_NOWIN,
+        n_scenes=1, label=f"preview_{sid}",
     )
-    if r.returncode != 0:
+    if rc != 0:
         print("SINGLE-SCENE MASTER RENDER FAILED:")
-        print(r.stdout[-2000:]); print(r.stderr[-2000:])
+        print(_log_tail(rlog))
         preview_inprogress.unlink(missing_ok=True)
         sys.exit(1)
     if not _mp4_is_healthy(preview_inprogress):
@@ -1850,33 +1884,7 @@ if args.scene is not None:
     print(f"\n-- SINGLE-SCENE PREVIEW: {preview_final}  ({sz} MB)")
     sys.exit(0)
 
-print(f"[10/10] Final assembly (master composition)...")
-TMP = ROOT / "storyboard" / ".build_work"
-TMP.mkdir(exist_ok=True)
-
-for sid in scene_ids:
-    src = RENDER_OUT / f"{sid}.mp4"
-    dst = TMP / f"{sid}_clean.mp4"
-    # Atomic write: ffmpeg produces an .inprogress file, we os.replace to the
-    # final name only on success. Killing ffmpeg mid-encode then leaves an
-    # orphan .inprogress (cleanly identifiable) and the previous valid
-    # _clean.mp4 (if any) is untouched — stitch can still proceed after a
-    # restart that re-renders only the failed scene.
-    inprogress = dst.with_suffix(dst.suffix + ".inprogress")
-    if inprogress.exists():
-        inprogress.unlink()
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", str(src),
-         "-c:v", "libx264", "-preset", SCENE_CLEAN_PRESET, "-crf", SCENE_CLEAN_CRF,
-         "-an", "-pix_fmt", "yuv420p", "-r", str(FPS), "-f", "mp4", str(inprogress)],
-        capture_output=True, text=True, check=True,
-        creationflags=_NOWIN,
-    )
-    if not _mp4_is_healthy(inprogress):
-        inprogress.unlink(missing_ok=True)
-        print(f"      _clean.mp4 produced for {sid} failed health check — aborting stitch")
-        sys.exit(1)
-    os.replace(inprogress, dst)
+print(f"[10/10] Final assembly — ONE live master render (render_master.mjs)...")
 
 # Use filter_complex concat (not -f concat demuxer) for tighter A/V sync.
 # Demuxer concat copies stream timestamps, which can drift if any source mp4
@@ -1893,10 +1901,42 @@ final_out = OUT_DIR / OUTPUT_NAME
 #                      ffmpeg has a known timeline-drift bug (rule 09 Layer 4).
 #                      Prefer remotion_master for smooth crossfade.
 #   remotion_master  — render the master Remotion composition that chains per-scene
-#                      mp4s via <TransitionSeries> + master <Audio>. Frame-accurate
-#                      sync by construction. NO ffmpeg stitch step.
-_stitch_mode = str(_stitch_cfg.get("mode", "hard_cut")).lower()
-_crossfade_frames = int(_stitch_cfg.get("crossfade_frames", 15))
+#                      mp4s via a plain <Series> (zero overlap) + master <Audio>.
+#                      Frame-accurate sync by construction. NO ffmpeg stitch step.
+# DEFAULT (and only supported path) is remotion_master — the native one-render live master.
+# Any other value errors out below (the legacy per-scene render + ffmpeg stitch was removed).
+_stitch_mode = str(_stitch_cfg.get("mode", "remotion_master")).lower()
+
+# ─── 10·pre. SOUND-DESIGN MIX (vg-sound-design) ───
+# Mix a side-chain-DUCKED music bed + the sfx_emitter cues onto the narration, then
+# feed the result to the master render. OFF by default: with no music file AND
+# audio.sfx:false, the mixer no-ops and the plain (loudnormed) narration is used.
+# Missing sound files are skipped; any failure falls back to narration — never breaks a build.
+MASTER_AUDIO_NAME = FULL_AUDIO_NAME
+if MUSIC_PATH or SFX_ENABLED:
+    try:
+        if SFX_ENABLED:
+            emit_for_project(PROJECT, FPS)        # (re)write projects/<name>/sfx/<sid>_cues.json
+        _music = None
+        if MUSIC_PATH:
+            _mp = Path(MUSIC_PATH)
+            if not _mp.is_absolute():
+                _cand = PROJECT_DIR / MUSIC_PATH
+                _mp = _cand if _cand.exists() else (ROOT / MUSIC_PATH)
+            _music = _mp if _mp.exists() else None
+            if _music is None:
+                print(f"      [audio_mixer] WARN music not found: {MUSIC_PATH} — skipping bed")
+        _sfx_dir = Path(SFX_DIR_CFG) if SFX_DIR_CFG else (PROJECT_DIR / "assets" / "sfx")
+        _mixed = mix_audio_layer(
+            full_audio, AUDIO_DIR / ("mix-" + FULL_AUDIO_NAME),
+            project_dir=PROJECT_DIR, scene_timings=scene_timings, fps=FPS,
+            music=_music, music_gain_db=MUSIC_GAIN_DB,
+            sfx_enabled=SFX_ENABLED, sfx_dir=_sfx_dir,
+        )
+        MASTER_AUDIO_NAME = _mixed.name
+    except Exception as _e:  # noqa: BLE001 — the audio layer must never break a build
+        print(f"      [audio_mixer] WARN sound-design mix skipped ({_e!r}) — using narration")
+        MASTER_AUDIO_NAME = FULL_AUDIO_NAME
 
 
 # ─── 10a. REMOTION MASTER STITCH ───
@@ -1909,26 +1949,24 @@ if _stitch_mode == "remotion_master":
     final_inprogress = final_out.with_name(final_out.stem + ".tmp.mp4")
     if final_inprogress.exists():
         final_inprogress.unlink()
-    r = subprocess.run(
+    rc, rlog = _run_master_render(
         ["node", "render_master.mjs", str(final_inprogress.resolve())],
-        cwd=str(REMOTION_DIR),
         env={
             **os.environ,
             "PROJECT": PROJECT,
-            "MASTER_AUDIO_FILE": full_audio.name,
+            "MASTER_AUDIO_FILE": MASTER_AUDIO_NAME,   # narration, or the sound-design mix
             "VIDEO_FPS": str(FPS),
             "VIDEO_WIDTH": str(config["video"]["width"]),
             "VIDEO_HEIGHT": str(config["video"]["height"]),
-            "MASTER_TRANSITION_FRAMES": str(_crossfade_frames),
+            # NOTE: no MASTER_TRANSITION_FRAMES — the master uses a plain <Series>
+            # (no crossfade); the only scene fade is the per-scene Backdrop (design.fade_frames).
             "PYTHONIOENCODING": "utf-8",
         },
-        capture_output=True, text=True,
-        creationflags=_NOWIN,
+        n_scenes=len(target_scene_ids), label="final",
     )
-    if r.returncode != 0:
+    if rc != 0:
         print("REMOTION MASTER STITCH FAILED:")
-        print(r.stdout[-2000:])
-        print(r.stderr[-2000:])
+        print(_log_tail(rlog))
         final_inprogress.unlink(missing_ok=True)
         sys.exit(1)
     if not _mp4_is_healthy(final_inprogress):
@@ -1939,106 +1977,10 @@ if _stitch_mode == "remotion_master":
     print(f"      ✓ master mp4: {final_out.name}")
     sz = final_out.stat().st_size // 1024 // 1024
     print(f"\n-- DONE: {final_out}  ({sz} MB, {total_sec:.1f}s)")
-    _stitch_done_via_master = True
 else:
-    _stitch_done_via_master = False
-
-if not _stitch_done_via_master:
-    ffmpeg_inputs: list[str] = []
-    for sid in scene_ids:
-        ffmpeg_inputs += ["-i", str((TMP / f"{sid}_clean.mp4").resolve())]
-    ffmpeg_inputs += ["-i", str(full_audio)]
-    n_video = len(scene_ids)
-
-    if _stitch_mode == "crossfade" and n_video >= 2:
-        # Read each scene's duration in seconds so xfade `offset` can be computed.
-        scene_durs_sec: list[float] = []
-        for sid in scene_ids:
-            clean_mp4 = TMP / f"{sid}_clean.mp4"
-            probe = subprocess.run(
-                ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-                 "-of", "default=nw=1:nk=1", str(clean_mp4)],
-                capture_output=True, text=True, check=True, creationflags=_NOWIN,
-            )
-            scene_durs_sec.append(float(probe.stdout.strip()))
-        xfade_dur = _crossfade_frames / FPS
-        # Chain N-1 xfade filters. Each consumes the previous label and the next input.
-        # offset_i = sum(durations[0..i]) - (i+1) * xfade_dur
-        # because each xfade subtracts xfade_dur from the prior chain's output length.
-        parts: list[str] = []
-        cum = 0.0
-        label_in = "0:v:0"
-        for i in range(1, n_video):
-            cum += scene_durs_sec[i - 1]
-            offset = cum - i * xfade_dur
-            if offset < 0:
-                offset = 0.01
-            next_label = f"v{i:02d}"
-            parts.append(
-                f"[{label_in}][{i}:v:0]xfade=transition=fade:"
-                f"duration={xfade_dur:.3f}:offset={offset:.3f}[{next_label}]"
-            )
-            label_in = next_label
-        concat_filter = ";".join(parts)
-        out_video_label = label_in
-        print(f"      stitch.mode=crossfade ({_crossfade_frames}f / {xfade_dur:.2f}s overlap)")
-    else:
-        concat_filter = "".join(f"[{i}:v:0]" for i in range(n_video)) + f"concat=n={n_video}:v=1:a=0[outv]"
-        out_video_label = "outv"
-        if _stitch_mode != "hard_cut":
-            print(f"      WARNING: stitch.mode={_stitch_mode!r} unsupported — falling back to hard_cut concat")
-
-    # Atomic write to final_out: ffmpeg writes to .inprogress, we move on success.
-    # This is the most important atomic-write site in the pipeline — without it,
-    # Ctrl+C during the final mux leaves a partial mp4 with no moov atom that
-    # crashes every player. The .inprogress orphan is harmless and easy to spot.
-    final_inprogress = final_out.with_suffix(final_out.suffix + ".inprogress")
-    if final_inprogress.exists():
-        final_inprogress.unlink()
-    # Optional production-grade audio loudness normalization (YouTube target:
-    # I=-14 LUFS, TP=-1, LRA=11). Off by default to keep the existing audio
-    # levels stable; enable via config.yaml stitch.audio_loudnorm: true.
-    _loudnorm = bool(_stitch_cfg.get("audio_loudnorm", False))
-    audio_filter_args = ["-af", "loudnorm=I=-14:TP=-1:LRA=11"] if _loudnorm else []
-
-    # Video codec args: ABR hard-floor if final_bitrate set, else capped-CRF
-    # (quality-targeted with a peak ceiling) so easy content still clears the
-    # rule 23 T4 ≥8 Mbps gate instead of CRF dropping the bitrate too low.
-    if FINAL_BITRATE:
-        _vcodec_args = ["-c:v", "libx264", "-preset", FINAL_PRESET,
-                        "-b:v", str(FINAL_BITRATE),
-                        "-maxrate", FINAL_MAXRATE, "-bufsize", FINAL_BUFSIZE]
-    else:
-        _vcodec_args = ["-c:v", "libx264", "-preset", FINAL_PRESET, "-crf", FINAL_CRF,
-                        "-maxrate", FINAL_MAXRATE, "-bufsize", FINAL_BUFSIZE]
-
-    r = subprocess.run(
-        ["ffmpeg", "-y", *ffmpeg_inputs,
-         "-filter_complex", concat_filter,
-         "-map", f"[{out_video_label}]", "-map", f"{n_video}:a:0",
-         *_vcodec_args,
-         "-c:a", "aac", "-b:a", AUDIO_BITRATE, "-pix_fmt", "yuv420p",
-         # +faststart moves the moov atom to the front so web players can start
-         # playback before the full file is downloaded. Lossless metadata move.
-         "-movflags", "+faststart",
-         *audio_filter_args,
-         "-f", "mp4", str(final_inprogress)],
-        capture_output=True, text=True,
-        creationflags=_NOWIN,
-    )
-    if r.returncode != 0:
-        print("STITCH FAILED:")
-        print(r.stderr[-2000:])
-        final_inprogress.unlink(missing_ok=True)
-        sys.exit(1)
-    if not _mp4_is_healthy(final_inprogress):
-        print(f"STITCH PRODUCED CORRUPT mp4 (no playable duration) — aborting")
-        final_inprogress.unlink(missing_ok=True)
-        sys.exit(1)
-    os.replace(final_inprogress, final_out)
-
-    sz = final_out.stat().st_size // 1024 // 1024
-    print(f"\n-- DONE: {final_out}  ({sz} MB, {total_sec:.1f}s)")
+    print(f"ERROR: stitch.mode={_stitch_mode!r} — the legacy per-scene render + ffmpeg-stitch path "
+          f"was REMOVED. Use stitch.mode=remotion_master (the native one live-master render).")
+    sys.exit(1)
 
 
 # ─── 10.6 PRODUCTION SIDECAR ARTIFACTS ───

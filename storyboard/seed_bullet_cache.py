@@ -15,12 +15,25 @@ Or programmatically (preferred — avoids stdin quoting):
 
   python storyboard/seed_bullet_cache.py --json <bundle.json>
 
-  bundle.json format:
-    [
-      {"scene": 1, "bullet": 1, "anchor": "limb amputated", "code": "..." },
-      {"scene": 1, "bullet": 2, "anchor": "...",           "code": "..." },
-      ...
-    ]
+  bundle.json format (THE PLAN GATE — vg-render-code §0c is a hard requirement here):
+    {
+      "plan": {
+        "scenes": {
+          "<scene_num>": {
+            "live_systems": ["<system 1>", ... ],   # >= 8 named live systems (6 layers)
+            "physical_cast": ["<object 1>", ... ],  # >= 1 non-text physical object on stage
+            "atmosphere": {"grain": 0.05, "light": 0.7, "vignette": 0.15}  # >= minimums
+          }, ...
+        }
+      },
+      "bullets": [
+        {"scene": 1, "bullet": 1, "anchor": "<verbatim words>", "code": "..." },
+        ...
+      ]
+    }
+  A bare JSON list (no plan) is REFUSED: batch authoring without a written per-scene
+  motion plan is the documented "text-slide" failure mode. Single-bullet mode (a fix
+  to one bullet of an already-planned scene) is exempt.
 
 Once cache files exist at the correct hashed paths, build_video.py Step 2
 finds them via pure cache lookup. There is no LLM/CLI subprocess in the
@@ -31,6 +44,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -38,25 +52,121 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from storyboard.source_parser import parse as parse_source
+# SINGLE SOURCE OF TRUTH for the cache key — reuse the build's exact function so the
+# seeded hash can NEVER drift from the lookup hash (drift = silent CacheMissError at build).
+# This previously diverged: visual_designer added the scene-brief fields (v15) + bumped the
+# prompt version (v16) while this file kept a stale v14 copy missing those fields.
+from storyboard.visual_designer import _bullet_cache_key
 import yaml
 
 CACHE_DIR = ROOT / "storyboard" / ".cache" / "designs"
 
+# ── RENDER-DETERMINISM GATE ──────────────────────────────────────────────────────
+# The seeded bullet code MUST render identically on every render. Two reasons this
+# is load-bearing in the native architecture:
+#   1. The final video is ONE live master render — it must be reproducible.
+#   2. The Visual Proof filmstrip is rendered SEPARATELY from the master, so frame N
+#      in the proof must equal frame N in the ship. A wall-clock / RNG value makes
+#      them differ → the gate would validate a different image than ships.
+# Motion must be FRAME-DRIVEN: derive any jitter from `frame` (e.g. Math.sin(frame*0.1)),
+# never from the wall clock or an unseeded RNG. (See vg-code-tokens: frame-driven only.)
+_NONDETERMINISTIC = re.compile(r"\b(?:Math\.random|Date\.now|performance\.now)\b|\bnew\s+Date\b")
 
-def _bullet_cache_key(scene, bullet_idx: int, design_tokens: dict) -> str:
-    """Mirror visual_designer._bullet_cache_key EXACTLY. Any drift here
-    means the cache file lands at a hash visual_designer.py won't look up,
-    causing CacheMissError at build time (rule 04). Both functions hash the
-    same fields in the same order with the same prompt-version constant
-    (b'prompt-v14-per-bullet'); the preflight test asserts this stays in sync."""
-    h = hashlib.sha256()
-    b = scene.animation[bullet_idx]
-    h.update(scene.narration.encode("utf-8"))
-    h.update(f"{bullet_idx}|{b.time_from_sec}-{b.time_to_sec}".encode("utf-8"))
-    h.update(f"{b.headline}|{b.body}".encode("utf-8"))
-    h.update(json.dumps(design_tokens, sort_keys=True).encode("utf-8"))
-    h.update(b"prompt-v14-per-bullet")  # MUST match visual_designer.py constant
-    return h.hexdigest()[:16]
+# ── NARRATION-DUPLICATION GATE (the text-video injector made mechanical) ─────────
+# The audited #1 author-side text injector: copying a narration line onto the frame
+# as a caption ("the narration is SPOKEN, never typeset" — vg-code-text; the picture
+# proves the line, it doesn't quote it). Mechanical rule: any string literal of >=4
+# words in seeded code whose normalized token sequence appears in the scene's
+# narration is REJECTED — unless the script itself directs that text (it appears in
+# the bullet's own body/text fields, e.g. a typed query that IS a world object).
+_STR_LIT = re.compile(r"'((?:[^'\\]|\\.){12,300})'|\"((?:[^\"\\]|\\.){12,300})\"")
+
+
+def _norm_tokens(s: str) -> str:
+    s = re.sub(r"<pause[^>]*>", " ", s or "")
+    return " ".join(re.findall(r"[a-z0-9]+", s.lower()))
+
+
+def _check_narration_dup(code: str, scene, scene_num: int, where: str, allow_text: str = "") -> None:
+    narr = _norm_tokens(scene.narration)
+    allow = _norm_tokens(allow_text)
+    for m in _STR_LIT.finditer(code):
+        lit = m.group(1) or m.group(2) or ""
+        seq = _norm_tokens(lit)
+        if seq.count(" ") < 3:          # <4 words: anchors/labels/readings are fine
+            continue
+        if seq in narr and seq not in allow:
+            raise ValueError(
+                f"scene {scene_num} {where}: on-screen literal duplicates the narration: "
+                f"{lit[:70]!r} — the narration is SPOKEN, never typeset (the picture proves the "
+                f"line; a caption is the author gaming the muted test). If the SCRIPT directs this "
+                f"text, it must appear in the beat's own text/what_happens fields."
+            )
+
+
+# ── THE PLAN GATE (vg-render-code §0c made mechanical) ──────────────────────────
+# Batch-authoring bullets without a written per-scene MOTION PLAN is the documented
+# failure that ships "text-in-boxes" scenes (every rule in context, none executed).
+# A bundle must DECLARE, per scene: >=8 named live systems (vg-quality-animations
+# MOTION DENSITY layers), >=1 non-text physical cast object (visual-world-engine
+# LAW 1), and atmosphere strengths at values that visibly register
+# (vg-code-composition §8b — "subtle" may not mean "invisible").
+# A scene marked "interstitial": true is DESIGNED sparse → reduced minimum (3).
+PLAN_MIN_LIVE_SYSTEMS = 8
+PLAN_MIN_LIVE_SYSTEMS_INTERSTITIAL = 3
+PLAN_ATMOS_MIN = {"grain": 0.04, "light": 0.5, "vignette": 0.12}
+
+
+def _check_plan(plan: dict, scene_nums: list) -> None:
+    scenes = (plan or {}).get("scenes") or {}
+    problems: list[str] = []
+    for n in sorted({s for s in scene_nums if s is not None}):
+        sp = scenes.get(str(n)) or scenes.get(n)
+        if not isinstance(sp, dict):
+            problems.append(f"scene {n}: no plan entry")
+            continue
+        # Corrected doctrine (2026-07-10, serial attention): a plan declares the scene's
+        # RUNNING MECHANISM (the `cycle` that carries long beats) — motion QUANTITY is no
+        # longer the bar. Legacy bundles may still satisfy the gate with >=N live_systems.
+        mech = str(sp.get("mechanism") or "").strip()
+        min_sys = PLAN_MIN_LIVE_SYSTEMS_INTERSTITIAL if sp.get("interstitial") else PLAN_MIN_LIVE_SYSTEMS
+        ls = [s for s in (sp.get("live_systems") or []) if str(s).strip()]
+        if not mech and len(ls) < min_sys:
+            problems.append(
+                f"scene {n}: no 'mechanism' declared (the scene's running cycle — what operates "
+                f"continuously; 'none — payoff/interstitial' is explicit) and only {len(ls)} legacy "
+                f"live_systems (< {min_sys}). Declare the mechanism (vg-render-code §0c).")
+        pc = [s for s in (sp.get("physical_cast") or []) if str(s).strip()]
+        if len(pc) < 1:
+            problems.append(
+                f"scene {n}: no non-text physical cast object declared — a scene of text panels "
+                f"is a slide (visual-world-engine LAW 1)")
+        at = sp.get("atmosphere") or {}
+        for k, mn in PLAN_ATMOS_MIN.items():
+            try:
+                v = float(at.get(k, 0))
+            except (TypeError, ValueError):
+                v = 0.0
+            if v < mn:
+                problems.append(f"scene {n}: atmosphere.{k}={v} below minimum {mn} (vg-code-composition §8b)")
+    if problems:
+        raise ValueError(
+            "PLAN GATE FAILED — the motion plan is a hard prerequisite (vg-render-code §0c):\n  - "
+            + "\n  - ".join(problems)
+            + "\n  Write the per-scene plan into the bundle's \"plan\" section, make the CODE match it, re-seed."
+        )
+
+
+def _check_determinism(code: str, scene_num: int, bullet_idx_1based: int) -> None:
+    hits = sorted({m.group(0) for m in _NONDETERMINISTIC.finditer(code)})
+    if hits:
+        raise ValueError(
+            f"NON-DETERMINISTIC code in scene {scene_num} bullet {bullet_idx_1based}: {hits}.\n"
+            f"  The render must be reproducible — the final is ONE live master render, and the\n"
+            f"  Visual Proof filmstrip is rendered SEPARATELY and must match the ship.\n"
+            f"  Replace wall-clock/RNG with a FRAME-DRIVEN value: e.g. Math.sin(frame*0.1) for\n"
+            f"  jitter, or a frame-seeded hash. (vg-code-tokens: frame-driven only.)"
+        )
 
 
 def _load_design_tokens(project_dir: Path) -> dict:
@@ -92,6 +202,9 @@ def seed_one(script, design_tokens: dict, scene_num: int, bullet_idx_1based: int
             f"(scene has {len(scene.animation)} bullets)"
         )
     bullet = scene.animation[bullet_idx]
+    _check_determinism(code, scene_num, bullet_idx_1based)   # block non-deterministic bullet code
+    _check_narration_dup(code, scene, scene_num, f"bullet {bullet_idx_1based}",
+                         allow_text=bullet.body)             # block narration-as-caption text
     key = _bullet_cache_key(scene, bullet_idx, design_tokens)
     cache_file = CACHE_DIR / f"bullet-s{scene_num}-b{bullet_idx + 1}-{key}.json"
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -108,6 +221,27 @@ def seed_one(script, design_tokens: dict, scene_num: int, bullet_idx_1based: int
         "source_headline": bullet.headline,
     }
     cache_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return cache_file
+
+
+def seed_stage(script, design_tokens: dict, scene_num: int, code: str) -> Path:
+    """Write ONE scene's STAGE cache file (scene-driven architecture): the persistent
+    world component rendered on scene-local frames for the scene's whole duration.
+    Key mirrors visual_designer._stage_cache_key exactly."""
+    from storyboard.visual_designer import _stage_cache_key
+    scene = next((s for s in script.scenes if s.number == scene_num), None)
+    if scene is None:
+        raise ValueError(f"scene {scene_num} not found in script (have {[s.number for s in script.scenes]})")
+    _check_determinism(code, scene_num, 0)   # stage code must be frame-driven too
+    _check_narration_dup(code, scene, scene_num, "stage",
+                         allow_text=(getattr(scene, "description", "") or "") + " "
+                                    + (getattr(scene, "design", "") or ""))
+    key = _stage_cache_key(scene, design_tokens)
+    cache_file = CACHE_DIR / f"stage-s{scene_num}-{key}.json"
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    for old in CACHE_DIR.glob(f"stage-s{scene_num}-*.json"):
+        old.unlink()
+    cache_file.write_text(json.dumps({"code": code}, indent=2, ensure_ascii=False), encoding="utf-8")
     return cache_file
 
 
@@ -130,9 +264,18 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("Need script_path (positional) and either single-bullet flags or --json bundle")
 
     if args.json:
-        bundle = json.loads(Path(args.json).read_text(encoding="utf-8"))
-        if not isinstance(bundle, list):
-            raise ValueError("--json bundle must be a JSON list")
+        raw = json.loads(Path(args.json).read_text(encoding="utf-8"))
+        if isinstance(raw, list):
+            raise ValueError(
+                "PLAN GATE: bare-list bundles are no longer accepted. Batch authoring requires the "
+                "per-scene MOTION PLAN (vg-render-code §0c): use {\"plan\": {\"scenes\": {...}}, "
+                "\"bullets\": [...]} — declare >=8 live systems, >=1 physical cast object, and "
+                "atmosphere strengths per scene, then make the code match the plan."
+            )
+        if not isinstance(raw, dict) or not isinstance(raw.get("bullets"), list):
+            raise ValueError("--json bundle must be {\"plan\": {...}, \"bullets\": [...]}")
+        bundle = raw["bullets"]
+        _check_plan(raw.get("plan") or {}, [e.get("scene") for e in bundle])
         # Determine project from script_path or from each entry
         if args.script_path:
             script = _load_script(Path(args.script_path).resolve())
@@ -142,6 +285,15 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("--json bundle requires script_path positional arg")
 
         for i, entry in enumerate(bundle):
+            if entry.get("stage"):
+                # Scene-driven: {"scene": N, "stage": true, "code": "..."} seeds the
+                # scene's persistent-world component (no bullet/anchor — it spans the scene).
+                for k in ("scene", "code"):
+                    if k not in entry:
+                        raise ValueError(f"bundle[{i}] (stage) missing key '{k}'")
+                path = seed_stage(script, design_tokens, entry["scene"], entry["code"])
+                print(f"  ✓ scene {entry['scene']} STAGE → {path.name}")
+                continue
             for k in ("scene", "bullet", "anchor", "code"):
                 if k not in entry:
                     raise ValueError(f"bundle[{i}] missing key '{k}' (entry: {entry!r})")

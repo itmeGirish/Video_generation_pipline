@@ -1,6 +1,4 @@
-import { Composition, cancelRender, continueRender, delayRender } from "remotion";
-import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
-import { loadFont as loadJetBrainsMono } from "@remotion/google-fonts/JetBrainsMono";
+import { Composition, continueRender, delayRender, staticFile } from "remotion";
 import { makeUniversalScenePreview } from "./sequences/UniversalScenePreview";
 import { TIMELINES } from "./storyboard/timelines";
 import { registerMasterComposition } from "./MasterComposition";
@@ -14,19 +12,34 @@ const VIDEO_HEIGHT = Number(process.env.VIDEO_HEIGHT) || 1080;
 // call (rule 19) returns measurements based on the wrong glyphs — text either
 // clips or shrinks unnecessarily. delayRender pauses every Composition until
 // continueRender fires, so this gates ALL scenes uniformly.
-// Load ONLY the weights/subsets actually used. The default loadFont() pulls every
-// weight + every subset → 48–96 Google-Fonts network requests per font, and any single
-// failed request used to abort the whole render with "NetworkError: A network error
-// occurred." Restricting to latin + the 3 weights we use drops that to a handful.
-const FONT_OPTS = { weights: ["400", "600", "700"] as ("400" | "600" | "700")[], subsets: ["latin"] as "latin"[], ignoreTooManyRequestsWarning: true };
-const fontHandle = delayRender("Loading display + mono fonts");
-Promise.all([
-  loadInter("normal", FONT_OPTS).waitUntilDone(),
-  loadJetBrainsMono("normal", FONT_OPTS).waitUntilDone(),
-])
+// Fonts are VENDORED in public/fonts/ and loaded via FontFace from staticFile —
+// zero network requests at render time. The previous google-fonts package loaders
+// fetched from fonts.gstatic.com on every render; on an unstable connection that
+// intermittently failed the headless render (font ERR_CONNECTION_CLOSED / 30s
+// delayRender timeout). Local files also mean 'Space Grotesk' (the design token
+// font_display) actually renders instead of silently falling back to sans-serif.
+const FONT_FILES: Array<[family: string, file: string, weight: string]> = [
+  ["Inter", "fonts/Inter-400.woff2", "400"],
+  ["Inter", "fonts/Inter-600.woff2", "600"],
+  ["Inter", "fonts/Inter-700.woff2", "700"],
+  ["JetBrains Mono", "fonts/JetBrainsMono-400.woff2", "400"],
+  ["JetBrains Mono", "fonts/JetBrainsMono-700.woff2", "700"],
+  ["Space Grotesk", "fonts/SpaceGrotesk-400.woff2", "400"],
+  ["Space Grotesk", "fonts/SpaceGrotesk-500.woff2", "500"],
+  ["Space Grotesk", "fonts/SpaceGrotesk-700.woff2", "700"],
+];
+const fontHandle = delayRender("Loading local display + mono fonts");
+Promise.all(
+  FONT_FILES.map(([family, file, weight]) => {
+    const face = new FontFace(family, `url('${staticFile(file)}') format('woff2')`, { weight });
+    return face.load().then((loaded) => {
+      document.fonts.add(loaded);
+    });
+  }),
+)
   .then(() => continueRender(fontHandle))
-  // A transient font-CDN hiccup must NOT abort the render — continue with whatever
-  // loaded (fallback for a frame is far better than a failed scene). Was cancelRender.
+  // A font failure must NOT abort the render — continue with whatever loaded
+  // (fallback for a frame is far better than a failed scene).
   .catch(() => continueRender(fontHandle));
 
 // Auto-discovered from TIMELINES at module load. timelines.ts is patched by
@@ -59,10 +72,10 @@ export const RemotionRoot: React.FC = () => {
         />
       ))}
       {/*
-        Master composition: stitches per-scene mp4s + master audio in ONE
-        Remotion render via <TransitionSeries>. Replaces ffmpeg stitch step
-        (Step 10). Frame-accurate sync by construction.
-        See remotion/src/MasterComposition.tsx and rules/09 Layer 4.
+        Master composition: composes the LIVE per-scene components + master audio
+        in ONE Remotion render via <Series> (zero overlap → sync-safe). Scenes are
+        reusable modular components assembled into one master timeline — no
+        intermediate per-scene mp4 stitch. See remotion/src/MasterComposition.tsx.
       */}
       {registerMasterComposition()}
     </>

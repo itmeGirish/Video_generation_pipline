@@ -1,0 +1,125 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - button [ref=e5]:
+        - img [ref=e7]
+      - button "File" [ref=e9]
+      - button "View" [ref=e10]
+      - button "Tools" [ref=e11]
+      - button "Packages" [ref=e12]
+      - button "Help" [ref=e13]
+      - button "Update available" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+    - generic "C:\\Girish\\Fundamental_Projects\\video_generation\\video_explainer\\remotion" [ref=e14]:
+      - generic "Open in C:WINDOWS otepad.exe" [ref=e43] [cursor=pointer]: remotion
+      - generic [ref=e44]: /
+      - generic "Open in C:WINDOWS otepad.exe" [ref=e45] [cursor=pointer]: pixel-rag-s01
+    - generic [ref=e16]:
+      - button [ref=e17]:
+        - generic "Toggle Left Sidebar (Ctrl+B)" [ref=e18]
+      - button [ref=e20]:
+        - generic "Toggle Right Sidebar (Ctrl+J)" [ref=e21]
+  - generic [ref=e23]:
+    - generic [ref=e25]:
+      - generic [ref=e56]:
+        - generic [ref=e62]:
+          - generic [ref=e68]: Pricing
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: Plan
+              - generic [ref=e72]: Price
+              - generic [ref=e73]: Seats
+            - generic [ref=e74]:
+              - generic [ref=e75]: Pro
+              - generic [ref=e76]: $29
+              - generic [ref=e77]: "5"
+            - generic [ref=e78]:
+              - generic [ref=e79]: Team
+              - generic [ref=e80]: $49
+              - generic [ref=e81]: "20"
+            - generic [ref=e82]:
+              - generic [ref=e83]: Scale
+              - generic [ref=e84]: $79
+              - generic [ref=e85]: ∞
+        - generic [ref=e92]: a screenshot. beat text.
+      - generic [ref=e34]:
+        - generic [ref=e93]:
+          - button "Zoom out timeline" [disabled] [ref=e94]:
+            - img [ref=e95]
+          - slider "Timeline zoom (1x)" [ref=e97]: "1"
+          - button "Zoom in timeline" [ref=e98]:
+            - img [ref=e99]
+        - generic "Preview Size" [ref=e101]:
+          - button "Fit" [ref=e102]:
+            - generic "Fit" [ref=e103]
+            - img [ref=e104]
+        - generic "Change the playback rate" [ref=e106]:
+          - button "1x" [ref=e107]:
+            - generic "1x" [ref=e108]
+            - img [ref=e109]
+        - button "Jump to beginning" [disabled] [ref=e111]:
+          - img [ref=e112]
+        - button "Step back one frame" [disabled] [ref=e114]:
+          - img [ref=e115]
+        - button "Play" [ref=e117]:
+          - img [ref=e118]
+        - button "Step forward one frame" [ref=e120]:
+          - img [ref=e121]
+        - button "Loop video" [ref=e123]:
+          - img [ref=e124]
+        - button "Mute video" [ref=e126]:
+          - img [ref=e127]
+        - button "Mark In (I) - right click to clear" [disabled] [ref=e129]:
+          - img [ref=e130]
+        - button "Mark Out (O) - right click to clear" [ref=e132]:
+          - img [ref=e133]
+        - button "Show transparency as checkerboard (T)" [ref=e135]:
+          - img [ref=e136]
+        - button "Enter fullscreen preview (F)" [ref=e138]:
+          - img [ref=e139]
+        - generic "Export the current composition (R)" [ref=e141] [cursor=pointer]:
+          - button "Render" [ref=e142]:
+            - generic [ref=e143]:
+              - img [ref=e144]
+              - generic [ref=e146]: Render
+    - generic [ref=e149]:
+      - generic [ref=e151]:
+        - generic [ref=e154]:
+          - generic [ref=e155]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e156]: <Sequence>
+        - generic [ref=e158]:
+          - generic [ref=e159]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e160]: <Sequence>
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e164]: <Sequence>
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e168]: <Sequence>
+        - generic [ref=e170]:
+          - generic [ref=e171]:
+            - img
+          - generic "UniversalScene.tsx:38" [ref=e172]: <Sequence>
+      - generic [ref=e174]:
+        - generic [ref=e175]: 00:00.00
+        - button "0" [ref=e176]
+      - generic [ref=e180]:
+        - generic [ref=e189]: "0"
+        - generic:
+          - generic:
+            - generic: 00:07.00
+          - generic:
+            - generic: 00:14.00
+          - generic:
+            - generic: 00:21.00
+          - generic:
+            - generic: 00:28.00
+          - generic:
+            - generic: 00:35.00
+        - generic:
+          - generic:
+            - img

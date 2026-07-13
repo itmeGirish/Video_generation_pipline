@@ -1,6 +1,7 @@
 ---
 name: vg-when-script-received
 description: "FIRST rule to read when a script arrives. Follow this exact 6-step flow with no shortcuts. Use whenever a script is given, a render is about to start, a script needs conversion, or any request like "I have a script," "render this," "convert this script," "start the pipeline," "script received," or "begin building the video.""
+model: opus
 ---
 
 # When a Script + Animation is Given
@@ -14,7 +15,7 @@ This is the ENTRY POINT. Read this first every time the user gives you a script.
 - Step 1 — Read the raw script + animation, convert to canonical structure
 - Step 2 — Build config.yaml from the STRUCTURED script (not from defaults)
 - Step 3 — Verify every bullet body is concrete enough for codegen
-- Step 4 — Per-scene render → verify → fix LOOP (MANDATORY)
+- Step 4 — Per-scene VISUAL PROOF (cheap) → ONE master render → FINAL gate (MANDATORY)
 - Step 5 — Verify fidelity
 - Step 6 — Check output
 - What NOT to do
@@ -47,7 +48,7 @@ is usually the script.
 
 For each scene, internally answer:
 
-0. **Director's-brief check (read it FIRST).** The script (produced by `script-scene-design`) carries
+0. **Director's-brief check (read it FIRST).** The script (produced by `scene-composer`) carries
    ONE `<!-- GLOBAL VISUAL STYLE -->` + `<!-- REFERENCE ASSETS -->` at the top, and each scene opens with
    `<!-- SCENE DESCRIPTION -->` (a prose brief: Environment · Situation · Viewer Realization · Emotional
    Journey · Visual Transformation · Final Image) and `<!-- SCENE DESIGN -->` (fields: Scene Purpose ·
@@ -203,50 +204,14 @@ Animation defaults (`spring_damping`, `spring_stiffness`, `fade_frames`, `type_s
 are NOT user-facing knobs in most scripts — leave them out unless the script explicitly
 specifies them. The renderer has built-in defaults.
 
-### 2c. Skeleton template (no values — fill from script)
+### 2c. Skeleton
 
-Use this skeleton when authoring a new `projects/<name>/config.yaml`. Every `<...>` is
-a placeholder you fill from the raw script via the §2b mapping table. Do NOT carry
-example hex values from one project to another.
-
-```yaml
-project: <name>                   # ← derived from filename stem
-output: <Headline>.mp4            # ← derived from script's ## TITLE OPTIONS
-
-audio:
-  voice: en-US-AndrewMultilingualNeural   # ← pinned constant
-  full_audio_filename: vo-<name>-full.mp3 # ← path template
-  # rate: <from script ## Pacing>     ← OMIT this line if script has no pacing override
-  # pitch: <from script tone>         ← OMIT this line if script has no tone direction
-
-video:
-  fps: 30                                  # ← pinned constant
-  width: 1920                              # ← pinned constant
-  height: 1080                             # ← pinned constant
-
-design:
-  bg: <hex from BASE>
-  surface: <hex from SURFACE>
-  text: <hex from WHITE>
-  text_dim: <hex from DIM>
-  cyan: <hex from CYAN>
-  violet: <hex from MAGENTA>      # pipeline calls the magenta/pink slot 'violet'
-  amber: <hex from AMBER>
-  green: <hex from GREEN>
-  red: <hex from RED>
-  white: <hex from WHITE>
-  font_display: "'<font from FONT_DISPLAY>', sans-serif"
-  font_mono: "'<font from FONT_MONO>', monospace"
-  dot_grid_opacity: <decimal from GLOBAL VISUAL SYSTEM grid opacity>
-  dot_grid_spacing: <integer from GLOBAL VISUAL SYSTEM grid spacing>
-
-stitch:
-  mode: <hard_cut | crossfade — from script's scene transitions description>
-```
-
-If the script provides extra colors (e.g. `SOFT_RED`, `BRAND_BLUE`) that have no slot
-in the schema today, flag this to the user — they may want a new color slot, or you
-can reference the hex inline in the bullet body when designing visuals.
+Author `projects/<name>/config.yaml` as: the four pinned constants above + a `design:` block whose
+every field is filled from the §2b mapping table (`bg/surface/text/text_dim/cyan/violet=MAGENTA/amber/
+green/red/white/font_display/font_mono/dot_grid_opacity/dot_grid_spacing`) + `stitch.mode`. **OMIT any
+field the script doesn't define** (let the renderer default apply — don't invent), and carry NO example
+values from another project. A script color with no schema slot (e.g. `SOFT_RED`) → flag to the user.
+`vg-build-and-run` carries the full skeleton if you need it verbatim.
 
 ### 2d. Anti-patterns
 
@@ -292,116 +257,92 @@ Keep bullet bodies in the structured script free of those literals too.
 
 ---
 
-## Step 4 — Per-scene render → verify → fix LOOP (MANDATORY)
+## Step 4 — Per-scene VISUAL PROOF (cheap) → ONE master render → FINAL gate (MANDATORY)
 
-**DO NOT render all scenes at once.** This is the hard-won discipline from
-production: one bad scene caught at scene 1 saves 30+ minutes of wasted render
-time on scenes 2-7. The loop is non-negotiable.
+**⛔ NATIVE flow: there is NO per-scene mp4 render→verify→fix loop.** The one expensive step is
+the LIVE MASTER render (`render_master.mjs` — all scene COMPONENTS composed via a plain `<Series>`,
+zero overlap → sync-safe; narration overlaid at the mux; NO per-scene mp4 stitch). So quality is
+proven in TWO places: CHEAP per scene BEFORE the render (4a–4c), then the full battery ON the
+rendered master (4e). `render_scenes.mjs` is only an OPTIONAL debug render-to-watch — never a gate.
 
-### The loop (repeat for each scene N = 1, 2, 3, ... last):
-
-```
-LOOP scene N:
-  4a. RENDER scene N only         → produces remotion/out/<name>-s0N.mp4
-  4b. VERIFY scene N (rule 23)    → V1-V8 + A1-A8 + audio sync + caption zone
-  4c. IF FAIL:
-        - identify which bullet(s) failed
-        - rewrite that bullet's React.createElement code (rule 04 + rule 19)
-        - delete cache: storyboard/.cache/designs/bullet-s0N-bXX-*.json
-        - re-seed the affected bullet via seed_bullet_cache.py
-        - GO TO 4a
-  4d. IF PASS:
-        - mark scene N done
-        - advance to scene N+1
-```
-
-**You may NEVER advance to scene N+1 until scene N is PASS.**
-
-### 4a — Render ONE scene
+### 4a — VISUAL PROOF each scene (cheap keyframes; no TTS/Whisper/full render)
 
 ```bash
-cd c:/Girish/Fundamental_Projects/video_generation/video_explainer
-# Pipeline supports per-scene rendering via --scene flag:
-python storyboard/build_video.py projects/scripts/<name>.txt --scene 1
-
-# OR direct Remotion (faster, skips TTS/Whisper if already done):
-cd remotion && PROJECT=<name> node render_scenes.mjs <name>-s01
+python storyboard/preview_bullet.py projects/structured_scripts/<name>.txt --scene N --visual-proof
 ```
 
-### 4b — Verify (rule 23 is the law)
+Renders the 5-keyframe FILMSTRIP from the LIVE composition + the mechanical proofs
+(canvas coverage + transformation Δ — frames near-identical = FLAT = FAIL).
 
-For EVERY bullet in the rendered scene, run all of:
+### 4b — Judge the 3 proofs against the scene's DDI (route to owners — never score from memory)
 
-| Layer | What to check | Tool |
+| Proof | What must be true | Owner to invoke |
 |---|---|---|
-| V1-V8 | Frame inspection (5 frames per bullet: p10/p30/p50/p70/p90) | ffmpeg extract → Read tool on jpg |
-| V9 | Internal element overlap | Visual inspection |
-| V9b | Decorative covers text | Visual inspection |
-| **V9c** | **Caption zone reserved (top<h*0.88 & bottom>h*0.10)** | Visual inspection |
-| V10 | Text fits container (no overflow) | Visual inspection |
-| V11 | Bullet duration vs animation timeline | Check last phase frame < duration |
-| V13 | Primary visual prominence (≥50% canvas) | Visual inspection |
-| A1-A8 | Animation filmstrip (5-frame motion check) | ffmpeg filmstrip |
-| A4 | Freeze detection (>3s static = FAIL unless final-hold) | PSNR check |
-| A5 | PSNR p10→p70 motion check | ffmpeg PSNR |
-| Layer 2 | Audio sync (framesFrom ≈ Whisper word start within ±0.05s) | Whisper JSON lookup |
-| Layer 2.5 | Mid-bullet audio coherence (visual matches narration throughout) | Per 3s window |
+| Composition | hero obvious in ~1s · hierarchy · no overlap · caption zone clear | `vg-visual-quality` factors 5–8 + `python -m storyboard.layout_validator <project>` |
+| Narrative | MUTED: attention travels + a first-time viewer understands · through-line present | `render-validator` (the muted test) |
+| Transformation | the hero's STATE changed A→B across the strip (mechanical Δ vs the DDI) | the DDI + `vg-scene-validator` |
 
-Save report to `projects/<name>/verify_s0N_report.txt` for the record.
+PASS → append to `projects/<name>/verification.md`:
 
-### 4c — On FAIL, fix the actual bullet
-
-DON'T just re-render and hope. The cache is content-addressed, so re-rendering
-without changing the cache returns the same broken output.
-
-```bash
-# After fixing the bullet body OR the React.createElement code:
-rm storyboard/.cache/designs/bullet-s0N-b0X-*.json
-
-# Re-seed just that bullet:
-python storyboard/seed_bullet_cache.py projects/scripts/<name>.txt --json fix_bundle.json
-
-# Delete the broken mp4 so renderer re-renders:
-rm remotion/out/<name>-s0N.mp4
-
-# Re-render this scene only:
-cd remotion && PROJECT=<name> node render_scenes.mjs <name>-s0N
+```
+VISUAL-PROOF: <name>-s0N | composition=PASS narrative=PASS transform=<Δ>%
 ```
 
-Then loop back to 4b verification.
+**`render_gate.sh` HARD-BLOCKS the master render until EVERY scene has this marker.**
 
-### 4d — Only advance after PASS
+### 4c — On FAIL, fix the actual bullet/DDI (the cache is content-addressed)
 
-Document scene N as PASS in your todo list BEFORE rendering scene N+1.
-This forces honest tracking. A "mostly passed" scene is FAIL.
+Route the symptom to its ONE owner skill FIRST (CLAUDE.md BUG ROUTER) — motion→`vg-code-animations`,
+mechanism→`vg-code-artifacts`, stagger→`vg-code-sequencing`, easing→`vg-code-timing`,
+text→`vg-code-text`, image→`vg-code-images`, tokens→`vg-code-tokens`. Then:
 
-### Why this loop is mandatory (lessons from production)
+```bash
+# After fixing the bullet's React.createElement code or the scene's DDI, re-seed:
+python storyboard/seed_bullet_cache.py projects/structured_scripts/<name>.txt --json fix_bundle.json
 
-- **ADDITIVE bullet violations** silently break the visual story. Caught at
-  scene 1, fixed in 2 min. Caught after stitching all 7 = re-do 6 scenes.
-- **Caption zone overlaps** look fine in isolation but break once captions render.
-  Per-scene check catches before bottom 12% is wasted.
-- **Audio sync drift** of +1.5s on scene 2 compounds when stitched — viewer
-  notices in scene 5. Per-scene Layer 2 check catches at the source.
-- **Render time budget**: 7 scenes × 5 min each = 35 min total. One bug
-  caught late = re-render all = 70 min wasted. Loop discipline = strictly
-  +verification time, no wasted renders.
+# Re-prove the scene:
+python storyboard/preview_bullet.py projects/structured_scripts/<name>.txt --scene N --visual-proof
+```
 
-### Underlying pipeline behavior (informational)
+The scene never reaches the master render flat.
 
-The bulk `build_video.py` runs these steps; per-scene rendering uses the same
-infrastructure but stops at step [9] for one scene at a time:
-- [1] Load + schema-check config.yaml
-- [2] Parse structured script
-- [3] Per-bullet cache LOOKUP (no LLM subprocess — fail-fast on cache miss)
-- [4] SSML compile + TTS (one-time, cached)
-- [5] Whisper transcribe (one-time, cached)
-- [6] Locate scene boundaries
-- [7] Compute framesFrom/framesTo via audio_anchor lookup
-- [8] Patch timelines.ts
-- [8.5] Validate pipeline state
-- [9] Render the requested scene(s) only
-- [10] Stitch + mux → final mp4 — **DEFER until all scenes pass**
+### 4d — MASTER RENDER (once, after every scene has its marker)
+
+```bash
+python storyboard/build_video.py projects/structured_scripts/<name>.txt
+```
+
+`build_video.py` flows: [1] config → [2] parse → [3] per-bullet cache LOOKUP (fail-fast on miss) →
+[4] SSML+TTS (cached) → [5] Whisper (cached) → [6–8] scene boundaries + `framesFrom/framesTo` via
+`audio_anchor` + patch `timelines.ts` → [10] **ONE live master render via `render_master.mjs`**
+(there is no per-scene mp4 render and no stitch) + narration mux → final mp4.
+Partial subset preview: `MASTER_SCENES=<subset>` (reminder-only, not hard-gated).
+
+### 4e — FINAL gate ON THE RENDERED MASTER (invoke ALL, then record MASTER-PASS)
+
+| Check | Owner (invoke the Skill) |
+|---|---|
+| V1–V13 + AUDIO-SYNC drift + `ffmpeg volumedetect` (never ship silent) | `vg-verification-protocol` |
+| 8 visual factors → /100 (motion factors 1–4 from the FILMSTRIP) | `vg-visual-quality` |
+| Audio quality (voice · −14 LUFS · music+duck · sfx · silence) | `vg-quality-audio` |
+| Coverage + visibility (≥90%, 0 placeholder/error) | `vg-output-validation` |
+| Watch the WHOLE video MUTED — 8 lenses → SHIP\|RE-CUT | `video-narrative-editor` |
+| 12-layer Motion-Native conformance + cross-scene continuity | `vg-scene-validator` |
+| YouTube T1–T12 technical gate + runtime | `vg-youtube-validation` · `vg-video-duration` |
+
+PASS → record `MASTER-PASS: <name> | visual=<NN>/100 audio=<N>/10 transform=<min-Δ>%` in
+`projects/<name>/verification.md`, then upload. FAIL → route to the ONE owner (BUG ROUTER) →
+fix the scene's bullet code/DDI → re-seed → re-prove (4a) → re-render the master. One master fix
+re-renders the whole video — the cheap proof (4a) is what keeps re-renders rare.
+
+### Why prove-cheap-first is mandatory (lessons from production)
+
+- A FLAT scene caught at 4a costs seconds; caught after the master it re-renders the
+  WHOLE video (~260s/scene render budget).
+- **Caption zone overlaps** and layout collisions are caught on cheap keyframes by
+  `layout_validator` before any render burn.
+- **Audio sync** is checked ONCE on the real master (`vg-verification-protocol` Layer 2) —
+  the master `<Series>` is zero-overlap, so per-scene drift no longer compounds through a stitch.
 
 `stitch.mode`: omit from config.yaml → safe default `hard_cut`. Set
 `crossfade` only when script explicitly requests it.
@@ -468,64 +409,19 @@ If anything is wrong → see **`rule 13`** for the right re-run flag (no manual 
 | `remotion/public/scenes/<id>.json` | Build-time mirror of project scenes (auto-synced; not source-of-truth) |
 | `remotion/public/captions/<id>.json` | Build-time mirror of project captions (auto-synced; not source-of-truth) |
 | `remotion/src/storyboard/timelines.ts` | Scene duration registry |
-| `remotion/out/<id>.mp4` | Per-scene silent renders |
+| `remotion/out/<id>.mp4` | OPTIONAL debug per-scene renders (`render_scenes.mjs` — never a gate) |
 | `projects/<name>/out/<Title>.mp4` | **FINAL VIDEO** |
 
 ---
 
-## Examples
+## Examples (brief)
 
-### Receiving "AI Thinking Levels" script (7 scenes, ~8 min)
-
-```
-User: "here's my script for AI thinking levels, render it"
-
-Step 0 — Identify format: rich movie-script format (### VO:, frame timestamps, DESIGN TOKENS preamble)
-  → Rule 18 mandatory. NOT regex-only. Hand-convert now.
-
-Step 1 — Hand-convert (rule 18):
-  - Strip frame timestamps ("0:00–0:45 / SCENE 1")
-  - Collapse "### VO:" blocks into "### Narration" blocks
-  - Split sub-scenes into separate "### Scene N" headers
-  - Preserve bespoke metaphors ("octopus neurons") as Animation bullets
-  - Write output to projects/structured_scripts/ai-thinking-levels.txt
-
-Step 2 — Build config.yaml:
-  - Read ## DESIGN TOKENS from structured script
-  - Paste hex values into projects/ai-thinking-levels/config.yaml
-  - Set output: "AI Thinking Levels.mp4"
-
-Step 3 — Count bullets: 7 scenes × ~6 bullets = 42 total bullets to author
-
-Step 4 — Author bullet code (rule 04 + rule 21):
-  - Read rule 21 first — Q1/Q2 for every bullet before writing code
-  - Scene 1 bullet 1 (hook): Single hero number animating in
-  - Scene 2 bullet 3 (comparison): SplitPanel left=instinct right=reasoning
-  - Scene 5 bullet 2 (bespoke): octopus tentacles branching via interpolate arcs
-  - etc. for all 42 bullets
-
-Step 5 — Seed cache:
-  python storyboard/seed_bullet_cache.py projects/scripts/ai-thinking-levels.txt --json bundle.json
-
-Step 6 — Build:
-  python storyboard/build_video.py projects/scripts/ai-thinking-levels.txt
-```
-
-### Receiving a simple 3-scene explainer (plain format)
-
-```
-User: "i have a 3 scene explainer about TCP handshake"
-
-Step 0 — Identify format: plain structured format (no design preamble, no frame timestamps)
-  → script_converter.py regex path. No hand-conversion needed.
-
-Step 1 — Verify conversion produced valid structured_scripts/tcp-handshake.txt
-  python -m storyboard.source_parser projects/structured_scripts/tcp-handshake.txt --dry-run
-
-Step 2 — Config: minimal config.yaml (black bg, white text, Sora font)
-
-Step 3 — Author 3×6=18 bullets, seed, build.
-```
+- **Rich movie-script** (`### VO:`, frame timestamps, DESIGN TOKENS preamble) → Step 0 flags it →
+  hand-convert per `vg-script-conversion` MODE B (`references/movie-script-conversion.md`) / rule 18 (strip frame timestamps, `### VO:`→`### Narration`,
+  split sub-scenes, preserve bespoke metaphors) → config from the token block → per-scene author →
+  visual-proof each scene → master render → final gate.
+- **Plain 3-scene explainer** → `script_converter.py` regex path (no hand-convert) → confirm it parses →
+  author 3×~6 bullets → seed → build.
 
 ---
 

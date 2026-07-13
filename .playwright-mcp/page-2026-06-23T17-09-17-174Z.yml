@@ -1,0 +1,123 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - button [ref=e5]:
+        - img [ref=e7]
+      - button "File" [ref=e9]
+      - button "View" [ref=e10]
+      - button "Tools" [ref=e11]
+      - button "Packages" [ref=e12]
+      - button "Help" [ref=e13]
+    - generic "C:\\Girish\\Fundamental_Projects\\video_generation\\video_explainer\\remotion" [ref=e14]:
+      - generic "Open GitHub Repo" [ref=e15] [cursor=pointer]: remotion
+      - generic [ref=e16]: /
+      - generic "pixel-rag-s01" [ref=e17]
+    - generic [ref=e18]:
+      - button [ref=e19]:
+        - generic "Toggle Left Sidebar (Ctrl+B)" [ref=e20]
+      - button [ref=e22]:
+        - generic "Toggle Right Sidebar (Ctrl+J)" [ref=e23]
+  - generic [ref=e25]:
+    - generic [ref=e27]:
+      - generic [ref=e44]:
+        - generic [ref=e50]:
+          - generic [ref=e56]: Pricing
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - generic [ref=e59]: Plan
+              - generic [ref=e60]: Price
+              - generic [ref=e61]: Seats
+            - generic [ref=e62]:
+              - generic [ref=e63]: Pro
+              - generic [ref=e64]: $29
+              - generic [ref=e65]: "5"
+            - generic [ref=e66]:
+              - generic [ref=e67]: Team
+              - generic [ref=e68]: $49
+              - generic [ref=e69]: "20"
+            - generic [ref=e70]:
+              - generic [ref=e71]: Scale
+              - generic [ref=e72]: $79
+              - generic [ref=e73]: ∞
+        - generic [ref=e80]: a screenshot. beat text.
+      - generic [ref=e81]:
+        - generic [ref=e83]:
+          - button "Zoom out timeline" [disabled] [ref=e84]:
+            - img [ref=e85]
+          - slider "Timeline zoom (1x)" [ref=e87]: "1"
+          - button "Zoom in timeline" [ref=e88]:
+            - img [ref=e89]
+        - generic "Preview Size" [ref=e91]:
+          - button "Fit" [ref=e92]:
+            - generic "Fit" [ref=e93]
+            - img [ref=e94]
+        - generic "Change the playback rate" [ref=e96]:
+          - button "1x" [ref=e97]:
+            - generic "1x" [ref=e98]
+            - img [ref=e99]
+        - button "Jump to beginning" [disabled] [ref=e101]:
+          - img [ref=e102]
+        - button "Step back one frame" [disabled] [ref=e104]:
+          - img [ref=e105]
+        - button "Play" [ref=e107]:
+          - img [ref=e108]
+        - button "Step forward one frame" [ref=e110]:
+          - img [ref=e111]
+        - button "Loop video" [ref=e113]:
+          - img [ref=e114]
+        - button "Mute video" [ref=e116]:
+          - img [ref=e117]
+        - button "Mark In (I) - right click to clear" [disabled] [ref=e119]:
+          - img [ref=e120]
+        - button "Mark Out (O) - right click to clear" [ref=e122]:
+          - img [ref=e123]
+        - button "Show transparency as checkerboard (T)" [ref=e125]:
+          - img [ref=e126]
+        - button "Enter fullscreen preview (F)" [ref=e128]:
+          - img [ref=e129]
+        - generic "Connect to the Studio server to render" [ref=e132]:
+          - button "Render" [disabled] [ref=e133] [cursor=pointer]:
+            - generic [ref=e134]:
+              - img [ref=e135]
+              - generic [ref=e137]: Render
+    - generic [ref=e142]:
+      - generic [ref=e144]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - img
+          - generic "<Sequence>" [ref=e149]
+        - generic [ref=e151]:
+          - generic [ref=e152]:
+            - img
+          - generic "<Sequence>" [ref=e153]
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - img
+          - generic "<Sequence>" [ref=e157]
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - img
+          - generic "<Sequence>" [ref=e161]
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - img
+          - generic "<Sequence>" [ref=e165]
+      - generic [ref=e167]:
+        - generic [ref=e168]: 00:00.00
+        - button "0" [ref=e169]
+      - generic [ref=e173]:
+        - generic [ref=e182]: "0"
+        - generic:
+          - generic:
+            - generic: 00:07.00
+          - generic:
+            - generic: 00:14.00
+          - generic:
+            - generic: 00:21.00
+          - generic:
+            - generic: 00:28.00
+          - generic:
+            - generic: 00:35.00
+        - generic:
+          - generic:
+            - img

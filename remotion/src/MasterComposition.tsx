@@ -1,19 +1,23 @@
 import React from 'react';
-import { Audio, Composition, Series, Video, staticFile } from 'remotion';
+import { Audio, Composition, Series, staticFile } from 'remotion';
 import { TIMELINES } from './storyboard/timelines';
+import { makeUniversalScenePreview } from './sequences/UniversalScenePreview';
 
-// MasterComposition — single Remotion composition that:
-//  1. Plays the full TTS mp3 via <Audio> at the master timeline root
-//  2. Plays per-scene mp4s sequentially via <Series> — NO overlap, NO frame stealing.
-//     Series guarantees: scene N video starts at the exact frame where scene N audio starts.
-//     Audio timeline = Video timeline = frame-perfect sync by construction.
-//  3. Single render → audio + visuals always frame-accurately aligned.
-//     NO ffmpeg stitch step. NO TransitionSeries overlap drift.
+// MasterComposition — ONE Remotion composition, ONE render (Remotion-native):
+//  1. Plays the full TTS mp3 via <Audio> at the master timeline root.
+//  2. Composes the LIVE per-scene components (the SAME makeUniversalScenePreview
+//     used for each per-scene composition) sequentially via <Series>. The scenes
+//     are reusable modular components assembled into one master timeline — there
+//     is NO intermediate per-scene mp4 stitch; the final video is a single render
+//     of the live scene graph (Remotion's "components → one composition → one render").
+//  3. Series guarantees scene N starts at the exact frame where scene N's audio
+//     starts → audio timeline == video timeline, frame-perfect by construction.
 //
-// Why NOT TransitionSeries: TransitionSeries overlaps adjacent scenes by
-// TRANSITION_FRAMES. This shortens the master video by (N-1)*TRANSITION_FRAMES
-// while the audio remains full-length → sync drifts 12 frames per transition,
-// last N*12 frames of audio have no matching video. Series has zero overlap.
+// Why <Series> and NOT <TransitionSeries>: TransitionSeries OVERLAPS adjacent
+// scenes by TRANSITION_FRAMES, shortening the video by (N-1)*TRANSITION_FRAMES
+// while the audio stays full-length → sync drifts ~12 frames per transition.
+// Series has ZERO overlap, so live composition stays sync-safe. (A cross-scene
+// transition therefore remains a per-scene Backdrop fade, never a master overlap.)
 
 // process.env.PROJECT and process.env.MASTER_AUDIO_FILE are inlined at bundle
 // time by render_master.mjs (webpack.DefinePlugin).
@@ -44,13 +48,10 @@ const MasterRoot: React.FC = () => {
       <Series>
         {SCENE_IDS.map((sid: string) => {
           const tl = TIMELINES[sid];
+          const Scene = makeUniversalScenePreview(sid);   // the LIVE modular scene component
           return (
             <Series.Sequence key={sid} durationInFrames={tl.durationFrames}>
-              <Video
-                src={staticFile(`out/${sid}.mp4`)}
-                startFrom={0}
-                endAt={tl.durationFrames}
-              />
+              <Scene />
             </Series.Sequence>
           );
         })}

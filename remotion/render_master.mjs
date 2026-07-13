@@ -1,9 +1,12 @@
 /**
- * Render the master composition (audio + scenes stitched via TransitionSeries)
- * to a single mp4. Replaces ffmpeg stitch step in build_video.py.
+ * Render the master composition — ONE live render of the per-scene COMPONENTS composed via
+ * a plain <Series> (zero overlap, no master fade) + the master audio → a single mp4. The
+ * scenes render LIVE (no intermediate per-scene mp4 stitch); this is the Remotion-native
+ * "modular components → one master composition → one render" assembly.
  *
- * Per-scene mp4s must already be in remotion/out/ (Step 9 produces them).
  * Master audio must already be in projects/<name>/audio/ (Step 4 produces it).
+ * (Per-scene mp4s are NO LONGER required by the master — they remain only for the
+ *  per-scene render→verify loop. Scene JSONs in remotion/public/scenes/ feed the live scenes.)
  *
  * Usage:
  *   PROJECT=difference_txt MASTER_AUDIO_FILE=vo-difference_txt-full.mp3 \
@@ -48,24 +51,11 @@ if (audioFileName) {
     + '  (ffmpeg -i out.mp4 -af volumedetect -f null -).');
 }
 
-// MasterComposition references each scene mp4 via staticFile('out/<sid>.mp4').
-// staticFile() resolves under the bundle's publicDir, so we must mirror the
-// per-scene mp4s from remotion/out/ into remotion/public/out/ before bundling.
-// MASTER_SCENES (when set) limits which mp4s we copy.
-const sceneOutDir = path.resolve(REMOTION_DIR, 'out');
-const publicOutDir = path.resolve(REMOTION_DIR, 'public', 'out');
-fs.mkdirSync(publicOutDir, { recursive: true });
-const _filter = (process.env.MASTER_SCENES || '').trim();
-const _allowed = _filter ? new Set(_filter.split(',').map((s) => s.trim())) : null;
-const copiedScenes = [];
-for (const f of fs.readdirSync(sceneOutDir)) {
-  if (!f.endsWith('.mp4')) continue;
-  const sid = f.replace(/\.mp4$/, '');
-  if (_allowed && !_allowed.has(sid)) continue;
-  fs.copyFileSync(path.join(sceneOutDir, f), path.join(publicOutDir, f));
-  copiedScenes.push(f);
-}
-console.log(`▶ mirrored ${copiedScenes.length} scene mp4(s) into public/out/`);
+// The master renders the per-scene COMPONENTS live (via makeUniversalScenePreview),
+// so there is NO per-scene mp4 to mirror. The live scenes read the scene JSONs already
+// in remotion/public/scenes/ (mirrored by build_video.py step 7.5). MASTER_SCENES
+// (when set) still filters which scenes the composition includes (handled in
+// MasterComposition.tsx via the same env var).
 
 const projectIdSafe = PROJECT.replace(/[_]/g, '-');
 const masterCompId = `${projectIdSafe}-master`;
@@ -75,7 +65,8 @@ fs.mkdirSync(path.dirname(outPath), { recursive: true });
 // Inject env vars at bundle time. Remotion's bundler does NOT auto-inline
 // arbitrary process.env vars, so without DefinePlugin the bundled
 // MasterComposition would see undefined for these.
-const transitionFrames = process.env.MASTER_TRANSITION_FRAMES || '12';
+// NOTE: MasterComposition uses a plain <Series> (zero overlap, no crossfade) so the
+// audio and video stay frame-perfect. There is intentionally NO transition-frames input.
 const masterScenes = process.env.MASTER_SCENES || '';
 function webpackOverride(config) {
   return {
@@ -97,7 +88,6 @@ function webpackOverride(config) {
       new webpack.DefinePlugin({
         'process.env.PROJECT': JSON.stringify(PROJECT),
         'process.env.MASTER_AUDIO_FILE': JSON.stringify(audioFileName),
-        'process.env.MASTER_TRANSITION_FRAMES': JSON.stringify(transitionFrames),
         'process.env.MASTER_SCENES': JSON.stringify(masterScenes),
       }),
     ],
@@ -119,6 +109,14 @@ const composition = await selectComposition({
   id: masterCompId,
 });
 
+// RENDERING INTELLIGENCE — collect the RuntimeProbe's telemetry Artifacts.
+// The probe (inside every scene component) emits [data-cast-id] layout boxes at
+// sampled frames; we persist them beside the output for the rules engine
+// (python -m storyboard.render_intelligence) to verify against the contract.
+const telemetryDir = path.resolve(path.dirname(outPath), 'telemetry');
+fs.rmSync(telemetryDir, { recursive: true, force: true });
+let telemetryCount = 0;
+
 await renderMedia({
   composition,
   serveUrl,
@@ -128,6 +126,17 @@ await renderMedia({
   audioCodec: 'aac',
   audioBitrate: '192k',
   pixelFormat: 'yuv420p',
+  // Per-frame render timeout (default 33s is too tight for heavy scenes under
+  // parallel concurrency contention — a slow frame times out even though it would
+  // finish). Both env-configurable so a heavy master can render without spurious fails.
+  timeoutInMilliseconds: Number(process.env.RENDER_TIMEOUT_MS) || 120000,
+  ...(process.env.RENDER_CONCURRENCY ? { concurrency: Number(process.env.RENDER_CONCURRENCY) } : {}),
+  onArtifact: (artifact) => {
+    const dest = path.resolve(telemetryDir, path.basename(artifact.filename));
+    fs.mkdirSync(telemetryDir, { recursive: true });
+    fs.writeFileSync(dest, artifact.content);
+    telemetryCount++;
+  },
   // The single render takes longer than per-scene; expose progress.
   onProgress: ({ progress, renderedFrames, encodedFrames }) => {
     if (renderedFrames % 60 === 0) {
@@ -139,10 +148,12 @@ await renderMedia({
 
 const stats = fs.statSync(outPath);
 console.log(`\n✓ master rendered: ${(stats.size / 1024 / 1024).toFixed(1)} MB → ${outPath}`);
-
-// Clean up: remove the audio + scene mp4s we copied into public/.
-try { fs.unlinkSync(audioDst); } catch (_) { /* ignore */ }
-for (const f of copiedScenes) {
-  try { fs.unlinkSync(path.join(publicOutDir, f)); } catch (_) { /* ignore */ }
+if (telemetryCount > 0) {
+  console.log(`✓ telemetry: ${telemetryCount} samples → ${telemetryDir}`);
+  console.log('  verify: python -m storyboard.telemetry_rules <project>');
 }
-try { fs.rmdirSync(publicOutDir); } catch (_) { /* not empty / not ours, ignore */ }
+
+// Clean up: remove the audio we copied into public/.
+if (audioFileName) {
+  try { fs.unlinkSync(path.resolve(REMOTION_DIR, 'public', audioFileName)); } catch (_) { /* ignore */ }
+}
