@@ -37,6 +37,11 @@ For each beat of the Teaching Narrative, name the mental model the viewer uses t
 - **Name the misconception it replaces.** The model exists to *correct* the viewer's wrong intuition:
   "they think it's a list; it's actually a tree" → the model is **hierarchy**, and the video's job is to
   transform the list-in-their-head into the tree.
+- **Name the CURRENT model and the TARGET model (center on the learner, not the content).** The lesson IS the
+  shift from the model the viewer holds NOW to the one they should leave with (from `research-engine`'s
+  `learning_frame`: `current_mental_model` → `target_mental_model`). If current and target are the same, there
+  is nothing to learn — the beat is a recital. Shape understanding around the learner's MOVE, not the topic's
+  structure.
 - **One dominant model per beat**, but the video as a whole should VARY models across beats — eight
   comparison beats in a row is the same-shape monotony that loses viewers.
 

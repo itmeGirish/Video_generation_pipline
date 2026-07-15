@@ -21,6 +21,24 @@ export type SceneTimeline = {
 };
 
 export const TIMELINES: Record<string, SceneTimeline> = {
+  "loop-engineering-s01": {
+    "id": "loop-engineering-s01",
+    "durationFrames": 420,
+    "durationSeconds": 14.000,
+    "fps": 30,
+    "audioFile": "",
+    "anchors": {},
+    "phases": [{"id":"scene","fromFrame":0,"toFrame":420,"enterFrames":0,"exitFrames":0,"transitionIn":"hard_cut"}]
+  },
+  "loop-engineering-s02": {
+    "id": "loop-engineering-s02",
+    "durationFrames": 390,
+    "durationSeconds": 13.000,
+    "fps": 30,
+    "audioFile": "",
+    "anchors": {},
+    "phases": [{"id":"scene","fromFrame":0,"toFrame":390,"enterFrames":0,"exitFrames":0,"transitionIn":"hard_cut"}]
+  },
   "pixel-rag-v2-s01": {
     "id": "pixel-rag-v2-s01",
     "durationFrames": 1027,

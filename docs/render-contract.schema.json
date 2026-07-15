@@ -452,6 +452,35 @@
                       }
                     }
                   }
+                },
+                "motion": {
+                  "type": "object",
+                  "description": "THE MOTION SCORE (stages 14/16/17 exported as INTENT) — how the beat's world BEHAVES, so the codegen builds cinematic motion instead of inventing generic tweens. Carries the choreography + physics FEEL; the exact easing/duration/springs resolve at Phase-2 via the style-locked (action,intensity)->(easing,duration) table — never baked per beat (the semantics<->timing boundary). Disciplined by serial attention: rich on the hero/impact beat, restrained on support. A motion score left as free-form prose is a determinism smell; the score steps are STRUCTURED tokens.",
+                  "properties": {
+                    "operator": { "type": "string", "description": "the closed-set operator(s) realizing the beat (e.g. 'dock + count(overshoot)')" },
+                    "material": { "type": "string", "description": "metal | ink | glow | paper | glass — picks the physics character" },
+                    "intensity": { "type": "string", "enum": ["hero", "medium", "restrained", "still"], "description": "serial-attention tier — only hero/impact beats get camera + particulate reaction" },
+                    "score": {
+                      "type": "array",
+                      "description": "the ordered micro-beats (anticipation -> action -> secondary -> settle) as STRUCTURED, machine-parseable steps — never free-form prose.",
+                      "items": {
+                        "type": "object",
+                        "required": ["actor", "action", "intensity"],
+                        "properties": {
+                          "actor": { "type": "string", "description": "the thing that moves — a cast id or a named sub-part (e.g. 'stamp_arm')" },
+                          "action": { "type": "string", "description": "a verb from the CLOSED operator set (slam|dock|count|split|ignite|flash|shake|travel|snap|...) — the closed vocabulary is what makes realization deterministic and film-consistent" },
+                          "intensity": { "type": "string", "description": "anticipation | hard | medium | soft — resolves to (easing, duration) via the Phase-2 style table" },
+                          "target": { "type": "string", "description": "optional — the cast id / value the action lands on" }
+                        }
+                      }
+                    },
+                    "secondary": { "type": "array", "description": "restrained supporting motion (the running mechanism + particulate on hero beats), same step shape", "items": { "type": "object" } },
+                    "camera_reaction": { "type": "string", "description": "the camera's beat-level reaction (punch-in on impact, etc.) — 'none' on restrained beats" },
+                    "light_reaction": { "type": "string", "description": "the lighting reaction (a flash/bloom on impact) — 'steady' on restrained beats" },
+                    "physics_feel": { "type": "string", "description": "the FEEL (anticipation/overshoot/follow-through) — intent, never spring constants" },
+                    "realization_note": { "type": "string", "description": "how (action, intensity) resolve to (easing, duration) at Phase-2" },
+                    "attention_discipline": { "type": "string" }
+                  }
                 }
               }
             }

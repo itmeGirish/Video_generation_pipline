@@ -47,6 +47,16 @@ lag); the render maps it to frame-driven springs on transform/opacity.
 Per operator: its easing/spring character · anticipation · follow-through/overlap · squash-stretch (or rigid)
 · weight/damping · how the physics shifts with the emotional beat. Every operator now has a physical feel.
 
+## The feel EXPORTS as `motion.physics_feel` + each step's `intensity`
+
+Your physics intent ships in the render contract as the beat's **`motion.physics_feel`** (the
+anticipation / overshoot / follow-through description) plus each `motion.score` step's **`intensity`**
+(`anticipation` | `hard` | `medium` | `soft`). Intensity + the step's action RESOLVE to the concrete
+`(easing, duration)` at Phase-2 via the style-locked table — the contract carries the FEEL, **NEVER the
+spring constants or frame counts.** This is the held semantics↔timing boundary: a physics FEEL is the
+contract's; the exact spring stiffness/damping/frames are the compiler's (`vg-code-timing`). Do not bake
+numbers here — even when an expert asks; per-beat numbers reintroduce hardcoding + cross-scene drift.
+
 ## Boundary
 
 You own how motion FEELS physically. You do NOT choose the operator (`motion-operator-engine`), time it to

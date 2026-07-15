@@ -83,6 +83,18 @@ Per event: the chosen operator (from the closed set) + the material it implies +
 teaches. Every event now has a named, buildable operation. Flag any event whose meaning no operator in the
 set can carry — that's a signal the event was conceived unbuildably; route it back to the event-graph.
 
+## The operator EXPORTS as the beat's `motion.score`
+
+The operator you pick ships in the render contract as the steps of the beat's **`motion.score`** — structured
+`{actor, action, intensity, target}`, where `action` is THIS closed-set verb (`slam`/`dock`/`count`/`split`/
+`ignite`/…). The closed vocabulary is exactly what makes realization DETERMINISTIC: the same `action` maps to
+the same motion video-wide via the Phase-2 style-locked table, so a `slam` in scene 1 and scene 8 render
+identically (film consistency). Emit the score as STRUCTURED steps — the ordered micro-beats
+(anticipation → action → secondary → settle) — **never free-form prose**; prose forces the codegen to parse
+English and two runs can diverge (a determinism smell). What you do NOT emit: the easing curve or the frame
+duration — those resolve from `(action, intensity)` at Phase-2 (`physics-engine` owns the FEEL; the style
+table owns the numbers). `contract_scorecard.py` gates this (`motion=n/m` + closed-verb wellformedness).
+
 ## Boundary
 
 You pick the concrete operator (the verb). You do NOT set springs/easing/inertia (`physics-engine`), map it

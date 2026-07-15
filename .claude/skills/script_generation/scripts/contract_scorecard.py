@@ -34,6 +34,13 @@ TEXT_BUDGET_PER_SCENE = 5      # one display-class line + a handful of micro-lab
 CONTAINERS_PER_SCENE = 6       # the canvas negotiates a handful of containers (containment law)
 ENTRIES_PER_BEAT = 3           # arrivals cost attention — a beat introduces at most a couple of elements
 _ENTRY_STATES = {"absent", "hidden", "not-yet-entered"}
+CLOSED_ACTIONS = {  # the closed operator vocabulary (motion-operator-engine) — motion.score actions
+    "rise", "pop", "sweep", "fade", "sink", "shrink", "dock", "travel", "orbit", "redirect", "settle",
+    "cycle", "split", "merge", "fold", "shred", "shatter", "morph", "tile", "extract", "assemble", "melt",
+    "grow", "fill", "count", "draw", "wipe", "unmask", "pulse", "glow", "shake", "slam", "bob", "link",
+    "thread", "snap", "ignite", "dim", "flash", "crumble", "desaturate", "push", "pull", "whip", "macro",
+    "parallax", "rack", "cut",
+}
 PROCESS_NARRATION = re.compile(
     r"\b(each|every|per)\s+\w+|\bkeeps?\s+\w+ing\b|\bstreams?\b|\brepeated(ly)?\b|\bone\s+at\s+a\s+time\b",
     re.IGNORECASE,
@@ -58,6 +65,8 @@ def score(path: Path) -> int:
     text_over: list[str] = []
     stage_missing: list[int] = []
     load_over: list[str] = []
+    n_motion = 0
+    motion_bad: list[str] = []
 
     for sc in scenes:
         num = sc.get("number")
@@ -86,6 +95,18 @@ def score(path: Path) -> int:
                     fails.append(f"scene {num} bullet {i}: semantics.concept '{cid}' not in the contract's concepts list")
             if str(b.get("text", "")).strip():
                 texts += 1
+            # MOTION coverage — the beat's motion.score is STRUCTURED + closed-verb (anti-prose-motion gate)
+            msc = (b.get("motion") or {}).get("score") or []
+            if msc:
+                n_motion += 1
+                for st in msc:
+                    if not isinstance(st, dict) or not (str(st.get("actor", "")).strip()
+                            and str(st.get("action", "")).strip() and str(st.get("intensity", "")).strip()):
+                        motion_bad.append(f"scene {num} bullet {i}: motion.score step missing actor/action/intensity "
+                                          f"(or is free-form prose, not a structured step)")
+                    elif st.get("action") not in CLOSED_ACTIONS:
+                        motion_bad.append(f"scene {num} bullet {i}: motion.score action '{st.get('action')}' "
+                                          f"not in the closed operator set")
             # VISUAL LOAD — entries: transitions arriving from an off-stage state cost attention
             entries = sum(1 for t in sem.get("transitions", [])
                           if str(t.get("from", "")).strip().lower() in _ENTRY_STATES)
@@ -121,6 +142,10 @@ def score(path: Path) -> int:
                          f"{'…' if len(untraced_beats) > 6 else ''}")
     fails.extend(text_over)
     fails.extend(load_over)
+    if n_motion and n_motion < n_bullets:
+        fails.append(f"MOTION coverage {n_motion}/{n_bullets} — motion.score present on some beats but missing "
+                     f"on others (partial); export the structured score for every teaching beat")
+    fails.extend(motion_bad[:8])
     if stage_missing:
         fails.append(f"stage.composite missing on scene(s): {stage_missing}")
     if any_process and trace_steps == 0:
@@ -132,7 +157,8 @@ def score(path: Path) -> int:
     print(f"SCRIPT-SCORECARD: semantics={n_sem}/{n_bullets} process={proc_have}/{proc_needed} "
           f"({proc_pct}%) {concepts_str} text_budget={'OK' if not text_over else 'OVER'} "
           f"load={'OK' if not load_over else 'OVER'} "
-          f"stage={len(scenes)-len(stage_missing)}/{len(scenes)} series={series} trace_steps={trace_steps}")
+          f"stage={len(scenes)-len(stage_missing)}/{len(scenes)} motion={n_motion}/{n_bullets} "
+          f"series={series} trace_steps={trace_steps}")
 
     if legacy:
         if fails:

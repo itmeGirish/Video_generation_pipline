@@ -95,6 +95,24 @@ reads it). No speculative fields, no "might be useful later," no second stage wr
 Adding a field = naming its producer + its consumer first (the DDI rule, generalized to the whole
 contract). A field nothing consumes is deleted, not documented.
 
+## The motion score (carried as INTENT, not inferred from prose)
+
+Each teaching beat carries a **`motion`** block (schema `motion:`) — the MOTION SCORE exported from the
+directors + operators + physics (stages 14/16/17), so the beat's world BEHAVES instead of the codegen
+inventing generic tweens (the "clean explainer, not a film" failure). It carries: `operator` (closed set) ·
+`material` · `intensity` (the serial-attention tier: hero/medium/restrained/still) · `score` (the ordered
+micro-beats **as STRUCTURED steps** `{actor, action (a CLOSED-set verb), intensity, target}` — never
+free-form prose, which is a determinism smell a compiler can't parse) · `secondary` (restrained supporting
+motion + particulate on hero beats) · `camera_reaction` · `light_reaction` · `physics_feel`.
+**The boundary holds:** the score carries the choreography + FEEL; the exact `(easing, duration)` per step
+resolves at Phase-2 via the style-locked `(action, intensity) -> (easing, duration)` table — the same action
+renders identically video-wide (film consistency) and no spring constant / frame count is baked per beat
+(the semantics-vs-timing boundary). **Serial attention:** only the hero/impact beat gets the full score +
+camera + particulate reaction; support beats stay quiet (one kinetic focus). A `motion` left null (prose in
+`what_happens` only) is the die-in-memory failure — the choreography designed at stages 14/16/17 must be
+EXPORTED here or the render re-invents it flat. Mechanically gated by `contract_scorecard.py` (`motion=n/m` +
+structured/closed-verb wellformedness).
+
 ## Determinism rules (the hard constraints)
 
 - **No runtime randomness** — every value is fixed or seeded from the frame. No `Math.random`/`Date.now`/wall

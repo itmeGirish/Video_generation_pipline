@@ -12,6 +12,12 @@ stage consumes. This is not one giant prompt — it is 32 single-purpose stages,
 with 10 cross-cutting skills running throughout. Invoke this orchestrator first, then invoke every stage's
 skill in order — **NONE skippable.**
 
+> **THE ONE PRINCIPLE EVERY LOOP OBEYS: optimize for the VIEWER'S LEARNING, not the author's information.**
+> Each stage asks "how will the viewer *learn* this?" before "what should I say?" — the learner's journey
+> (curiosity → misconception → discovery → new mental model → proof → recall) is the product; facts, words,
+> and visuals are inputs to it. A loop that optimizes the author's content instead of the viewer's learning
+> is the fact-pipeline trap this pipeline exists to avoid.
+
 > **THE MISSION:** a **visual learning experience** — every scene teaches ONE concept through motion,
 > transformation, and visual cause-and-effect; narration only REINFORCES. Hierarchy: `Concept → Viewer
 > Understanding → Visual Story → Motion Story → Remotion` (implementation LAST). **The success metric over all
@@ -47,7 +53,7 @@ confirms") is structurally impossible. Words-serve-the-seen, then freeze.
 | S | Script stage | Input → Output | Gate |
 |---|---|---|---|
 | S1 | **topic-intelligence** | Topic → Topic Brief | GO/NO-GO (NO-GO stops here — a success) |
-| S2 | **research-engine** | Topic Brief → Knowledge Package | primary sources · running example · boundary facts |
+| S2 | **research-engine** | Topic Brief → Knowledge Package | learning frame (current model · misconception blocking · experience that breaks it · target model) FIRST, then evidence · running example · boundary facts |
 | S3 | **angle-engine** | Knowledge Package → Angle Map | one stake · every tension released · open loop · mid-video re-hook (>8min) |
 | S4 | **narrative-architect** | Angle Map → Narrative Blueprint | concrete-before-abstract (mechanical) · ≤30s hook · one goal/chapter |
 | S5 | **script-writer** | Blueprint → Draft Script (sentences) | the 11 sentence laws (incl. the COMMENTARY LAW) — **run `scripts/sentence_laws_lint.py`** |
